@@ -1,0 +1,1452 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Polla Compis 2026 — Mis Pronósticos</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#F2F4F8;color:#1a1a1a}
+.hdr{background:#0A1628;padding:1rem 1.25rem;position:sticky;top:0;z-index:10}
+.hdr h1{font-size:17px;font-weight:600;color:#fff}
+.hdr p{font-size:12px;color:#C8D8F0;margin-top:2px}
+.prog{background:#0A1628;padding:0 1.25rem .75rem}
+.bar{height:3px;background:rgba(255,255,255,0.2);border-radius:2px}
+.fill{height:100%;background:#C8102E;border-radius:2px;width:0%;transition:width .3s}
+.plbl{display:flex;justify-content:space-between;font-size:11px;color:#C8D8F0;margin-top:4px}
+.body{max-width:600px;margin:0 auto;padding:.75rem}
+.card{background:#fff;border-radius:12px;padding:1rem;margin-bottom:.75rem;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.sec{font-size:11px;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:.07em;margin-bottom:.75rem}
+.field{margin-bottom:.625rem}
+.field label{display:block;font-size:12px;color:#555;margin-bottom:3px}
+.field input,.field select{width:100%;padding:9px 11px;border:1px solid #DDE;border-radius:8px;font-size:14px;background:#FAFAFA;color:#1a1a1a}
+.fhdr{background:#0A1628;padding:8px 12px;border-radius:8px;margin-bottom:.625rem}
+.fhdr h2{font-size:14px;font-weight:600;color:#fff}
+.fhdr .pts{font-size:11px;color:#C8D8F0;margin-top:2px}
+.nota{font-size:11px;color:#666;padding:7px 10px;background:#F0F4FF;border-radius:6px;margin-bottom:.625rem;border-left:3px solid #C8102E;line-height:1.5}
+.ghdr{font-size:11px;font-weight:600;color:#C8102E;padding:3px 0;margin-bottom:.4rem}
+.prow{display:grid;grid-template-columns:1fr 38px 14px 38px 1fr;align-items:center;gap:5px;padding:7px 0;border-bottom:1px solid #EEF}
+.prow:last-child{border-bottom:none}
+.el{text-align:right;font-size:13px;font-weight:500;line-height:1.3}
+.ev{font-size:13px;font-weight:500;line-height:1.3}
+.nin{width:38px;height:36px;text-align:center;border:1.5px solid #DDE;border-radius:7px;background:#FAFAFA;font-size:15px;font-weight:600;color:#1a1a1a}
+.nin:focus{border-color:#C8102E;outline:none}
+.nin::-webkit-outer-spin-button,.nin::-webkit-inner-spin-button{-webkit-appearance:none}
+.vsep{font-size:12px;color:#AAA;text-align:center}
+.col{font-size:9px;background:#FFF8DC;color:#8B6914;border:1px solid #FFD700;border-radius:3px;padding:1px 4px;margin-left:3px}
+.fr{font-size:9px;color:#AAA;text-align:right;padding-bottom:2px}
+.nav{display:flex;gap:8px;margin-top:.875rem}
+.nav button{padding:10px;border-radius:8px;font-size:13px;cursor:pointer;font-weight:500;border:none}
+.nbk{flex:1;background:#F5F5F5;color:#333;border:1px solid #DDD!important}
+.nxt{flex:2;background:#C8102E;color:#fff}
+.hrow{display:flex;align-items:center;gap:8px;margin-bottom:.5rem;flex-wrap:wrap}
+.hlbl{font-size:13px;color:#444;flex:0 0 155px;line-height:1.3}
+.hpts{font-size:10px;color:#888;background:#F0F0F0;padding:2px 6px;border-radius:5px}
+.hin{flex:1;min-width:110px;padding:7px 10px;border:1px solid #DDE;border-radius:6px;font-size:13px;background:#FAFAFA}
+.benv{width:100%;padding:13px;background:#C8102E;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;margin-top:.875rem}
+.benv:disabled{opacity:.5;cursor:not-allowed}
+.msg{padding:10px 12px;border-radius:8px;font-size:13px;margin-top:.75rem;display:none}
+.ok{background:#E8F5E9;color:#1B5E20;border:1px solid #A5D6A7;display:block}
+.err{background:#FFEBEE;color:#B71C1C;border:1px solid #FFCDD2;display:block}
+.step{display:none}.step.active{display:block}
+.conf{display:none;text-align:center;padding:2.5rem 1rem}
+/* ---- TABLA DE GRUPO EN VIVO (B1 FIX) ---- */
+.gtbl{width:100%;border-collapse:collapse;font-size:11px;margin-top:.5rem;margin-bottom:.25rem}
+.gtbl th{background:#0A1628;color:#C8D8F0;padding:4px 5px;text-align:center;font-weight:600}
+.gtbl th:first-child{text-align:left}
+.gtbl td{padding:4px 5px;text-align:center;border-bottom:1px solid #EEF}
+.gtbl td:first-child{text-align:left;font-weight:500;font-size:12px}
+.gtbl tr:last-child td{border-bottom:none}
+.gtbl .pos1{background:#FFF8DC}
+.gtbl .pos2{background:#F0F4FF}
+.gtbl .pos3{background:#F9F9F9}
+.gtbl .pos4{background:#FFF}
+/* ---- PENALES (B3 FIX) ---- */
+.pen-row{display:none;align-items:center;gap:8px;padding:5px 0 3px;font-size:11px;color:#E65100;background:#FFF8E1;border-radius:6px;padding:5px 10px;margin-top:4px}
+.pen-row.show{display:flex}
+.pen-in{width:38px;height:30px;text-align:center;border:1.5px solid #FFD54F;border-radius:6px;background:#fff;font-size:14px;font-weight:600;color:#E65100}
+.pen-in::-webkit-outer-spin-button,.pen-in::-webkit-inner-spin-button{-webkit-appearance:none}
+/* ---- ELIM NAMES (propagación B2 FIX) ---- */
+.ename-disp{font-size:11px;color:#555;background:#F0F4FF;border-radius:4px;padding:2px 6px;display:inline-block;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <h1>⚽ Polla Compis · Mundial 2026</h1>
+  <p>Llena tus 104 pronósticos · 100.000 COP / 25 EUR</p>
+</div>
+<div class="prog">
+  <div class="bar"><div class="fill" id="pf"></div></div>
+  <div class="plbl"><span id="pt">Paso 1 de 19</span><span id="pp">0%</span></div>
+</div>
+<div class="body">
+  <div id="app">
+    <div class="card">
+      <div class="sec">Tus datos</div>
+      <div class="field"><label>Nombre completo</label><input id="nom" type="text" placeholder="Ej: Daniel Collazos"></div>
+
+    </div>
+    <div id="steps"></div>
+    <div id="hsec" class="card" style="display:none">
+      <div class="fhdr"><h2>🏅 Cuadro de Honor</h2><div class="pts">Solo apellido o nombre · Ej: Mbappé · Vinicius · Yamal</div></div>
+      <div id="hfields"></div>
+    </div>
+    <button class="benv" id="benv" disabled>Enviar mi polla ⚽</button>
+    <div class="msg" id="msg"></div>
+  </div>
+    <div class="conf" id="conf">
+    <div style="font-size:56px;margin-bottom:1rem">&#127881;</div>
+    <h2 style="font-size:20px;font-weight:600;margin-bottom:.5rem">&#161;Polla enviada!</h2>
+    <p style="font-size:14px;color:#555;margin-bottom:1rem" id="ctxt"></p>
+    <div style="background:#F0F4FF;border-radius:10px;padding:1rem;font-size:13px;color:#444;line-height:1.7;margin-bottom:1rem">El admin revisar&#225; tus pron&#243;sticos y te confirmar&#225; pronto. &#9917;</div>
+    <button id="btnpdf" onclick="generarPDF()" style="width:100%;padding:13px;background:#0A1628;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer">&#11015; Descargar mi comprobante PDF</button>
+    <p style="font-size:11px;color:#999;margin-top:.5rem">Guarda este PDF como prueba de tus pron&#243;sticos</p>
+  </div>
+</div>
+
+<script>
+var SB="https://ilqtntrquulwsrvxeuki.supabase.co";
+var SK="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlscXRudHJxdXVsd3NydnhldWtpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0MzkwMDYsImV4cCI6MjA5NTAxNTAwNn0.eKMyKBGfAmwfgRcPcdr8ABrmeecmOcKbSXiFCXAuIvQ";
+
+// ============================================================
+// EQUIPOS POR GRUPO
+// ============================================================
+var GEQ={
+  A:["México","Sudáfrica","Corea del Sur","Rep. Checa"],
+  B:["Canadá","Bosnia y Herz.","Catar","Suiza"],
+  C:["Brasil","Marruecos","Haití","Escocia"],
+  D:["EE.UU.","Paraguay","Australia","Turquía"],
+  E:["Alemania","Curazao","Costa de Marfil","Ecuador"],
+  F:["Países Bajos","Japón","Suecia","Túnez"],
+  G:["Bélgica","Egipto","Irán","Nueva Zelanda"],
+  H:["España","Cabo Verde","Arabia Saudita","Uruguay"],
+  I:["Francia","Senegal","Irak","Noruega"],
+  J:["Argentina","Argelia","Austria","Jordania"],
+  K:["Portugal","RD Congo","Uzbekistán","Colombia"],
+  L:["Inglaterra","Croacia","Ghana","Panamá"]
+};
+
+// ============================================================
+// BANDERAS — mapa nombre → emoji bandera
+// ============================================================
+var FLAGS={
+  "México":"🇲🇽 ",
+  "Sudáfrica":"🇿🇦 ",
+  "Corea del Sur":"🇰🇷 ",
+  "Rep. Checa":"🇨🇿 ",
+  "Canadá":"🇨🇦 ",
+  "Bosnia y Herz.":"🇧🇦 ",
+  "Catar":"🇶🇦 ",
+  "Suiza":"🇨🇭 ",
+  "Brasil":"🇧🇷 ",
+  "Marruecos":"🇲🇦 ",
+  "Haití":"🇭🇹 ",
+  "Escocia":"🇬🇧 ",
+  "EE.UU.":"🇺🇸 ",
+  "Paraguay":"🇵🇾 ",
+  "Australia":"🇦🇺 ",
+  "Turquía":"🇹🇷 ",
+  "Alemania":"🇩🇪 ",
+  "Curazao":"🇨🇼 ",
+  "Costa de Marfil":"🇨🇮 ",
+  "Ecuador":"🇪🇨 ",
+  "Países Bajos":"🇳🇱 ",
+  "Japón":"🇯🇵 ",
+  "Suecia":"🇸🇪 ",
+  "Túnez":"🇹🇳 ",
+  "Bélgica":"🇧🇪 ",
+  "Egipto":"🇪🇬 ",
+  "Irán":"🇮🇷 ",
+  "Nueva Zelanda":"🇳🇿 ",
+  "España":"🇪🇸 ",
+  "Cabo Verde":"🇨🇻 ",
+  "Arabia Saudita":"🇸🇦 ",
+  "Uruguay":"🇺🇾 ",
+  "Francia":"🇫🇷 ",
+  "Senegal":"🇸🇳 ",
+  "Irak":"🇮🇶 ",
+  "Noruega":"🇳🇴 ",
+  "Argentina":"🇦🇷 ",
+  "Argelia":"🇩🇿 ",
+  "Austria":"🇦🇹 ",
+  "Jordania":"🇯🇴 ",
+  "Portugal":"🇵🇹 ",
+  "RD Congo":"🇨🇩 ",
+  "Uzbekistán":"🇺🇿 ",
+  "Colombia":"🇨🇴 ",
+  "Inglaterra":"🇬🇧 ",
+  "Croacia":"🇭🇷 ",
+  "Ghana":"🇬🇭 ",
+  "Panamá":"🇵🇦 "
+};
+function flag(n){return FLAGS[n]||'';}
+
+
+
+var PG=[
+  {id:1,l:"México",v:"Sudáfrica",g:"A",f:"11 Jun 15:00"},{id:2,l:"Corea del Sur",v:"Rep. Checa",g:"A",f:"11 Jun 22:00"},{id:25,l:"Rep. Checa",v:"Sudáfrica",g:"A",f:"18 Jun 12:00"},{id:28,l:"México",v:"Corea del Sur",g:"A",f:"18 Jun 21:00"},{id:53,l:"Sudáfrica",v:"Corea del Sur",g:"A",f:"24 Jun 21:00"},{id:54,l:"Rep. Checa",v:"México",g:"A",f:"24 Jun 21:00"},
+  {id:3,l:"Canadá",v:"Bosnia y Herz.",g:"B",f:"12 Jun 15:00"},{id:5,l:"Catar",v:"Suiza",g:"B",f:"13 Jun 15:00"},{id:26,l:"Suiza",v:"Bosnia y Herz.",g:"B",f:"18 Jun 15:00"},{id:27,l:"Canadá",v:"Catar",g:"B",f:"18 Jun 18:00"},{id:51,l:"Suiza",v:"Canadá",g:"B",f:"24 Jun 15:00"},{id:52,l:"Bosnia y Herz.",v:"Catar",g:"B",f:"24 Jun 15:00"},
+  {id:6,l:"Brasil",v:"Marruecos",g:"C",f:"13 Jun 18:00"},{id:7,l:"Haití",v:"Escocia",g:"C",f:"13 Jun 21:00"},{id:29,l:"Brasil",v:"Haití",g:"C",f:"19 Jun 18:00"},{id:30,l:"Escocia",v:"Marruecos",g:"C",f:"19 Jun 20:30"},{id:49,l:"Escocia",v:"Brasil",g:"C",f:"24 Jun 18:00"},{id:50,l:"Marruecos",v:"Haití",g:"C",f:"24 Jun 18:00"},
+  {id:4,l:"EE.UU.",v:"Paraguay",g:"D",f:"12 Jun 21:00"},{id:8,l:"Australia",v:"Turquía",g:"D",f:"14 Jun 00:00"},{id:31,l:"Turquía",v:"Paraguay",g:"D",f:"19 Jun 15:00"},{id:32,l:"EE.UU.",v:"Australia",g:"D",f:"19 Jun 23:00"},{id:59,l:"Turquía",v:"EE.UU.",g:"D",f:"25 Jun 22:00"},{id:60,l:"Paraguay",v:"Australia",g:"D",f:"25 Jun 22:00"},
+  {id:9,l:"Alemania",v:"Curazao",g:"E",f:"14 Jun 13:00"},{id:10,l:"Costa de Marfil",v:"Ecuador",g:"E",f:"14 Jun 19:00"},{id:33,l:"Alemania",v:"Costa de Marfil",g:"E",f:"20 Jun 16:00"},{id:34,l:"Ecuador",v:"Curazao",g:"E",f:"20 Jun 20:00"},{id:55,l:"Curazao",v:"Costa de Marfil",g:"E",f:"25 Jun 16:00"},{id:56,l:"Ecuador",v:"Alemania",g:"E",f:"25 Jun 16:00"},
+  {id:11,l:"Países Bajos",v:"Japón",g:"F",f:"14 Jun 16:00"},{id:12,l:"Suecia",v:"Túnez",g:"F",f:"14 Jun 22:00"},{id:35,l:"Países Bajos",v:"Suecia",g:"F",f:"20 Jun 13:00"},{id:36,l:"Túnez",v:"Japón",g:"F",f:"21 Jun 00:00"},{id:57,l:"Japón",v:"Suecia",g:"F",f:"25 Jun 19:00"},{id:58,l:"Túnez",v:"Países Bajos",g:"F",f:"25 Jun 19:00"},
+  {id:13,l:"Bélgica",v:"Egipto",g:"G",f:"15 Jun 15:00"},{id:14,l:"Irán",v:"Nueva Zelanda",g:"G",f:"15 Jun 21:00"},{id:38,l:"Bélgica",v:"Irán",g:"G",f:"21 Jun 15:00"},{id:40,l:"Nueva Zelanda",v:"Egipto",g:"G",f:"21 Jun 21:00"},{id:63,l:"Egipto",v:"Irán",g:"G",f:"26 Jun 23:00"},{id:64,l:"Nueva Zelanda",v:"Bélgica",g:"G",f:"26 Jun 23:00"},
+  {id:15,l:"España",v:"Cabo Verde",g:"H",f:"15 Jun 12:00"},{id:16,l:"Arabia Saudita",v:"Uruguay",g:"H",f:"15 Jun 18:00"},{id:37,l:"España",v:"Arabia Saudita",g:"H",f:"21 Jun 12:00"},{id:39,l:"Uruguay",v:"Cabo Verde",g:"H",f:"21 Jun 18:00"},{id:65,l:"Cabo Verde",v:"Arabia Saudita",g:"H",f:"26 Jun 20:00"},{id:66,l:"Uruguay",v:"España",g:"H",f:"26 Jun 20:00"},
+  {id:17,l:"Francia",v:"Senegal",g:"I",f:"16 Jun 15:00"},{id:18,l:"Irak",v:"Noruega",g:"I",f:"16 Jun 18:00"},{id:41,l:"Francia",v:"Irak",g:"I",f:"22 Jun 17:00"},{id:42,l:"Noruega",v:"Senegal",g:"I",f:"22 Jun 20:00"},{id:61,l:"Noruega",v:"Francia",g:"I",f:"26 Jun 15:00"},{id:62,l:"Senegal",v:"Irak",g:"I",f:"26 Jun 15:00"},
+  {id:19,l:"Argentina",v:"Argelia",g:"J",f:"16 Jun 21:00"},{id:20,l:"Austria",v:"Jordania",g:"J",f:"17 Jun 00:00"},{id:43,l:"Argentina",v:"Austria",g:"J",f:"22 Jun 13:00"},{id:44,l:"Jordania",v:"Argelia",g:"J",f:"22 Jun 23:00"},{id:69,l:"Argentina",v:"Austria",g:"J",f:"27 Jun 22:00"},{id:70,l:"Jordania",v:"Argelia",g:"J",f:"27 Jun 22:00"},
+  {id:21,l:"Portugal",v:"RD Congo",g:"K",f:"17 Jun 13:00"},{id:24,l:"Uzbekistán",v:"Colombia",g:"K",f:"17 Jun 22:00",col:true},{id:45,l:"Portugal",v:"Uzbekistán",g:"K",f:"23 Jun 13:00"},{id:48,l:"Colombia",v:"RD Congo",g:"K",f:"23 Jun 22:00",col:true},{id:71,l:"Colombia",v:"Portugal",g:"K",f:"27 Jun 19:30",col:true},{id:72,l:"RD Congo",v:"Uzbekistán",g:"K",f:"27 Jun 19:30"},
+  {id:22,l:"Inglaterra",v:"Croacia",g:"L",f:"17 Jun 16:00"},{id:23,l:"Ghana",v:"Panamá",g:"L",f:"17 Jun 19:00"},{id:46,l:"Inglaterra",v:"Ghana",g:"L",f:"23 Jun 16:00"},{id:47,l:"Panamá",v:"Croacia",g:"L",f:"23 Jun 19:00"},{id:67,l:"Panamá",v:"Inglaterra",g:"L",f:"27 Jun 17:00"},{id:68,l:"Croacia",v:"Ghana",g:"L",f:"27 Jun 17:00"}
+];
+
+var D16=[
+  {id:73,cl:"2A",cv:"2B",f:"28 Jun 15:00"},
+  {id:74,cl:"1E",cv:"3ABCDF",f:"29 Jun 16:30"},
+  {id:75,cl:"1F",cv:"2C",f:"29 Jun 21:00"},
+  {id:76,cl:"1C",cv:"2F",f:"29 Jun 13:00"},
+  {id:77,cl:"1I",cv:"3CDFGH",f:"30 Jun 17:00"},
+  {id:78,cl:"2E",cv:"2I",f:"30 Jun 13:00"},
+  {id:79,cl:"1A",cv:"3CEFHI",f:"30 Jun 21:00"},
+  {id:80,cl:"1L",cv:"3EHIJK",f:"01 Jul 12:00"},
+  {id:81,cl:"1D",cv:"3BEFIJ",f:"01 Jul 20:00"},
+  {id:82,cl:"1G",cv:"3AEHIJ",f:"01 Jul 16:00"},
+  {id:83,cl:"2K",cv:"2L",f:"02 Jul 19:00"},
+  {id:84,cl:"1H",cv:"2J",f:"02 Jul 15:00"},
+  {id:85,cl:"1B",cv:"3EFGIJ",f:"02 Jul 23:00"},
+  {id:86,cl:"1J",cv:"2H",f:"03 Jul 18:00"},
+  {id:87,cl:"1K",cv:"3DEIJL",f:"03 Jul 21:30"},
+  {id:88,cl:"2D",cv:"2G",f:"03 Jul 14:00"}
+];
+
+// Octavos y fases posteriores con códigos de cruce
+var ELIM=[
+  {id:"oct",lbl:"Octavos de Final",pts:"5pts signo · 7pts exacto · 8pts clasificado · 10pts cruce exacto",nota:"Resultado a 120min. Penales no cuentan. Solo sumas resultado si el cruce es exacto.",ps:[
+    {id:89,cl:"W73",cv:"W75",f:"04 Jul 17:00"},{id:90,cl:"W74",cv:"W77",f:"04 Jul 13:00"},
+    {id:91,cl:"W76",cv:"W78",f:"05 Jul 16:00"},{id:92,cl:"W79",cv:"W80",f:"05 Jul 20:00"},
+    {id:93,cl:"W83",cv:"W84",f:"06 Jul 15:00"},{id:94,cl:"W81",cv:"W82",f:"06 Jul 20:00"},
+    {id:95,cl:"W86",cv:"W88",f:"07 Jul 12:00"},{id:96,cl:"W85",cv:"W87",f:"07 Jul 16:00"}
+  ]},
+  {id:"cua",lbl:"Cuartos de Final",pts:"6pts signo · 8pts exacto · 12pts clasificado · 15pts cruce exacto",nota:"Resultado a 120min. Penales no cuentan.",ps:[
+    {id:97,cl:"W89",cv:"W90",f:"09 Jul 16:00"},{id:98,cl:"W93",cv:"W94",f:"10 Jul 15:00"},
+    {id:99,cl:"W91",cv:"W92",f:"11 Jul 17:00"},{id:100,cl:"W95",cv:"W96",f:"11 Jul 21:00"}
+  ]},
+  {id:"sem",lbl:"Semifinales",pts:"10pts signo · 12pts exacto · 16pts clasificado · 20pts cruce exacto",nota:"Resultado a 120min. ★ 16pts adicionales si acertaste qué equipo llega a la Final.",ps:[
+    {id:101,cl:"W97",cv:"W98",f:"14 Jul 15:00"},{id:102,cl:"W99",cv:"W100",f:"15 Jul 15:00"}
+  ]},
+  {id:"ter",lbl:"3er y 4to Puesto",pts:"10pts signo · 12pts exacto · 20pts cruce exacto",nota:"Resultado a 120min.",ps:[
+    {id:103,cl:"L101",cv:"L102",f:"18 Jul 17:00"}
+  ]},
+  {id:"fin",lbl:"Final",pts:"14pts signo · 16pts exacto · 20pts clasificado · 25pts cruce exacto",nota:"★ 20pts adicionales si acertaste el Campeón. Resultado a 120min.",ps:[
+    {id:104,cl:"W101",cv:"W102",f:"19 Jul 15:00"}
+  ]}
+];
+
+var HONOR=[
+  {k:"campeon",l:"🏆 Campeón",pts:40},{k:"subcampeon",l:"🥈 Subcampeón",pts:25},{k:"tercero_h",l:"🥉 Tercer puesto",pts:15},
+  {k:"bota_oro",l:"⚽ Bota de Oro",pts:15},{k:"bota_plata",l:"⚽ Bota de Plata",pts:10},{k:"bota_bronce",l:"⚽ Bota de Bronce",pts:7},
+  {k:"balon_oro",l:"🏅 Balón de Oro",pts:15},{k:"balon_plata",l:"🏅 Balón de Plata",pts:10},{k:"balon_bronce",l:"🏅 Balón de Bronce",pts:7},
+  {k:"guante_oro",l:"🧤 Guante de Oro",pts:15}
+];
+
+var pronos={}, hvals={};
+var GK=Object.keys(GEQ);
+// 12 grupos + D16 + 5 fases elim = 18 pasos (índices 0-17)
+var TOTAL=GK.length+1+ELIM.length; // 18
+
+// ============================================================
+// MOTOR FIFA — clasificación de grupo con Head-to-Head (B1+F1 FIX)
+// Criterios: Pts > H2H(Pts > DG > GF) > DG global > GF global > alfa
+// ============================================================
+function clasGrupo(g){
+  var eq=GEQ[g];
+  var stats={};
+  eq.forEach(function(e){stats[e]={pts:0,dg:0,gf:0,j:0,g:0,emp:0,p:0};});
+
+  var partidos=PG.filter(function(p){return p.g===g;});
+  partidos.forEach(function(p){
+    var pr=pronos[p.id];
+    if(!pr||pr.gl==null||pr.gv==null)return;
+    var gl=parseInt(pr.gl),gv=parseInt(pr.gv);
+    if(isNaN(gl)||isNaN(gv))return;
+    stats[p.l].gf+=gl; stats[p.l].dg+=(gl-gv); stats[p.l].j++;
+    stats[p.v].gf+=gv; stats[p.v].dg+=(gv-gl); stats[p.v].j++;
+    if(gl>gv){stats[p.l].pts+=3;stats[p.l].g++;stats[p.v].p++;}
+    else if(gl<gv){stats[p.v].pts+=3;stats[p.v].g++;stats[p.l].p++;}
+    else{stats[p.l].pts+=1;stats[p.l].emp++;stats[p.v].pts+=1;stats[p.v].emp++;}
+  });
+
+  // Ordenar con Head-to-Head para empatados
+  var sorted=eq.slice().sort(function(a,b){
+    if(stats[b].pts!==stats[a].pts)return stats[b].pts-stats[a].pts;
+    // H2H entre los empatados
+    var h2h=calcH2H([a,b],g);
+    if(h2h[b].pts!==h2h[a].pts)return h2h[b].pts-h2h[a].pts;
+    if(h2h[b].dg!==h2h[a].dg)return h2h[b].dg-h2h[a].dg;
+    if(h2h[b].gf!==h2h[a].gf)return h2h[b].gf-h2h[a].gf;
+    // DG global
+    if(stats[b].dg!==stats[a].dg)return stats[b].dg-stats[a].dg;
+    if(stats[b].gf!==stats[a].gf)return stats[b].gf-stats[a].gf;
+    return a.localeCompare(b);
+  });
+
+  return {orden:sorted,stats:stats};
+}
+
+// Calcula H2H entre un subconjunto de equipos
+function calcH2H(equipos,g){
+  var h={};equipos.forEach(function(e){h[e]={pts:0,dg:0,gf:0};});
+  PG.filter(function(p){return p.g===g&&equipos.indexOf(p.l)>=0&&equipos.indexOf(p.v)>=0;}).forEach(function(p){
+    var pr=pronos[p.id];
+    if(!pr||pr.gl==null||pr.gv==null)return;
+    var gl=parseInt(pr.gl),gv=parseInt(pr.gv);
+    if(isNaN(gl)||isNaN(gv))return;
+    h[p.l].gf+=gl;h[p.l].dg+=(gl-gv);h[p.v].gf+=gv;h[p.v].dg+=(gv-gl);
+    if(gl>gv)h[p.l].pts+=3;else if(gl<gv)h[p.v].pts+=3;else{h[p.l].pts+=1;h[p.v].pts+=1;}
+  });
+  return h;
+}
+
+// ============================================================
+// TABLA FIFA OFICIAL — 495 combinaciones de mejores terceros
+// ============================================================
+var COMBOS={"EFGHIJKL":{74:'F',77:'G',79:'E',80:'K',81:'I',82:'H',85:'J',87:'L'},
+"DFGHIJKL":{74:'D',77:'F',79:'H',80:'K',81:'I',82:'J',85:'G',87:'L'},
+"DEGHIJKL":{74:'D',77:'G',79:'E',80:'K',81:'I',82:'H',85:'J',87:'L'},
+"DEFHIJKL":{74:'D',77:'F',79:'E',80:'K',81:'I',82:'H',85:'J',87:'L'},
+"DEFGIJKL":{74:'D',77:'F',79:'E',80:'K',81:'I',82:'J',85:'G',87:'L'},
+"DEFGHJKL":{74:'D',77:'F',79:'E',80:'K',81:'J',82:'H',85:'G',87:'L'},
+"DEFGHIKL":{74:'D',77:'F',79:'E',80:'K',81:'I',82:'H',85:'G',87:'L'},
+"DEFGHIJL":{74:'D',77:'F',79:'E',80:'I',81:'J',82:'H',85:'G',87:'L'},
+"DEFGHIJK":{74:'D',77:'F',79:'E',80:'K',81:'J',82:'H',85:'G',87:'I'},
+"CFGHIJKL":{74:'C',77:'F',79:'H',80:'K',81:'I',82:'J',85:'G',87:'L'},
+"CEGHIJKL":{74:'C',77:'G',79:'E',80:'K',81:'I',82:'H',85:'J',87:'L'},
+"CEFHIJKL":{74:'C',77:'F',79:'E',80:'K',81:'I',82:'H',85:'J',87:'L'},
+"CEFGIJKL":{74:'C',77:'F',79:'E',80:'K',81:'I',82:'J',85:'G',87:'L'},
+"CEFGHJKL":{74:'C',77:'F',79:'E',80:'K',81:'J',82:'H',85:'G',87:'L'},
+"CEFGHIKL":{74:'C',77:'F',79:'E',80:'K',81:'I',82:'H',85:'G',87:'L'},
+"CEFGHIJL":{74:'C',77:'F',79:'E',80:'I',81:'J',82:'H',85:'G',87:'L'},
+"CEFGHIJK":{74:'C',77:'F',79:'E',80:'K',81:'J',82:'H',85:'G',87:'I'},
+"CDGHIJKL":{74:'C',77:'D',79:'H',80:'K',81:'I',82:'J',85:'G',87:'L'},
+"CDFHIJKL":{74:'D',77:'F',79:'C',80:'K',81:'I',82:'H',85:'J',87:'L'},
+"CDFGIJKL":{74:'D',77:'F',79:'C',80:'K',81:'I',82:'J',85:'G',87:'L'},
+"CDFGHJKL":{74:'D',77:'F',79:'C',80:'K',81:'J',82:'H',85:'G',87:'L'},
+"CDFGHIKL":{74:'D',77:'F',79:'C',80:'K',81:'I',82:'H',85:'G',87:'L'},
+"CDFGHIJL":{74:'D',77:'F',79:'C',80:'I',81:'J',82:'H',85:'G',87:'L'},
+"CDFGHIJK":{74:'D',77:'F',79:'C',80:'K',81:'J',82:'H',85:'G',87:'I'},
+"CDEHIJKL":{74:'C',77:'D',79:'E',80:'K',81:'I',82:'H',85:'J',87:'L'},
+"CDEGIJKL":{74:'C',77:'D',79:'E',80:'K',81:'I',82:'J',85:'G',87:'L'},
+"CDEGHJKL":{74:'C',77:'D',79:'E',80:'K',81:'J',82:'H',85:'G',87:'L'},
+"CDEGHIKL":{74:'C',77:'D',79:'E',80:'K',81:'I',82:'H',85:'G',87:'L'},
+"CDEGHIJL":{74:'C',77:'D',79:'E',80:'I',81:'J',82:'H',85:'G',87:'L'},
+"CDEGHIJK":{74:'C',77:'D',79:'E',80:'K',81:'J',82:'H',85:'G',87:'I'},
+"CDEFIJKL":{74:'D',77:'F',79:'C',80:'K',81:'E',82:'I',85:'J',87:'L'},
+"CDEFHJKL":{74:'D',77:'F',79:'C',80:'K',81:'E',82:'H',85:'J',87:'L'},
+"CDEFHIKL":{74:'D',77:'F',79:'C',80:'K',81:'I',82:'H',85:'E',87:'L'},
+"CDEFHIJL":{74:'D',77:'F',79:'C',80:'I',81:'E',82:'H',85:'J',87:'L'},
+"CDEFHIJK":{74:'D',77:'F',79:'C',80:'K',81:'E',82:'H',85:'J',87:'I'},
+"CDEFGJKL":{74:'D',77:'F',79:'C',80:'K',81:'E',82:'J',85:'G',87:'L'},
+"CDEFGIKL":{74:'D',77:'F',79:'C',80:'K',81:'E',82:'I',85:'G',87:'L'},
+"CDEFGIJL":{74:'D',77:'F',79:'C',80:'I',81:'E',82:'J',85:'G',87:'L'},
+"CDEFGIJK":{74:'D',77:'F',79:'C',80:'K',81:'E',82:'J',85:'G',87:'I'},
+"CDEFGHKL":{74:'D',77:'F',79:'C',80:'K',81:'E',82:'H',85:'G',87:'L'},
+"CDEFGHJL":{74:'D',77:'F',79:'C',80:'E',81:'J',82:'H',85:'G',87:'L'},
+"CDEFGHJK":{74:'D',77:'F',79:'C',80:'K',81:'J',82:'H',85:'G',87:'E'},
+"CDEFGHIL":{74:'D',77:'F',79:'C',80:'I',81:'E',82:'H',85:'G',87:'L'},
+"CDEFGHIK":{74:'D',77:'F',79:'C',80:'K',81:'E',82:'H',85:'G',87:'I'},
+"CDEFGHIJ":{74:'D',77:'F',79:'C',80:'I',81:'J',82:'H',85:'G',87:'E'},
+"BFGHIJKL":{74:'F',77:'G',79:'H',80:'K',81:'B',82:'I',85:'J',87:'L'},
+"BEGHIJKL":{74:'B',77:'G',79:'E',80:'K',81:'I',82:'H',85:'J',87:'L'},
+"BEFHIJKL":{74:'F',77:'H',79:'E',80:'K',81:'B',82:'I',85:'J',87:'L'},
+"BEFGIJKL":{74:'F',77:'G',79:'E',80:'K',81:'B',82:'I',85:'J',87:'L'},
+"BEFGHJKL":{74:'F',77:'G',79:'E',80:'K',81:'B',82:'H',85:'J',87:'L'},
+"BEFGHIKL":{74:'F',77:'H',79:'E',80:'K',81:'B',82:'I',85:'G',87:'L'},
+"BEFGHIJL":{74:'F',77:'G',79:'E',80:'I',81:'B',82:'H',85:'J',87:'L'},
+"BEFGHIJK":{74:'F',77:'G',79:'E',80:'K',81:'B',82:'H',85:'J',87:'I'},
+"BDGHIJKL":{74:'D',77:'G',79:'H',80:'K',81:'B',82:'I',85:'J',87:'L'},
+"BDFHIJKL":{74:'D',77:'F',79:'H',80:'K',81:'B',82:'I',85:'J',87:'L'},
+"BDFGIJKL":{74:'D',77:'F',79:'I',80:'K',81:'B',82:'J',85:'G',87:'L'},
+"BDFGHJKL":{74:'D',77:'F',79:'H',80:'K',81:'B',82:'J',85:'G',87:'L'},
+"BDFGHIKL":{74:'D',77:'F',79:'H',80:'K',81:'B',82:'I',85:'G',87:'L'},
+"BDFGHIJL":{74:'D',77:'F',79:'H',80:'I',81:'B',82:'J',85:'G',87:'L'},
+"BDFGHIJK":{74:'D',77:'F',79:'H',80:'K',81:'B',82:'J',85:'G',87:'I'},
+"BDEHIJKL":{74:'D',77:'H',79:'E',80:'K',81:'B',82:'I',85:'J',87:'L'},
+"BDEGIJKL":{74:'D',77:'G',79:'E',80:'K',81:'B',82:'I',85:'J',87:'L'},
+"BDEGHJKL":{74:'D',77:'G',79:'E',80:'K',81:'B',82:'H',85:'J',87:'L'},
+"BDEGHIKL":{74:'D',77:'H',79:'E',80:'K',81:'B',82:'I',85:'G',87:'L'},
+"BDEGHIJL":{74:'D',77:'G',79:'E',80:'I',81:'B',82:'H',85:'J',87:'L'},
+"BDEGHIJK":{74:'D',77:'G',79:'E',80:'K',81:'B',82:'H',85:'J',87:'I'},
+"BDEFIJKL":{74:'D',77:'F',79:'E',80:'K',81:'B',82:'I',85:'J',87:'L'},
+"BDEFHJKL":{74:'D',77:'F',79:'E',80:'K',81:'B',82:'H',85:'J',87:'L'},
+"BDEFHIKL":{74:'D',77:'F',79:'E',80:'K',81:'B',82:'H',85:'I',87:'L'},
+"BDEFHIJL":{74:'D',77:'F',79:'E',80:'I',81:'B',82:'H',85:'J',87:'L'},
+"BDEFHIJK":{74:'D',77:'F',79:'E',80:'K',81:'B',82:'H',85:'J',87:'I'},
+"BDEFGJKL":{74:'D',77:'F',79:'E',80:'K',81:'B',82:'J',85:'G',87:'L'},
+"BDEFGIKL":{74:'D',77:'F',79:'E',80:'K',81:'B',82:'I',85:'G',87:'L'},
+"BDEFGIJL":{74:'D',77:'F',79:'E',80:'I',81:'B',82:'J',85:'G',87:'L'},
+"BDEFGIJK":{74:'D',77:'F',79:'E',80:'K',81:'B',82:'J',85:'G',87:'I'},
+"BDEFGHKL":{74:'D',77:'F',79:'E',80:'K',81:'B',82:'H',85:'G',87:'L'},
+"BDEFGHJL":{74:'D',77:'F',79:'H',80:'E',81:'B',82:'J',85:'G',87:'L'},
+"BDEFGHJK":{74:'D',77:'F',79:'H',80:'K',81:'B',82:'J',85:'G',87:'E'},
+"BDEFGHIL":{74:'D',77:'F',79:'E',80:'I',81:'B',82:'H',85:'G',87:'L'},
+"BDEFGHIK":{74:'D',77:'F',79:'E',80:'K',81:'B',82:'H',85:'G',87:'I'},
+"BDEFGHIJ":{74:'D',77:'F',79:'H',80:'I',81:'B',82:'J',85:'G',87:'E'},
+"BCGHIJKL":{74:'C',77:'G',79:'H',80:'K',81:'B',82:'I',85:'J',87:'L'},
+"BCFHIJKL":{74:'C',77:'F',79:'H',80:'K',81:'B',82:'I',85:'J',87:'L'},
+"BCFGIJKL":{74:'C',77:'F',79:'I',80:'K',81:'B',82:'J',85:'G',87:'L'},
+"BCFGHJKL":{74:'C',77:'F',79:'H',80:'K',81:'B',82:'J',85:'G',87:'L'},
+"BCFGHIKL":{74:'C',77:'F',79:'H',80:'K',81:'B',82:'I',85:'G',87:'L'},
+"BCFGHIJL":{74:'C',77:'F',79:'H',80:'I',81:'B',82:'J',85:'G',87:'L'},
+"BCFGHIJK":{74:'C',77:'F',79:'H',80:'K',81:'B',82:'J',85:'G',87:'I'},
+"BCEHIJKL":{74:'C',77:'H',79:'E',80:'K',81:'B',82:'I',85:'J',87:'L'},
+"BCEGIJKL":{74:'C',77:'G',79:'E',80:'K',81:'B',82:'I',85:'J',87:'L'},
+"BCEGHJKL":{74:'C',77:'G',79:'E',80:'K',81:'B',82:'H',85:'J',87:'L'},
+"BCEGHIKL":{74:'C',77:'H',79:'E',80:'K',81:'B',82:'I',85:'G',87:'L'},
+"BCEGHIJL":{74:'C',77:'G',79:'E',80:'I',81:'B',82:'H',85:'J',87:'L'},
+"BCEGHIJK":{74:'C',77:'G',79:'E',80:'K',81:'B',82:'H',85:'J',87:'I'},
+"BCEFIJKL":{74:'C',77:'F',79:'E',80:'K',81:'B',82:'I',85:'J',87:'L'},
+"BCEFHJKL":{74:'C',77:'F',79:'E',80:'K',81:'B',82:'H',85:'J',87:'L'},
+"BCEFHIKL":{74:'C',77:'F',79:'E',80:'K',81:'B',82:'H',85:'I',87:'L'},
+"BCEFHIJL":{74:'C',77:'F',79:'E',80:'I',81:'B',82:'H',85:'J',87:'L'},
+"BCEFHIJK":{74:'C',77:'F',79:'E',80:'K',81:'B',82:'H',85:'J',87:'I'},
+"BCEFGJKL":{74:'C',77:'F',79:'E',80:'K',81:'B',82:'J',85:'G',87:'L'},
+"BCEFGIKL":{74:'C',77:'F',79:'E',80:'K',81:'B',82:'I',85:'G',87:'L'},
+"BCEFGIJL":{74:'C',77:'F',79:'E',80:'I',81:'B',82:'J',85:'G',87:'L'},
+"BCEFGIJK":{74:'C',77:'F',79:'E',80:'K',81:'B',82:'J',85:'G',87:'I'},
+"BCEFGHKL":{74:'C',77:'F',79:'E',80:'K',81:'B',82:'H',85:'G',87:'L'},
+"BCEFGHJL":{74:'C',77:'F',79:'H',80:'E',81:'B',82:'J',85:'G',87:'L'},
+"BCEFGHJK":{74:'C',77:'F',79:'H',80:'K',81:'B',82:'J',85:'G',87:'E'},
+"BCEFGHIL":{74:'C',77:'F',79:'E',80:'I',81:'B',82:'H',85:'G',87:'L'},
+"BCEFGHIK":{74:'C',77:'F',79:'E',80:'K',81:'B',82:'H',85:'G',87:'I'},
+"BCEFGHIJ":{74:'C',77:'F',79:'H',80:'I',81:'B',82:'J',85:'G',87:'E'},
+"BCDHIJKL":{74:'C',77:'D',79:'H',80:'K',81:'B',82:'I',85:'J',87:'L'},
+"BCDGIJKL":{74:'C',77:'D',79:'I',80:'K',81:'B',82:'J',85:'G',87:'L'},
+"BCDGHJKL":{74:'C',77:'D',79:'H',80:'K',81:'B',82:'J',85:'G',87:'L'},
+"BCDGHIKL":{74:'C',77:'D',79:'H',80:'K',81:'B',82:'I',85:'G',87:'L'},
+"BCDGHIJL":{74:'C',77:'D',79:'H',80:'I',81:'B',82:'J',85:'G',87:'L'},
+"BCDGHIJK":{74:'C',77:'D',79:'H',80:'K',81:'B',82:'J',85:'G',87:'I'},
+"BCDFIJKL":{74:'D',77:'F',79:'C',80:'K',81:'B',82:'I',85:'J',87:'L'},
+"BCDFHJKL":{74:'D',77:'F',79:'C',80:'K',81:'B',82:'H',85:'J',87:'L'},
+"BCDFHIKL":{74:'D',77:'F',79:'C',80:'K',81:'B',82:'H',85:'I',87:'L'},
+"BCDFHIJL":{74:'D',77:'F',79:'C',80:'I',81:'B',82:'H',85:'J',87:'L'},
+"BCDFHIJK":{74:'D',77:'F',79:'C',80:'K',81:'B',82:'H',85:'J',87:'I'},
+"BCDFGJKL":{74:'D',77:'F',79:'C',80:'K',81:'B',82:'J',85:'G',87:'L'},
+"BCDFGIKL":{74:'D',77:'F',79:'C',80:'K',81:'B',82:'I',85:'G',87:'L'},
+"BCDFGIJL":{74:'D',77:'F',79:'C',80:'I',81:'B',82:'J',85:'G',87:'L'},
+"BCDFGIJK":{74:'D',77:'F',79:'C',80:'K',81:'B',82:'J',85:'G',87:'I'},
+"BCDFGHKL":{74:'D',77:'F',79:'C',80:'K',81:'B',82:'H',85:'G',87:'L'},
+"BCDFGHJL":{74:'D',77:'F',79:'C',80:'J',81:'B',82:'H',85:'G',87:'L'},
+"BCDFGHJK":{74:'C',77:'F',79:'H',80:'K',81:'B',82:'J',85:'G',87:'D'},
+"BCDFGHIL":{74:'D',77:'F',79:'C',80:'I',81:'B',82:'H',85:'G',87:'L'},
+"BCDFGHIK":{74:'D',77:'F',79:'C',80:'K',81:'B',82:'H',85:'G',87:'I'},
+"BCDFGHIJ":{74:'C',77:'F',79:'H',80:'I',81:'B',82:'J',85:'G',87:'D'},
+"BCDEIJKL":{74:'C',77:'D',79:'E',80:'K',81:'B',82:'I',85:'J',87:'L'},
+"BCDEHJKL":{74:'C',77:'D',79:'E',80:'K',81:'B',82:'H',85:'J',87:'L'},
+"BCDEHIKL":{74:'C',77:'D',79:'E',80:'K',81:'B',82:'H',85:'I',87:'L'},
+"BCDEHIJL":{74:'C',77:'D',79:'E',80:'I',81:'B',82:'H',85:'J',87:'L'},
+"BCDEHIJK":{74:'C',77:'D',79:'E',80:'K',81:'B',82:'H',85:'J',87:'I'},
+"BCDEGJKL":{74:'C',77:'D',79:'E',80:'K',81:'B',82:'J',85:'G',87:'L'},
+"BCDEGIKL":{74:'C',77:'D',79:'E',80:'K',81:'B',82:'I',85:'G',87:'L'},
+"BCDEGIJL":{74:'C',77:'D',79:'E',80:'I',81:'B',82:'J',85:'G',87:'L'},
+"BCDEGIJK":{74:'C',77:'D',79:'E',80:'K',81:'B',82:'J',85:'G',87:'I'},
+"BCDEGHKL":{74:'C',77:'D',79:'E',80:'K',81:'B',82:'H',85:'G',87:'L'},
+"BCDEGHJL":{74:'C',77:'D',79:'H',80:'E',81:'B',82:'J',85:'G',87:'L'},
+"BCDEGHJK":{74:'C',77:'D',79:'H',80:'K',81:'B',82:'J',85:'G',87:'E'},
+"BCDEGHIL":{74:'C',77:'D',79:'E',80:'I',81:'B',82:'H',85:'G',87:'L'},
+"BCDEGHIK":{74:'C',77:'D',79:'E',80:'K',81:'B',82:'H',85:'G',87:'I'},
+"BCDEGHIJ":{74:'C',77:'D',79:'H',80:'I',81:'B',82:'J',85:'G',87:'E'},
+"BCDEFJKL":{74:'D',77:'F',79:'C',80:'K',81:'B',82:'E',85:'J',87:'L'},
+"BCDEFIKL":{74:'D',77:'F',79:'C',80:'K',81:'B',82:'I',85:'E',87:'L'},
+"BCDEFIJL":{74:'D',77:'F',79:'C',80:'I',81:'B',82:'E',85:'J',87:'L'},
+"BCDEFIJK":{74:'D',77:'F',79:'C',80:'K',81:'B',82:'E',85:'J',87:'I'},
+"BCDEFHKL":{74:'D',77:'F',79:'C',80:'K',81:'B',82:'H',85:'E',87:'L'},
+"BCDEFHJL":{74:'D',77:'F',79:'C',80:'E',81:'B',82:'H',85:'J',87:'L'},
+"BCDEFHJK":{74:'D',77:'F',79:'C',80:'K',81:'B',82:'H',85:'J',87:'E'},
+"BCDEFHIL":{74:'D',77:'F',79:'C',80:'I',81:'B',82:'H',85:'E',87:'L'},
+"BCDEFHIK":{74:'D',77:'F',79:'C',80:'K',81:'B',82:'H',85:'E',87:'I'},
+"BCDEFHIJ":{74:'D',77:'F',79:'C',80:'I',81:'B',82:'H',85:'J',87:'E'},
+"BCDEFGKL":{74:'D',77:'F',79:'C',80:'K',81:'B',82:'E',85:'G',87:'L'},
+"BCDEFGJL":{74:'D',77:'F',79:'C',80:'E',81:'B',82:'J',85:'G',87:'L'},
+"BCDEFGJK":{74:'D',77:'F',79:'C',80:'K',81:'B',82:'J',85:'G',87:'E'},
+"BCDEFGIL":{74:'D',77:'F',79:'C',80:'I',81:'B',82:'E',85:'G',87:'L'},
+"BCDEFGIK":{74:'D',77:'F',79:'C',80:'K',81:'B',82:'E',85:'G',87:'I'},
+"BCDEFGIJ":{74:'D',77:'F',79:'C',80:'I',81:'B',82:'J',85:'G',87:'E'},
+"BCDEFGHL":{74:'D',77:'F',79:'C',80:'E',81:'B',82:'H',85:'G',87:'L'},
+"BCDEFGHK":{74:'D',77:'F',79:'C',80:'K',81:'B',82:'H',85:'G',87:'E'},
+"BCDEFGHJ":{74:'C',77:'F',79:'H',80:'E',81:'B',82:'J',85:'G',87:'D'},
+"BCDEFGHI":{74:'D',77:'F',79:'C',80:'I',81:'B',82:'H',85:'G',87:'E'},
+"AFGHIJKL":{74:'F',77:'G',79:'H',80:'K',81:'I',82:'A',85:'J',87:'L'},
+"AEGHIJKL":{74:'A',77:'G',79:'E',80:'K',81:'I',82:'H',85:'J',87:'L'},
+"AEFHIJKL":{74:'F',77:'H',79:'E',80:'K',81:'I',82:'A',85:'J',87:'L'},
+"AEFGIJKL":{74:'F',77:'G',79:'E',80:'K',81:'I',82:'A',85:'J',87:'L'},
+"AEFGHJKL":{74:'F',77:'H',79:'E',80:'K',81:'J',82:'A',85:'G',87:'L'},
+"AEFGHIKL":{74:'F',77:'H',79:'E',80:'K',81:'I',82:'A',85:'G',87:'L'},
+"AEFGHIJL":{74:'F',77:'H',79:'E',80:'I',81:'J',82:'A',85:'G',87:'L'},
+"AEFGHIJK":{74:'F',77:'H',79:'E',80:'K',81:'J',82:'A',85:'G',87:'I'},
+"ADGHIJKL":{74:'D',77:'G',79:'H',80:'K',81:'I',82:'A',85:'J',87:'L'},
+"ADFHIJKL":{74:'D',77:'F',79:'H',80:'K',81:'I',82:'A',85:'J',87:'L'},
+"ADFGIJKL":{74:'D',77:'F',79:'I',80:'K',81:'J',82:'A',85:'G',87:'L'},
+"ADFGHJKL":{74:'D',77:'F',79:'H',80:'K',81:'J',82:'A',85:'G',87:'L'},
+"ADFGHIKL":{74:'D',77:'F',79:'H',80:'K',81:'I',82:'A',85:'G',87:'L'},
+"ADFGHIJL":{74:'D',77:'F',79:'H',80:'I',81:'J',82:'A',85:'G',87:'L'},
+"ADFGHIJK":{74:'D',77:'F',79:'H',80:'K',81:'J',82:'A',85:'G',87:'I'},
+"ADEHIJKL":{74:'D',77:'H',79:'E',80:'K',81:'I',82:'A',85:'J',87:'L'},
+"ADEGIJKL":{74:'D',77:'G',79:'E',80:'K',81:'I',82:'A',85:'J',87:'L'},
+"ADEGHJKL":{74:'D',77:'H',79:'E',80:'K',81:'J',82:'A',85:'G',87:'L'},
+"ADEGHIKL":{74:'D',77:'H',79:'E',80:'K',81:'I',82:'A',85:'G',87:'L'},
+"ADEGHIJL":{74:'D',77:'H',79:'E',80:'I',81:'J',82:'A',85:'G',87:'L'},
+"ADEGHIJK":{74:'D',77:'H',79:'E',80:'K',81:'J',82:'A',85:'G',87:'I'},
+"ADEFIJKL":{74:'D',77:'F',79:'E',80:'K',81:'I',82:'A',85:'J',87:'L'},
+"ADEFHJKL":{74:'D',77:'F',79:'H',80:'K',81:'E',82:'A',85:'J',87:'L'},
+"ADEFHIKL":{74:'D',77:'F',79:'H',80:'K',81:'I',82:'A',85:'E',87:'L'},
+"ADEFHIJL":{74:'D',77:'F',79:'H',80:'I',81:'E',82:'A',85:'J',87:'L'},
+"ADEFHIJK":{74:'D',77:'F',79:'H',80:'K',81:'E',82:'A',85:'J',87:'I'},
+"ADEFGJKL":{74:'D',77:'F',79:'E',80:'K',81:'J',82:'A',85:'G',87:'L'},
+"ADEFGIKL":{74:'D',77:'F',79:'E',80:'K',81:'I',82:'A',85:'G',87:'L'},
+"ADEFGIJL":{74:'D',77:'F',79:'E',80:'I',81:'J',82:'A',85:'G',87:'L'},
+"ADEFGIJK":{74:'D',77:'F',79:'E',80:'K',81:'J',82:'A',85:'G',87:'I'},
+"ADEFGHKL":{74:'D',77:'F',79:'H',80:'K',81:'E',82:'A',85:'G',87:'L'},
+"ADEFGHJL":{74:'D',77:'F',79:'H',80:'E',81:'J',82:'A',85:'G',87:'L'},
+"ADEFGHJK":{74:'D',77:'F',79:'H',80:'K',81:'J',82:'A',85:'G',87:'E'},
+"ADEFGHIL":{74:'D',77:'F',79:'H',80:'I',81:'E',82:'A',85:'G',87:'L'},
+"ADEFGHIK":{74:'D',77:'F',79:'H',80:'K',81:'E',82:'A',85:'G',87:'I'},
+"ADEFGHIJ":{74:'D',77:'F',79:'H',80:'I',81:'J',82:'A',85:'G',87:'E'},
+"ACGHIJKL":{74:'C',77:'G',79:'H',80:'K',81:'I',82:'A',85:'J',87:'L'},
+"ACFHIJKL":{74:'C',77:'F',79:'H',80:'K',81:'I',82:'A',85:'J',87:'L'},
+"ACFGIJKL":{74:'C',77:'F',79:'I',80:'K',81:'J',82:'A',85:'G',87:'L'},
+"ACFGHJKL":{74:'C',77:'F',79:'H',80:'K',81:'J',82:'A',85:'G',87:'L'},
+"ACFGHIKL":{74:'C',77:'F',79:'H',80:'K',81:'I',82:'A',85:'G',87:'L'},
+"ACFGHIJL":{74:'C',77:'F',79:'H',80:'I',81:'J',82:'A',85:'G',87:'L'},
+"ACFGHIJK":{74:'C',77:'F',79:'H',80:'K',81:'J',82:'A',85:'G',87:'I'},
+"ACEHIJKL":{74:'C',77:'H',79:'E',80:'K',81:'I',82:'A',85:'J',87:'L'},
+"ACEGIJKL":{74:'C',77:'G',79:'E',80:'K',81:'I',82:'A',85:'J',87:'L'},
+"ACEGHJKL":{74:'C',77:'H',79:'E',80:'K',81:'J',82:'A',85:'G',87:'L'},
+"ACEGHIKL":{74:'C',77:'H',79:'E',80:'K',81:'I',82:'A',85:'G',87:'L'},
+"ACEGHIJL":{74:'C',77:'H',79:'E',80:'I',81:'J',82:'A',85:'G',87:'L'},
+"ACEGHIJK":{74:'C',77:'H',79:'E',80:'K',81:'J',82:'A',85:'G',87:'I'},
+"ACEFIJKL":{74:'C',77:'F',79:'E',80:'K',81:'I',82:'A',85:'J',87:'L'},
+"ACEFHJKL":{74:'C',77:'F',79:'H',80:'K',81:'E',82:'A',85:'J',87:'L'},
+"ACEFHIKL":{74:'C',77:'F',79:'H',80:'K',81:'I',82:'A',85:'E',87:'L'},
+"ACEFHIJL":{74:'C',77:'F',79:'H',80:'I',81:'E',82:'A',85:'J',87:'L'},
+"ACEFHIJK":{74:'C',77:'F',79:'H',80:'K',81:'E',82:'A',85:'J',87:'I'},
+"ACEFGJKL":{74:'C',77:'F',79:'E',80:'K',81:'J',82:'A',85:'G',87:'L'},
+"ACEFGIKL":{74:'C',77:'F',79:'E',80:'K',81:'I',82:'A',85:'G',87:'L'},
+"ACEFGIJL":{74:'C',77:'F',79:'E',80:'I',81:'J',82:'A',85:'G',87:'L'},
+"ACEFGIJK":{74:'C',77:'F',79:'E',80:'K',81:'J',82:'A',85:'G',87:'I'},
+"ACEFGHKL":{74:'C',77:'F',79:'H',80:'K',81:'E',82:'A',85:'G',87:'L'},
+"ACEFGHJL":{74:'C',77:'F',79:'H',80:'E',81:'J',82:'A',85:'G',87:'L'},
+"ACEFGHJK":{74:'C',77:'F',79:'H',80:'K',81:'J',82:'A',85:'G',87:'E'},
+"ACEFGHIL":{74:'C',77:'F',79:'H',80:'I',81:'E',82:'A',85:'G',87:'L'},
+"ACEFGHIK":{74:'C',77:'F',79:'H',80:'K',81:'E',82:'A',85:'G',87:'I'},
+"ACEFGHIJ":{74:'C',77:'F',79:'H',80:'I',81:'J',82:'A',85:'G',87:'E'},
+"ACDHIJKL":{74:'C',77:'D',79:'H',80:'K',81:'I',82:'A',85:'J',87:'L'},
+"ACDGIJKL":{74:'C',77:'D',79:'I',80:'K',81:'J',82:'A',85:'G',87:'L'},
+"ACDGHJKL":{74:'C',77:'D',79:'H',80:'K',81:'J',82:'A',85:'G',87:'L'},
+"ACDGHIKL":{74:'C',77:'D',79:'H',80:'K',81:'I',82:'A',85:'G',87:'L'},
+"ACDGHIJL":{74:'C',77:'D',79:'H',80:'I',81:'J',82:'A',85:'G',87:'L'},
+"ACDGHIJK":{74:'C',77:'D',79:'H',80:'K',81:'J',82:'A',85:'G',87:'I'},
+"ACDFIJKL":{74:'D',77:'F',79:'C',80:'K',81:'I',82:'A',85:'J',87:'L'},
+"ACDFHJKL":{74:'C',77:'D',79:'H',80:'K',81:'F',82:'A',85:'J',87:'L'},
+"ACDFHIKL":{74:'C',77:'D',79:'H',80:'K',81:'I',82:'A',85:'F',87:'L'},
+"ACDFHIJL":{74:'C',77:'D',79:'H',80:'I',81:'F',82:'A',85:'J',87:'L'},
+"ACDFHIJK":{74:'C',77:'D',79:'H',80:'K',81:'F',82:'A',85:'J',87:'I'},
+"ACDFGJKL":{74:'D',77:'F',79:'C',80:'K',81:'J',82:'A',85:'G',87:'L'},
+"ACDFGIKL":{74:'D',77:'F',79:'C',80:'K',81:'I',82:'A',85:'G',87:'L'},
+"ACDFGIJL":{74:'D',77:'F',79:'C',80:'I',81:'J',82:'A',85:'G',87:'L'},
+"ACDFGIJK":{74:'D',77:'F',79:'C',80:'K',81:'J',82:'A',85:'G',87:'I'},
+"ACDFGHKL":{74:'C',77:'D',79:'H',80:'K',81:'F',82:'A',85:'G',87:'L'},
+"ACDFGHJL":{74:'D',77:'F',79:'C',80:'H',81:'J',82:'A',85:'G',87:'L'},
+"ACDFGHJK":{74:'C',77:'F',79:'H',80:'K',81:'J',82:'A',85:'G',87:'D'},
+"ACDFGHIL":{74:'C',77:'D',79:'H',80:'I',81:'F',82:'A',85:'G',87:'L'},
+"ACDFGHIK":{74:'C',77:'D',79:'H',80:'K',81:'F',82:'A',85:'G',87:'I'},
+"ACDFGHIJ":{74:'C',77:'F',79:'H',80:'I',81:'J',82:'A',85:'G',87:'D'},
+"ACDEIJKL":{74:'C',77:'D',79:'E',80:'K',81:'I',82:'A',85:'J',87:'L'},
+"ACDEHJKL":{74:'C',77:'D',79:'H',80:'K',81:'E',82:'A',85:'J',87:'L'},
+"ACDEHIKL":{74:'C',77:'D',79:'H',80:'K',81:'I',82:'A',85:'E',87:'L'},
+"ACDEHIJL":{74:'C',77:'D',79:'H',80:'I',81:'E',82:'A',85:'J',87:'L'},
+"ACDEHIJK":{74:'C',77:'D',79:'H',80:'K',81:'E',82:'A',85:'J',87:'I'},
+"ACDEGJKL":{74:'C',77:'D',79:'E',80:'K',81:'J',82:'A',85:'G',87:'L'},
+"ACDEGIKL":{74:'C',77:'D',79:'E',80:'K',81:'I',82:'A',85:'G',87:'L'},
+"ACDEGIJL":{74:'C',77:'D',79:'E',80:'I',81:'J',82:'A',85:'G',87:'L'},
+"ACDEGIJK":{74:'C',77:'D',79:'E',80:'K',81:'J',82:'A',85:'G',87:'I'},
+"ACDEGHKL":{74:'C',77:'D',79:'H',80:'K',81:'E',82:'A',85:'G',87:'L'},
+"ACDEGHJL":{74:'C',77:'D',79:'H',80:'E',81:'J',82:'A',85:'G',87:'L'},
+"ACDEGHJK":{74:'C',77:'D',79:'H',80:'K',81:'J',82:'A',85:'G',87:'E'},
+"ACDEGHIL":{74:'C',77:'D',79:'H',80:'I',81:'E',82:'A',85:'G',87:'L'},
+"ACDEGHIK":{74:'C',77:'D',79:'H',80:'K',81:'E',82:'A',85:'G',87:'I'},
+"ACDEGHIJ":{74:'C',77:'D',79:'H',80:'I',81:'J',82:'A',85:'G',87:'E'},
+"ACDEFJKL":{74:'D',77:'F',79:'C',80:'K',81:'E',82:'A',85:'J',87:'L'},
+"ACDEFIKL":{74:'D',77:'F',79:'C',80:'K',81:'I',82:'A',85:'E',87:'L'},
+"ACDEFIJL":{74:'D',77:'F',79:'C',80:'I',81:'E',82:'A',85:'J',87:'L'},
+"ACDEFIJK":{74:'D',77:'F',79:'C',80:'K',81:'E',82:'A',85:'J',87:'I'},
+"ACDEFHKL":{74:'C',77:'D',79:'H',80:'K',81:'F',82:'A',85:'E',87:'L'},
+"ACDEFHJL":{74:'C',77:'D',79:'H',80:'E',81:'F',82:'A',85:'J',87:'L'},
+"ACDEFHJK":{74:'C',77:'F',79:'H',80:'K',81:'E',82:'A',85:'J',87:'D'},
+"ACDEFHIL":{74:'C',77:'D',79:'H',80:'I',81:'F',82:'A',85:'E',87:'L'},
+"ACDEFHIK":{74:'C',77:'D',79:'H',80:'K',81:'F',82:'A',85:'E',87:'I'},
+"ACDEFHIJ":{74:'C',77:'F',79:'H',80:'I',81:'E',82:'A',85:'J',87:'D'},
+"ACDEFGKL":{74:'D',77:'F',79:'C',80:'K',81:'E',82:'A',85:'G',87:'L'},
+"ACDEFGJL":{74:'D',77:'F',79:'C',80:'E',81:'J',82:'A',85:'G',87:'L'},
+"ACDEFGJK":{74:'D',77:'F',79:'C',80:'K',81:'J',82:'A',85:'G',87:'E'},
+"ACDEFGIL":{74:'D',77:'F',79:'C',80:'I',81:'E',82:'A',85:'G',87:'L'},
+"ACDEFGIK":{74:'D',77:'F',79:'C',80:'K',81:'E',82:'A',85:'G',87:'I'},
+"ACDEFGIJ":{74:'D',77:'F',79:'C',80:'I',81:'J',82:'A',85:'G',87:'E'},
+"ACDEFGHL":{74:'C',77:'D',79:'H',80:'E',81:'F',82:'A',85:'G',87:'L'},
+"ACDEFGHK":{74:'C',77:'F',79:'H',80:'K',81:'E',82:'A',85:'G',87:'D'},
+"ACDEFGHJ":{74:'C',77:'F',79:'H',80:'E',81:'J',82:'A',85:'G',87:'D'},
+"ACDEFGHI":{74:'C',77:'F',79:'H',80:'I',81:'E',82:'A',85:'G',87:'D'},
+"ABGHIJKL":{74:'A',77:'G',79:'H',80:'K',81:'B',82:'I',85:'J',87:'L'},
+"ABFHIJKL":{74:'A',77:'F',79:'H',80:'K',81:'B',82:'I',85:'J',87:'L'},
+"ABFGIJKL":{74:'F',77:'G',79:'I',80:'K',81:'B',82:'A',85:'J',87:'L'},
+"ABFGHJKL":{74:'F',77:'G',79:'H',80:'K',81:'B',82:'A',85:'J',87:'L'},
+"ABFGHIKL":{74:'A',77:'F',79:'H',80:'K',81:'B',82:'I',85:'G',87:'L'},
+"ABFGHIJL":{74:'F',77:'G',79:'H',80:'I',81:'B',82:'A',85:'J',87:'L'},
+"ABFGHIJK":{74:'F',77:'G',79:'H',80:'K',81:'B',82:'A',85:'J',87:'I'},
+"ABEHIJKL":{74:'A',77:'H',79:'E',80:'K',81:'B',82:'I',85:'J',87:'L'},
+"ABEGIJKL":{74:'A',77:'G',79:'E',80:'K',81:'B',82:'I',85:'J',87:'L'},
+"ABEGHJKL":{74:'A',77:'G',79:'E',80:'K',81:'B',82:'H',85:'J',87:'L'},
+"ABEGHIKL":{74:'A',77:'H',79:'E',80:'K',81:'B',82:'I',85:'G',87:'L'},
+"ABEGHIJL":{74:'A',77:'G',79:'E',80:'I',81:'B',82:'H',85:'J',87:'L'},
+"ABEGHIJK":{74:'A',77:'G',79:'E',80:'K',81:'B',82:'H',85:'J',87:'I'},
+"ABEFIJKL":{74:'A',77:'F',79:'E',80:'K',81:'B',82:'I',85:'J',87:'L'},
+"ABEFHJKL":{74:'F',77:'H',79:'E',80:'K',81:'B',82:'A',85:'J',87:'L'},
+"ABEFHIKL":{74:'F',77:'H',79:'E',80:'K',81:'B',82:'A',85:'I',87:'L'},
+"ABEFHIJL":{74:'F',77:'H',79:'E',80:'I',81:'B',82:'A',85:'J',87:'L'},
+"ABEFHIJK":{74:'F',77:'H',79:'E',80:'K',81:'B',82:'A',85:'J',87:'I'},
+"ABEFGJKL":{74:'F',77:'G',79:'E',80:'K',81:'B',82:'A',85:'J',87:'L'},
+"ABEFGIKL":{74:'A',77:'F',79:'E',80:'K',81:'B',82:'I',85:'G',87:'L'},
+"ABEFGIJL":{74:'F',77:'G',79:'E',80:'I',81:'B',82:'A',85:'J',87:'L'},
+"ABEFGIJK":{74:'F',77:'G',79:'E',80:'K',81:'B',82:'A',85:'J',87:'I'},
+"ABEFGHKL":{74:'F',77:'H',79:'E',80:'K',81:'B',82:'A',85:'G',87:'L'},
+"ABEFGHJL":{74:'F',77:'G',79:'H',80:'E',81:'B',82:'A',85:'J',87:'L'},
+"ABEFGHJK":{74:'F',77:'G',79:'H',80:'K',81:'B',82:'A',85:'J',87:'E'},
+"ABEFGHIL":{74:'F',77:'H',79:'E',80:'I',81:'B',82:'A',85:'G',87:'L'},
+"ABEFGHIK":{74:'F',77:'H',79:'E',80:'K',81:'B',82:'A',85:'G',87:'I'},
+"ABEFGHIJ":{74:'F',77:'G',79:'H',80:'I',81:'B',82:'A',85:'J',87:'E'},
+"ABDHIJKL":{74:'D',77:'H',79:'I',80:'K',81:'B',82:'A',85:'J',87:'L'},
+"ABDGIJKL":{74:'D',77:'G',79:'I',80:'K',81:'B',82:'A',85:'J',87:'L'},
+"ABDGHJKL":{74:'D',77:'G',79:'H',80:'K',81:'B',82:'A',85:'J',87:'L'},
+"ABDGHIKL":{74:'D',77:'H',79:'I',80:'K',81:'B',82:'A',85:'G',87:'L'},
+"ABDGHIJL":{74:'D',77:'G',79:'H',80:'I',81:'B',82:'A',85:'J',87:'L'},
+"ABDGHIJK":{74:'D',77:'G',79:'H',80:'K',81:'B',82:'A',85:'J',87:'I'},
+"ABDFIJKL":{74:'D',77:'F',79:'I',80:'K',81:'B',82:'A',85:'J',87:'L'},
+"ABDFHJKL":{74:'D',77:'F',79:'H',80:'K',81:'B',82:'A',85:'J',87:'L'},
+"ABDFHIKL":{74:'D',77:'F',79:'H',80:'K',81:'B',82:'A',85:'I',87:'L'},
+"ABDFHIJL":{74:'D',77:'F',79:'H',80:'I',81:'B',82:'A',85:'J',87:'L'},
+"ABDFHIJK":{74:'D',77:'F',79:'H',80:'K',81:'B',82:'A',85:'J',87:'I'},
+"ABDFGJKL":{74:'D',77:'G',79:'F',80:'K',81:'B',82:'A',85:'J',87:'L'},
+"ABDFGIKL":{74:'D',77:'F',79:'I',80:'K',81:'B',82:'A',85:'G',87:'L'},
+"ABDFGIJL":{74:'D',77:'G',79:'F',80:'I',81:'B',82:'A',85:'J',87:'L'},
+"ABDFGIJK":{74:'D',77:'G',79:'F',80:'K',81:'B',82:'A',85:'J',87:'I'},
+"ABDFGHKL":{74:'D',77:'F',79:'H',80:'K',81:'B',82:'A',85:'G',87:'L'},
+"ABDFGHJL":{74:'D',77:'F',79:'H',80:'J',81:'B',82:'A',85:'G',87:'L'},
+"ABDFGHJK":{74:'D',77:'F',79:'H',80:'K',81:'B',82:'A',85:'G',87:'J'},
+"ABDFGHIL":{74:'D',77:'F',79:'H',80:'I',81:'B',82:'A',85:'G',87:'L'},
+"ABDFGHIK":{74:'D',77:'F',79:'H',80:'K',81:'B',82:'A',85:'G',87:'I'},
+"ABDFGHIJ":{74:'D',77:'F',79:'H',80:'J',81:'B',82:'A',85:'G',87:'I'},
+"ABDEIJKL":{74:'A',77:'D',79:'E',80:'K',81:'B',82:'I',85:'J',87:'L'},
+"ABDEHJKL":{74:'D',77:'H',79:'E',80:'K',81:'B',82:'A',85:'J',87:'L'},
+"ABDEHIKL":{74:'D',77:'H',79:'E',80:'K',81:'B',82:'A',85:'I',87:'L'},
+"ABDEHIJL":{74:'D',77:'H',79:'E',80:'I',81:'B',82:'A',85:'J',87:'L'},
+"ABDEHIJK":{74:'D',77:'H',79:'E',80:'K',81:'B',82:'A',85:'J',87:'I'},
+"ABDEGJKL":{74:'D',77:'G',79:'E',80:'K',81:'B',82:'A',85:'J',87:'L'},
+"ABDEGIKL":{74:'A',77:'D',79:'E',80:'K',81:'B',82:'I',85:'G',87:'L'},
+"ABDEGIJL":{74:'D',77:'G',79:'E',80:'I',81:'B',82:'A',85:'J',87:'L'},
+"ABDEGIJK":{74:'D',77:'G',79:'E',80:'K',81:'B',82:'A',85:'J',87:'I'},
+"ABDEGHKL":{74:'D',77:'H',79:'E',80:'K',81:'B',82:'A',85:'G',87:'L'},
+"ABDEGHJL":{74:'D',77:'G',79:'H',80:'E',81:'B',82:'A',85:'J',87:'L'},
+"ABDEGHJK":{74:'D',77:'G',79:'H',80:'K',81:'B',82:'A',85:'J',87:'E'},
+"ABDEGHIL":{74:'D',77:'H',79:'E',80:'I',81:'B',82:'A',85:'G',87:'L'},
+"ABDEGHIK":{74:'D',77:'H',79:'E',80:'K',81:'B',82:'A',85:'G',87:'I'},
+"ABDEGHIJ":{74:'D',77:'G',79:'H',80:'I',81:'B',82:'A',85:'J',87:'E'},
+"ABDEFJKL":{74:'D',77:'F',79:'E',80:'K',81:'B',82:'A',85:'J',87:'L'},
+"ABDEFIKL":{74:'D',77:'F',79:'E',80:'K',81:'B',82:'A',85:'I',87:'L'},
+"ABDEFIJL":{74:'D',77:'F',79:'E',80:'I',81:'B',82:'A',85:'J',87:'L'},
+"ABDEFIJK":{74:'D',77:'F',79:'E',80:'K',81:'B',82:'A',85:'J',87:'I'},
+"ABDEFHKL":{74:'D',77:'F',79:'H',80:'K',81:'B',82:'A',85:'E',87:'L'},
+"ABDEFHJL":{74:'D',77:'F',79:'H',80:'E',81:'B',82:'A',85:'J',87:'L'},
+"ABDEFHJK":{74:'D',77:'F',79:'H',80:'K',81:'B',82:'A',85:'J',87:'E'},
+"ABDEFHIL":{74:'D',77:'F',79:'H',80:'I',81:'B',82:'A',85:'E',87:'L'},
+"ABDEFHIK":{74:'D',77:'F',79:'H',80:'K',81:'B',82:'A',85:'E',87:'I'},
+"ABDEFHIJ":{74:'D',77:'F',79:'H',80:'I',81:'B',82:'A',85:'J',87:'E'},
+"ABDEFGKL":{74:'D',77:'F',79:'E',80:'K',81:'B',82:'A',85:'G',87:'L'},
+"ABDEFGJL":{74:'D',77:'F',79:'E',80:'J',81:'B',82:'A',85:'G',87:'L'},
+"ABDEFGJK":{74:'D',77:'F',79:'E',80:'K',81:'B',82:'A',85:'G',87:'J'},
+"ABDEFGIL":{74:'D',77:'F',79:'E',80:'I',81:'B',82:'A',85:'G',87:'L'},
+"ABDEFGIK":{74:'D',77:'F',79:'E',80:'K',81:'B',82:'A',85:'G',87:'I'},
+"ABDEFGIJ":{74:'D',77:'F',79:'E',80:'J',81:'B',82:'A',85:'G',87:'I'},
+"ABDEFGHL":{74:'D',77:'F',79:'H',80:'E',81:'B',82:'A',85:'G',87:'L'},
+"ABDEFGHK":{74:'D',77:'F',79:'H',80:'K',81:'B',82:'A',85:'G',87:'E'},
+"ABDEFGHJ":{74:'D',77:'F',79:'H',80:'J',81:'B',82:'A',85:'G',87:'E'},
+"ABDEFGHI":{74:'D',77:'F',79:'H',80:'I',81:'B',82:'A',85:'G',87:'E'},
+"ABCHIJKL":{74:'C',77:'H',79:'I',80:'K',81:'B',82:'A',85:'J',87:'L'},
+"ABCGIJKL":{74:'C',77:'G',79:'I',80:'K',81:'B',82:'A',85:'J',87:'L'},
+"ABCGHJKL":{74:'C',77:'G',79:'H',80:'K',81:'B',82:'A',85:'J',87:'L'},
+"ABCGHIKL":{74:'C',77:'H',79:'I',80:'K',81:'B',82:'A',85:'G',87:'L'},
+"ABCGHIJL":{74:'C',77:'G',79:'H',80:'I',81:'B',82:'A',85:'J',87:'L'},
+"ABCGHIJK":{74:'C',77:'G',79:'H',80:'K',81:'B',82:'A',85:'J',87:'I'},
+"ABCFIJKL":{74:'C',77:'F',79:'I',80:'K',81:'B',82:'A',85:'J',87:'L'},
+"ABCFHJKL":{74:'C',77:'F',79:'H',80:'K',81:'B',82:'A',85:'J',87:'L'},
+"ABCFHIKL":{74:'C',77:'F',79:'H',80:'K',81:'B',82:'A',85:'I',87:'L'},
+"ABCFHIJL":{74:'C',77:'F',79:'H',80:'I',81:'B',82:'A',85:'J',87:'L'},
+"ABCFHIJK":{74:'C',77:'F',79:'H',80:'K',81:'B',82:'A',85:'J',87:'I'},
+"ABCFGJKL":{74:'F',77:'G',79:'C',80:'K',81:'B',82:'A',85:'J',87:'L'},
+"ABCFGIKL":{74:'C',77:'F',79:'I',80:'K',81:'B',82:'A',85:'G',87:'L'},
+"ABCFGIJL":{74:'F',77:'G',79:'C',80:'I',81:'B',82:'A',85:'J',87:'L'},
+"ABCFGIJK":{74:'F',77:'G',79:'C',80:'K',81:'B',82:'A',85:'J',87:'I'},
+"ABCFGHKL":{74:'C',77:'F',79:'H',80:'K',81:'B',82:'A',85:'G',87:'L'},
+"ABCFGHJL":{74:'C',77:'F',79:'H',80:'J',81:'B',82:'A',85:'G',87:'L'},
+"ABCFGHJK":{74:'C',77:'F',79:'H',80:'K',81:'B',82:'A',85:'G',87:'J'},
+"ABCFGHIL":{74:'C',77:'F',79:'H',80:'I',81:'B',82:'A',85:'G',87:'L'},
+"ABCFGHIK":{74:'C',77:'F',79:'H',80:'K',81:'B',82:'A',85:'G',87:'I'},
+"ABCFGHIJ":{74:'C',77:'F',79:'H',80:'J',81:'B',82:'A',85:'G',87:'I'},
+"ABCEIJKL":{74:'A',77:'C',79:'E',80:'K',81:'B',82:'I',85:'J',87:'L'},
+"ABCEHJKL":{74:'C',77:'H',79:'E',80:'K',81:'B',82:'A',85:'J',87:'L'},
+"ABCEHIKL":{74:'C',77:'H',79:'E',80:'K',81:'B',82:'A',85:'I',87:'L'},
+"ABCEHIJL":{74:'C',77:'H',79:'E',80:'I',81:'B',82:'A',85:'J',87:'L'},
+"ABCEHIJK":{74:'C',77:'H',79:'E',80:'K',81:'B',82:'A',85:'J',87:'I'},
+"ABCEGJKL":{74:'C',77:'G',79:'E',80:'K',81:'B',82:'A',85:'J',87:'L'},
+"ABCEGIKL":{74:'A',77:'C',79:'E',80:'K',81:'B',82:'I',85:'G',87:'L'},
+"ABCEGIJL":{74:'C',77:'G',79:'E',80:'I',81:'B',82:'A',85:'J',87:'L'},
+"ABCEGIJK":{74:'C',77:'G',79:'E',80:'K',81:'B',82:'A',85:'J',87:'I'},
+"ABCEGHKL":{74:'C',77:'H',79:'E',80:'K',81:'B',82:'A',85:'G',87:'L'},
+"ABCEGHJL":{74:'C',77:'G',79:'H',80:'E',81:'B',82:'A',85:'J',87:'L'},
+"ABCEGHJK":{74:'C',77:'G',79:'H',80:'K',81:'B',82:'A',85:'J',87:'E'},
+"ABCEGHIL":{74:'C',77:'H',79:'E',80:'I',81:'B',82:'A',85:'G',87:'L'},
+"ABCEGHIK":{74:'C',77:'H',79:'E',80:'K',81:'B',82:'A',85:'G',87:'I'},
+"ABCEGHIJ":{74:'C',77:'G',79:'H',80:'I',81:'B',82:'A',85:'J',87:'E'},
+"ABCEFJKL":{74:'C',77:'F',79:'E',80:'K',81:'B',82:'A',85:'J',87:'L'},
+"ABCEFIKL":{74:'C',77:'F',79:'E',80:'K',81:'B',82:'A',85:'I',87:'L'},
+"ABCEFIJL":{74:'C',77:'F',79:'E',80:'I',81:'B',82:'A',85:'J',87:'L'},
+"ABCEFIJK":{74:'C',77:'F',79:'E',80:'K',81:'B',82:'A',85:'J',87:'I'},
+"ABCEFHKL":{74:'C',77:'F',79:'H',80:'K',81:'B',82:'A',85:'E',87:'L'},
+"ABCEFHJL":{74:'C',77:'F',79:'H',80:'E',81:'B',82:'A',85:'J',87:'L'},
+"ABCEFHJK":{74:'C',77:'F',79:'H',80:'K',81:'B',82:'A',85:'J',87:'E'},
+"ABCEFHIL":{74:'C',77:'F',79:'H',80:'I',81:'B',82:'A',85:'E',87:'L'},
+"ABCEFHIK":{74:'C',77:'F',79:'H',80:'K',81:'B',82:'A',85:'E',87:'I'},
+"ABCEFHIJ":{74:'C',77:'F',79:'H',80:'I',81:'B',82:'A',85:'J',87:'E'},
+"ABCEFGKL":{74:'C',77:'F',79:'E',80:'K',81:'B',82:'A',85:'G',87:'L'},
+"ABCEFGJL":{74:'C',77:'F',79:'E',80:'J',81:'B',82:'A',85:'G',87:'L'},
+"ABCEFGJK":{74:'C',77:'F',79:'E',80:'K',81:'B',82:'A',85:'G',87:'J'},
+"ABCEFGIL":{74:'C',77:'F',79:'E',80:'I',81:'B',82:'A',85:'G',87:'L'},
+"ABCEFGIK":{74:'C',77:'F',79:'E',80:'K',81:'B',82:'A',85:'G',87:'I'},
+"ABCEFGIJ":{74:'C',77:'F',79:'E',80:'J',81:'B',82:'A',85:'G',87:'I'},
+"ABCEFGHL":{74:'C',77:'F',79:'H',80:'E',81:'B',82:'A',85:'G',87:'L'},
+"ABCEFGHK":{74:'C',77:'F',79:'H',80:'K',81:'B',82:'A',85:'G',87:'E'},
+"ABCEFGHJ":{74:'C',77:'F',79:'H',80:'J',81:'B',82:'A',85:'G',87:'E'},
+"ABCEFGHI":{74:'C',77:'F',79:'H',80:'I',81:'B',82:'A',85:'G',87:'E'},
+"ABCDIJKL":{74:'C',77:'D',79:'I',80:'K',81:'B',82:'A',85:'J',87:'L'},
+"ABCDHJKL":{74:'C',77:'D',79:'H',80:'K',81:'B',82:'A',85:'J',87:'L'},
+"ABCDHIKL":{74:'C',77:'D',79:'H',80:'K',81:'B',82:'A',85:'I',87:'L'},
+"ABCDHIJL":{74:'C',77:'D',79:'H',80:'I',81:'B',82:'A',85:'J',87:'L'},
+"ABCDHIJK":{74:'C',77:'D',79:'H',80:'K',81:'B',82:'A',85:'J',87:'I'},
+"ABCDGJKL":{74:'D',77:'G',79:'C',80:'K',81:'B',82:'A',85:'J',87:'L'},
+"ABCDGIKL":{74:'C',77:'D',79:'I',80:'K',81:'B',82:'A',85:'G',87:'L'},
+"ABCDGIJL":{74:'D',77:'G',79:'C',80:'I',81:'B',82:'A',85:'J',87:'L'},
+"ABCDGIJK":{74:'D',77:'G',79:'C',80:'K',81:'B',82:'A',85:'J',87:'I'},
+"ABCDGHKL":{74:'C',77:'D',79:'H',80:'K',81:'B',82:'A',85:'G',87:'L'},
+"ABCDGHJL":{74:'C',77:'D',79:'H',80:'J',81:'B',82:'A',85:'G',87:'L'},
+"ABCDGHJK":{74:'C',77:'D',79:'H',80:'K',81:'B',82:'A',85:'G',87:'J'},
+"ABCDGHIL":{74:'C',77:'D',79:'H',80:'I',81:'B',82:'A',85:'G',87:'L'},
+"ABCDGHIK":{74:'C',77:'D',79:'H',80:'K',81:'B',82:'A',85:'G',87:'I'},
+"ABCDGHIJ":{74:'C',77:'D',79:'H',80:'J',81:'B',82:'A',85:'G',87:'I'},
+"ABCDFJKL":{74:'D',77:'F',79:'C',80:'K',81:'B',82:'A',85:'J',87:'L'},
+"ABCDFIKL":{74:'D',77:'F',79:'C',80:'K',81:'B',82:'A',85:'I',87:'L'},
+"ABCDFIJL":{74:'D',77:'F',79:'C',80:'I',81:'B',82:'A',85:'J',87:'L'},
+"ABCDFIJK":{74:'D',77:'F',79:'C',80:'K',81:'B',82:'A',85:'J',87:'I'},
+"ABCDFHKL":{74:'C',77:'D',79:'H',80:'K',81:'B',82:'A',85:'F',87:'L'},
+"ABCDFHJL":{74:'D',77:'F',79:'C',80:'H',81:'B',82:'A',85:'J',87:'L'},
+"ABCDFHJK":{74:'C',77:'F',79:'H',80:'K',81:'B',82:'A',85:'J',87:'D'},
+"ABCDFHIL":{74:'C',77:'D',79:'H',80:'I',81:'B',82:'A',85:'F',87:'L'},
+"ABCDFHIK":{74:'C',77:'D',79:'H',80:'K',81:'B',82:'A',85:'F',87:'I'},
+"ABCDFHIJ":{74:'C',77:'F',79:'H',80:'I',81:'B',82:'A',85:'J',87:'D'},
+"ABCDFGKL":{74:'D',77:'F',79:'C',80:'K',81:'B',82:'A',85:'G',87:'L'},
+"ABCDFGJL":{74:'D',77:'F',79:'C',80:'J',81:'B',82:'A',85:'G',87:'L'},
+"ABCDFGJK":{74:'D',77:'F',79:'C',80:'K',81:'B',82:'A',85:'G',87:'J'},
+"ABCDFGIL":{74:'D',77:'F',79:'C',80:'I',81:'B',82:'A',85:'G',87:'L'},
+"ABCDFGIK":{74:'D',77:'F',79:'C',80:'K',81:'B',82:'A',85:'G',87:'I'},
+"ABCDFGIJ":{74:'D',77:'F',79:'C',80:'J',81:'B',82:'A',85:'G',87:'I'},
+"ABCDFGHL":{74:'D',77:'F',79:'C',80:'H',81:'B',82:'A',85:'G',87:'L'},
+"ABCDFGHK":{74:'C',77:'F',79:'H',80:'K',81:'B',82:'A',85:'G',87:'D'},
+"ABCDFGHJ":{74:'C',77:'F',79:'H',80:'J',81:'B',82:'A',85:'G',87:'D'},
+"ABCDFGHI":{74:'C',77:'F',79:'H',80:'I',81:'B',82:'A',85:'G',87:'D'},
+"ABCDEJKL":{74:'C',77:'D',79:'E',80:'K',81:'B',82:'A',85:'J',87:'L'},
+"ABCDEIKL":{74:'C',77:'D',79:'E',80:'K',81:'B',82:'A',85:'I',87:'L'},
+"ABCDEIJL":{74:'C',77:'D',79:'E',80:'I',81:'B',82:'A',85:'J',87:'L'},
+"ABCDEIJK":{74:'C',77:'D',79:'E',80:'K',81:'B',82:'A',85:'J',87:'I'},
+"ABCDEHKL":{74:'C',77:'D',79:'H',80:'K',81:'B',82:'A',85:'E',87:'L'},
+"ABCDEHJL":{74:'C',77:'D',79:'H',80:'E',81:'B',82:'A',85:'J',87:'L'},
+"ABCDEHJK":{74:'C',77:'D',79:'H',80:'K',81:'B',82:'A',85:'J',87:'E'},
+"ABCDEHIL":{74:'C',77:'D',79:'H',80:'I',81:'B',82:'A',85:'E',87:'L'},
+"ABCDEHIK":{74:'C',77:'D',79:'H',80:'K',81:'B',82:'A',85:'E',87:'I'},
+"ABCDEHIJ":{74:'C',77:'D',79:'H',80:'I',81:'B',82:'A',85:'J',87:'E'},
+"ABCDEGKL":{74:'C',77:'D',79:'E',80:'K',81:'B',82:'A',85:'G',87:'L'},
+"ABCDEGJL":{74:'C',77:'D',79:'E',80:'J',81:'B',82:'A',85:'G',87:'L'},
+"ABCDEGJK":{74:'C',77:'D',79:'E',80:'K',81:'B',82:'A',85:'G',87:'J'},
+"ABCDEGIL":{74:'C',77:'D',79:'E',80:'I',81:'B',82:'A',85:'G',87:'L'},
+"ABCDEGIK":{74:'C',77:'D',79:'E',80:'K',81:'B',82:'A',85:'G',87:'I'},
+"ABCDEGIJ":{74:'C',77:'D',79:'E',80:'J',81:'B',82:'A',85:'G',87:'I'},
+"ABCDEGHL":{74:'C',77:'D',79:'H',80:'E',81:'B',82:'A',85:'G',87:'L'},
+"ABCDEGHK":{74:'C',77:'D',79:'H',80:'K',81:'B',82:'A',85:'G',87:'E'},
+"ABCDEGHJ":{74:'C',77:'D',79:'H',80:'J',81:'B',82:'A',85:'G',87:'E'},
+"ABCDEGHI":{74:'C',77:'D',79:'H',80:'I',81:'B',82:'A',85:'G',87:'E'},
+"ABCDEFKL":{74:'D',77:'F',79:'C',80:'K',81:'B',82:'A',85:'E',87:'L'},
+"ABCDEFJL":{74:'D',77:'F',79:'C',80:'E',81:'B',82:'A',85:'J',87:'L'},
+"ABCDEFJK":{74:'D',77:'F',79:'C',80:'K',81:'B',82:'A',85:'J',87:'E'},
+"ABCDEFIL":{74:'D',77:'F',79:'C',80:'I',81:'B',82:'A',85:'E',87:'L'},
+"ABCDEFIK":{74:'D',77:'F',79:'C',80:'K',81:'B',82:'A',85:'E',87:'I'},
+"ABCDEFIJ":{74:'D',77:'F',79:'C',80:'I',81:'B',82:'A',85:'J',87:'E'},
+"ABCDEFHL":{74:'C',77:'D',79:'H',80:'E',81:'B',82:'A',85:'F',87:'L'},
+"ABCDEFHK":{74:'C',77:'F',79:'H',80:'K',81:'B',82:'A',85:'E',87:'D'},
+"ABCDEFHJ":{74:'C',77:'F',79:'H',80:'E',81:'B',82:'A',85:'J',87:'D'},
+"ABCDEFHI":{74:'C',77:'F',79:'H',80:'I',81:'B',82:'A',85:'E',87:'D'},
+"ABCDEFGL":{74:'D',77:'F',79:'C',80:'E',81:'B',82:'A',85:'G',87:'L'},
+"ABCDEFGK":{74:'D',77:'F',79:'C',80:'K',81:'B',82:'A',85:'G',87:'E'},
+"ABCDEFGJ":{74:'D',77:'F',79:'C',80:'J',81:'B',82:'A',85:'G',87:'E'},
+"ABCDEFGI":{74:'D',77:'F',79:'C',80:'I',81:'B',82:'A',85:'G',87:'E'},
+"ABCDEFGH":{74:'C',77:'F',79:'H',80:'E',81:'B',82:'A',85:'G',87:'D'}};
+
+var SLOT_TO_PARTIDO={"1A":79,"1B":85,"1D":81,"1E":74,"1G":82,"1I":77,"1K":87,"1L":80};
+
+function getMejorTerceroParaPartido(pid){
+  var terceros=[];
+  Object.keys(GEQ).forEach(function(g){
+    var r=clasGrupo(g);var eq=r.orden[2];var st=r.stats[eq];
+    terceros.push({equipo:eq,grupo:g,pts:st.pts,dg:st.dg,gf:st.gf});
+  });
+  terceros.sort(function(a,b){
+    if(b.pts!==a.pts)return b.pts-a.pts;
+    if(b.dg!==a.dg)return b.dg-a.dg;
+    if(b.gf!==a.gf)return b.gf-a.gf;
+    return a.equipo.localeCompare(b.equipo);
+  });
+  var top8=terceros.slice(0,8);
+  var clave=top8.map(function(t){return t.grupo;}).sort().join("");
+  var combo=COMBOS[clave];
+  if(!combo)return null;
+  var g=combo[pid];
+  if(!g)return null;
+  var t=top8.find(function(x){return x.grupo===g;});
+  return t?t.equipo:null;
+}
+
+function obtenerMejoresTerceros(){
+  var terceros=[];
+  Object.keys(GEQ).forEach(function(g){
+    var r=clasGrupo(g);var eq=r.orden[2];var st=r.stats[eq];
+    terceros.push({equipo:eq,grupo:g,pts:st.pts,dg:st.dg,gf:st.gf});
+  });
+  terceros.sort(function(a,b){
+    if(b.pts!==a.pts)return b.pts-a.pts;
+    if(b.dg!==a.dg)return b.dg-a.dg;
+    if(b.gf!==a.gf)return b.gf-a.gf;
+    return a.equipo.localeCompare(b.equipo);
+  });
+  return terceros.slice(0,8);
+}
+
+// ============================================================
+// RESOLVER CÓDIGO DE CRUCE — usa tabla FIFA correcta
+// ============================================================
+function resolveCod(cod){
+  var m1=cod.match(/^([1-4])([A-L])$/);
+  if(m1){
+    var pos=parseInt(m1[1])-1;
+    var g=m1[2];
+    var r=clasGrupo(g);
+    return r.orden[pos]||cod;
+  }
+  var D16SLOTS={"3ABCDF":74,"3CDFGH":77,"3CEFHI":79,"3EHIJK":80,"3BEFIJ":81,"3AEHIJ":82,"3EFGIJ":85,"3DEIJL":87};
+  if(D16SLOTS[cod]!==undefined){
+    var eq=getMejorTerceroParaPartido(D16SLOTS[cod]);
+    if(eq)return eq;
+    return "3 Mejor ("+cod+")";
+  }
+  var mw=cod.match(/^W([0-9]+)$/);
+  if(mw){
+    var pid=parseInt(mw[1]);
+    var pr=pronos[pid];
+    if(pr&&pr.pl&&pr.gl!=null&&pr.gv!=null){
+      if(pr.gl>pr.gv)return pr.pl;
+      if(pr.gl<pr.gv)return pr.pv;
+      return pr.pl;
+    }
+    return cod;
+  }
+  var ml=cod.match(/^L([0-9]+)$/);
+  if(ml){
+    var pid2=parseInt(ml[1]);
+    var pr2=pronos[pid2];
+    if(pr2&&pr2.pl&&pr2.gl!=null&&pr2.gv!=null){
+      if(pr2.gl>pr2.gv)return pr2.pv;
+      if(pr2.gl<pr2.gv)return pr2.pl;
+      return pr2.pv;
+    }
+    return cod;
+  }
+  return cod;
+}
+
+
+
+// ============================================================
+// TABLA DE GRUPO EN VIVO (B1 FIX)
+// ============================================================
+function renderTablaGrupo(g,contenedor){
+  var res=clasGrupo(g);
+  var orden=res.orden;
+  var st=res.stats;
+
+  // Calcular qué terceros clasifican globalmente
+  var mejores8=obtenerMejoresTerceros().map(function(t){return t.equipo;});
+  var terceroDeEsteGrupo=orden[2];
+  var terceroClasifica=mejores8.indexOf(terceroDeEsteGrupo)>=0;
+  // Posición en el ranking de mejores terceros (1-8) si clasifica
+  var rankTercero=mejores8.indexOf(terceroDeEsteGrupo)+1;
+
+  var posClasses=["pos1","pos2","pos3","pos4"];
+  var html="<table class='gtbl'><thead><tr><th>#</th><th>Equipo</th><th>J</th><th>G</th><th>E</th><th>P</th><th>GF</th><th>GC</th><th>DG</th><th>Pts</th></tr></thead><tbody>";
+  orden.forEach(function(eq,i){
+    var s=st[eq]||{j:0,g:0,emp:0,p:0,gf:0,dg:0,pts:0};
+    var gc=s.gf-s.dg;
+    var medalla="";
+    if(i===0) medalla="🥇";
+    else if(i===1) medalla="🥈";
+    else if(i===2){
+      // Solo mostrar 🥉 si este tercero está en el top 8
+      if(terceroClasifica){
+        medalla="🥉<span style='font-size:9px;color:#888;margin-left:1px'>"+rankTercero+"°</span>";
+      } else {
+        medalla="<span style='font-size:10px;color:#CCC'>✗</span>";
+      }
+    }
+    html+="<tr class='"+posClasses[i]+"'>";
+    html+="<td style='white-space:nowrap'>"+(i+1)+medalla+"</td>";
+    html+="<td>"+flag(eq)+eq+"</td>";
+    html+="<td>"+s.j+"</td><td>"+s.g+"</td><td>"+s.emp+"</td><td>"+s.p+"</td>";
+    html+="<td>"+s.gf+"</td><td>"+gc+"</td>";
+    html+="<td>"+(s.dg>=0?"+":"")+s.dg+"</td>";
+    html+="<td><b>"+s.pts+"</b></td>";
+    html+="</tr>";
+  });
+  html+="</tbody></table>";
+  contenedor.innerHTML=html;
+}
+
+// ============================================================
+// PRONÓSTICOS Y PENALES
+// ============================================================
+function setP(id,campo,val){
+  if(!pronos[id])pronos[id]={};
+  pronos[id][campo]=(val===""||val==null)?null:parseInt(val);
+}
+function setPL(id,campo,val){
+  if(!pronos[id])pronos[id]={};
+  pronos[id][campo]=val;
+}
+
+// Verifica si hay empate (para mostrar penales)
+function checkPenales(id,inL,inV,penRow,penInL,penInV){
+  var gl=parseInt(inL.value);
+  var gv=parseInt(inV.value);
+  if(!isNaN(gl)&&!isNaN(gv)&&gl===gv){
+    penRow.classList.add("show");
+  } else {
+    penRow.classList.remove("show");
+    if(pronos[id]){pronos[id].penL=null;pronos[id].penV=null;}
+  }
+}
+
+// ============================================================
+// CONSTRUIR FILA DE PARTIDO (grupos)
+// ============================================================
+function mkRow(id,l,v,f,isCol,grupoContenedor){
+  var wrap=document.createElement("div");
+  var row=document.createElement("div");row.className="prow";
+  var elDiv=document.createElement("div");elDiv.className="el";
+  elDiv.innerHTML=flag(l)+l+(isCol?" <span class='col'>COL</span>":"");
+  var inL=document.createElement("input");inL.type="number";inL.min="0";inL.max="20";inL.placeholder="-";inL.className="nin";
+  var sep=document.createElement("div");sep.className="vsep";sep.textContent="–";
+  var inV=document.createElement("input");inV.type="number";inV.min="0";inV.max="20";inV.placeholder="-";inV.className="nin";
+  // Pre-llenar si hay datos de prueba
+  if(pronos[id]&&pronos[id].gl!=null){inL.value=pronos[id].gl;}
+  if(pronos[id]&&pronos[id].gv!=null){inV.value=pronos[id].gv;}
+  var evDiv=document.createElement("div");evDiv.className="ev";evDiv.textContent=flag(v)+v;
+  row.appendChild(elDiv);row.appendChild(inL);row.appendChild(sep);row.appendChild(inV);row.appendChild(evDiv);
+  var fd=document.createElement("div");fd.className="fr";fd.textContent=f;
+  wrap.appendChild(row);wrap.appendChild(fd);
+
+  // Actualizar tabla en vivo cuando cambia el marcador
+  inL.addEventListener("input",function(){
+    setP(id,"gl",this.value);
+    if(grupoContenedor)renderTablaGrupo(grupoContenedor.dataset.grupo,grupoContenedor);
+  });
+  inV.addEventListener("input",function(){
+    setP(id,"gv",this.value);
+    if(grupoContenedor)renderTablaGrupo(grupoContenedor.dataset.grupo,grupoContenedor);
+  });
+  return wrap;
+}
+
+// ============================================================
+// CONSTRUIR FILA ELIMINATORIA (con nombre local/visitante y penales B3)
+// ============================================================
+function mkElimRow(id,nomL,nomV,f,cl,cv){
+  var wrap=document.createElement("div");
+
+  // Nombre del cruce (resuelto dinámicamente)
+  var nameRow=document.createElement("div");
+  nameRow.style.cssText="display:flex;justify-content:space-between;align-items:center;padding:3px 0;font-size:10px;color:#888";
+  var nlDiv=document.createElement("span");nlDiv.className="ename-disp";nlDiv.id="ln_"+id;nlDiv.textContent=flag(nomL)+nomL;
+  var nvDiv=document.createElement("span");nvDiv.className="ename-disp";nvDiv.style.textAlign="right";nvDiv.id="vn_"+id;nvDiv.textContent=flag(nomV)+nomV;
+  nameRow.appendChild(nlDiv);
+  nameRow.appendChild(document.createTextNode("vs"));
+  nameRow.appendChild(nvDiv);
+  wrap.appendChild(nameRow);
+
+  var row=document.createElement("div");row.className="prow";row.id="er_"+id;
+  var elDiv=document.createElement("div");elDiv.className="el";
+  elDiv.innerHTML="<span style='font-size:11px;color:#888'>Local</span>";
+  var inL=document.createElement("input");inL.type="number";inL.min="0";inL.max="20";inL.placeholder="-";inL.className="nin";
+  var sep=document.createElement("div");sep.className="vsep";sep.textContent="–";
+  var inV=document.createElement("input");inV.type="number";inV.min="0";inV.max="20";inV.placeholder="-";inV.className="nin";
+  // Pre-llenar si hay datos de prueba
+  if(pronos[id]&&pronos[id].gl!=null){inL.value=pronos[id].gl;}
+  if(pronos[id]&&pronos[id].gv!=null){inV.value=pronos[id].gv;}
+  var evDiv=document.createElement("div");evDiv.className="ev";
+  evDiv.innerHTML="<span style='font-size:11px;color:#888'>Visitante</span>";
+  row.appendChild(elDiv);row.appendChild(inL);row.appendChild(sep);row.appendChild(inV);row.appendChild(evDiv);
+
+  // Fila de penales (B3 FIX)
+  var penRow=document.createElement("div");penRow.className="pen-row";
+  penRow.innerHTML="⚽ Penales: ";
+  var penInL=document.createElement("input");penInL.type="number";penInL.min="0";penInL.max="30";penInL.placeholder="-";penInL.className="pen-in";
+  penRow.appendChild(penInL);
+  penRow.appendChild(document.createTextNode("–"));
+  var penInV=document.createElement("input");penInV.type="number";penInV.min="0";penInV.max="30";penInV.placeholder="-";penInV.className="pen-in";
+  penRow.appendChild(penInV);
+  var penNote=document.createElement("span");penNote.style.cssText="font-size:10px;color:#999;margin-left:6px";penNote.textContent="(no suma pts, solo determina quién clasifica)";
+  penRow.appendChild(penNote);
+
+  var fd=document.createElement("div");fd.className="fr";fd.textContent=f;
+  wrap.appendChild(row);
+  wrap.appendChild(penRow);
+  wrap.appendChild(fd);
+
+  // Guardar nombres para el pronóstico al cambiar
+  function syncNames(){
+    var nl=document.getElementById("ln_"+id);
+    var nv=document.getElementById("vn_"+id);
+    if(nl&&nv){
+      setPL(id,"pl",nl.textContent);
+      setPL(id,"pv",nv.textContent);
+    }
+  }
+
+  inL.addEventListener("input",function(){
+    setP(id,"gl",this.value);
+    syncNames();
+    checkPenales(id,inL,inV,penRow,penInL,penInV);
+    updNombresElim();
+  });
+  inV.addEventListener("input",function(){
+    setP(id,"gv",this.value);
+    syncNames();
+    checkPenales(id,inL,inV,penRow,penInL,penInV);
+    updNombresElim();
+  });
+  penInL.addEventListener("input",function(){setPL(id,"penL",parseInt(this.value)||null);});
+  penInV.addEventListener("input",function(){setPL(id,"penV",parseInt(this.value)||null);});
+
+  return wrap;
+}
+
+// ============================================================
+// ACTUALIZAR NOMBRES EN D16 (y propagar a Octavos, Cuartos, Semis, Final)
+// FIX B2: ahora actualiza TODAS las fases eliminatorias
+// ============================================================
+function updNombresElim(){
+  // D16
+  D16.forEach(function(c){
+    var a=document.getElementById("ln_"+c.id);
+    var b=document.getElementById("vn_"+c.id);
+    if(a){var ra=resolveCod(c.cl);a.textContent=flag(ra)+ra;}
+    if(b){var rb=resolveCod(c.cv);b.textContent=flag(rb)+rb;}
+  });
+  // Octavos, Cuartos, Semis, 3er Puesto, Final
+  ELIM.forEach(function(fase){
+    fase.ps.forEach(function(p){
+      var a=document.getElementById("ln_"+p.id);
+      var b=document.getElementById("vn_"+p.id);
+      if(a){var ra2=resolveCod(p.cl);a.textContent=flag(ra2)+ra2;}
+      if(b){var rb2=resolveCod(p.cv);b.textContent=flag(rb2)+rb2;}
+    });
+  });
+}
+
+// ============================================================
+// NAVEGACIÓN ENTRE PASOS
+// ============================================================
+function go(i){
+  document.querySelectorAll(".step").forEach(function(s){s.classList.remove("active");});
+  var s=document.getElementById("step-"+i);if(s)s.classList.add("active");
+  currentStep=i;
+  // Si entramos a D16 o cualquier elim: actualizar nombres
+  if(i>=GK.length)updNombresElim();
+  var pct=Math.round((i/TOTAL)*100);
+  document.getElementById("pf").style.width=pct+"%";
+  document.getElementById("pt").textContent="Paso "+(i+1)+" de "+(TOTAL+1);
+  document.getElementById("pp").textContent=pct+"%";
+  window.scrollTo(0,0);
+}
+
+function showH(){
+  document.querySelectorAll(".step").forEach(function(s){s.classList.remove("active");});
+  document.getElementById("hsec").style.display="block";
+  document.getElementById("benv").disabled=false;
+  document.getElementById("pf").style.width="95%";
+  document.getElementById("pt").textContent="Último paso";
+  var hf=document.getElementById("hfields");hf.innerHTML="";
+  HONOR.forEach(function(h){
+    var row=document.createElement("div");row.className="hrow";
+    var lbl=document.createElement("span");lbl.className="hlbl";lbl.textContent=h.l;
+    var pts=document.createElement("span");pts.className="hpts";pts.textContent=h.pts+"pts";
+    var inp=document.createElement("input");inp.type="text";inp.placeholder="Apellido/nombre…";inp.className="hin";
+    (function(hk){inp.addEventListener("input",function(){hvals[hk]=this.value;});})(h.k);
+    row.appendChild(lbl);row.appendChild(pts);row.appendChild(inp);hf.appendChild(row);
+  });
+  document.getElementById("hsec").scrollIntoView({behavior:"smooth"});
+}
+
+// ============================================================
+// CONSTRUIR PASO
+// ============================================================
+var currentStep=0;
+
+function buildStep(i,cont){
+  var div=document.createElement("div");
+  div.className="step card"+(i===0?" active":"");
+  div.id="step-"+i;
+
+  if(i<GK.length){
+    // GRUPO (con tabla en vivo B1)
+    var g=GK[i];
+    var fh=document.createElement("div");fh.className="fhdr";
+    fh.innerHTML="<h2>Grupo "+g+"</h2><div class='pts'>3pts signo · 5pts exacto · 2pts posición exacta en grupo</div>";
+    div.appendChild(fh);
+
+    var gh=document.createElement("div");gh.className="ghdr";
+    gh.innerHTML="GR."+g+" · "+GEQ[g].map(function(e){return flag(e)+e;}).join(" · ");
+    div.appendChild(gh);
+
+    // Partidos del grupo
+    var pgGrupo=PG.filter(function(p){return p.g===g;});
+
+    // Contenedor tabla en vivo
+    var tblCont=document.createElement("div");
+    tblCont.dataset.grupo=g;
+    tblCont.style.cssText="margin-bottom:.5rem";
+    renderTablaGrupo(g,tblCont);
+
+    pgGrupo.forEach(function(p){
+      div.appendChild(mkRow(p.id,p.l,p.v,p.f,p.col||false,tblCont));
+    });
+    div.appendChild(tblCont);
+
+  } else if(i===GK.length){
+    // DIECISEISAVOS
+    var fh2=document.createElement("div");fh2.className="fhdr";
+    fh2.innerHTML="<h2>Dieciseisavos de Final</h2><div class='pts'>4pts signo · 6pts exacto · 4pts clasificado · 5pts cruce exacto</div>";
+    div.appendChild(fh2);
+    var nt=document.createElement("p");nt.className="nota";
+    nt.textContent="Los equipos se muestran según tus pronósticos de grupos. Solo sumas resultado si el cruce es exacto. Resultado a 120min. Penales no cuentan para el marcador.";
+    div.appendChild(nt);
+    D16.forEach(function(c){div.appendChild(mkElimRow(c.id,resolveCod(c.cl),resolveCod(c.cv),c.f,c.cl,c.cv));});
+
+  } else {
+    // OCTAVOS, CUARTOS, SEMIS, 3er PUESTO, FINAL
+    var fase=ELIM[i-GK.length-1];
+    var fh3=document.createElement("div");fh3.className="fhdr";
+    fh3.innerHTML="<h2>"+fase.lbl+"</h2><div class='pts'>"+fase.pts+"</div>";
+    div.appendChild(fh3);
+    var nt2=document.createElement("p");nt2.className="nota";nt2.textContent=fase.nota;
+    div.appendChild(nt2);
+    fase.ps.forEach(function(p){div.appendChild(mkElimRow(p.id,resolveCod(p.cl),resolveCod(p.cv),p.f,p.cl,p.cv));});
+  }
+
+  // Botones de navegación
+  var nav=document.createElement("div");nav.className="nav";
+  if(i>0){
+    var bb=document.createElement("button");bb.className="nbk";bb.textContent="← Atrás";
+    (function(idx){bb.addEventListener("click",function(){go(idx);});})(i-1);
+    nav.appendChild(bb);
+  }
+  var lblSig=i<GK.length-1?"Grupo "+GK[i+1]+" →":
+             i===GK.length-1?"Dieciseisavos →":
+             i===GK.length?"Octavos →":
+             i===GK.length+1?"Cuartos →":
+             i===GK.length+2?"Semifinales →":
+             i===GK.length+3?"3er Puesto →":
+             i===GK.length+4?"Final →":"";
+  if(i<TOTAL-1){
+    var bn=document.createElement("button");bn.className="nxt";bn.textContent=lblSig;
+    (function(idx){bn.addEventListener("click",function(){go(idx);});})(i+1);
+    nav.appendChild(bn);
+  } else {
+    var bh=document.createElement("button");bh.className="nxt";bh.textContent="Cuadro de Honor →";
+    bh.addEventListener("click",showH);
+    nav.appendChild(bh);
+  }
+  div.appendChild(nav);
+  cont.appendChild(div);
+}
+
+// ============================================================
+// ENVIAR
+// ============================================================
+async function enviar(){
+  var nom=document.getElementById("nom").value.trim();
+  if(!nom){showMsg("Escribe tu nombre para continuar.","err");return;}
+  var btn=document.getElementById("benv");btn.disabled=true;btn.textContent="Enviando…";
+  try{
+    var r=await fetch(SB+"/rest/v1/participantes",{
+      method:"POST",
+      headers:{"Content-Type":"application/json","apikey":SK,"Authorization":"Bearer "+SK,"Prefer":"return=minimal"},
+      body:JSON.stringify({nombre:nom,canal:"WhatsApp",pronos:pronos,honor:hvals,validado:false})
+    });
+    if(!r.ok)throw new Error(await r.text());
+    document.getElementById("app").style.display="none";
+    document.getElementById("conf").style.display="block";
+    document.getElementById("ctxt").textContent="¡Gracias, "+nom+"! Polla registrada con "+Object.keys(pronos).length+" pronósticos.";
+  }catch(e){
+    btn.disabled=false;btn.textContent="Enviar mi polla ⚽";
+    showMsg("Error al enviar. Verifica tu conexión.","err");
+  }
+}
+
+function showMsg(t,tipo){var m=document.getElementById("msg");m.textContent=t;m.className="msg "+tipo;}
+document.getElementById("benv").addEventListener("click",enviar);
+
+// Construir todos los pasos
+var cont=document.getElementById("steps");
+for(var i=0;i<TOTAL;i++)buildStep(i,cont);
+
+
+
+// ============================================================
+// GENERADOR DE PDF — comprobante de pronósticos
+// Usa jsPDF (cargado desde CDN al hacer clic)
+// ============================================================
+function generarPDF(){
+  var btn=document.getElementById("btnpdf");
+  btn.textContent="Generando PDF…";btn.disabled=true;
+
+  // Cargar jsPDF dinámicamente si no está disponible
+  if(typeof window.jspdf==="undefined"){
+    var s=document.createElement("script");
+    s.src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+    s.onload=function(){construirPDF();};
+    s.onerror=function(){btn.textContent="⬇ Descargar mi comprobante PDF";btn.disabled=false;alert("Error cargando la librería. Verifica tu conexión a internet.");};
+    document.head.appendChild(s);
+  } else {
+    construirPDF();
+  }
+}
+
+function construirPDF(){
+  var btn=document.getElementById("btnpdf");
+  try{
+    var {jsPDF}=window.jspdf;
+    var doc=new jsPDF({orientation:"portrait",unit:"mm",format:"a4"});
+    var W=210, mg=14, y=0, lineH=5.5;
+    var now=new Date();
+    var fechaStr=now.toLocaleDateString("es-CO",{day:"2-digit",month:"long",year:"numeric"})+" · "+now.toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit"});
+    var refCode="PC2026-"+now.getTime().toString(36).toUpperCase();
+    var nomPart=document.getElementById("nom").value.trim()||"Participante";
+
+    // ---- UTILIDADES ----
+    function newPage(){doc.addPage();y=0;}
+    function checkY(needed){if(y+needed>275)newPage();}
+
+    function banda(color,h){
+      doc.setFillColor(color[0],color[1],color[2]);
+      doc.rect(0,y,W,h,"F");
+    }
+
+    function txt(texto,x,fy,size,bold,color){
+      doc.setFontSize(size);
+      doc.setFont("helvetica",bold?"bold":"normal");
+      doc.setTextColor(color?color[0]:30,color?color[1]:30,color?color[2]:30);
+      doc.text(texto,x,fy);
+    }
+
+    // ---- ENCABEZADO ----
+    banda([10,22,40],22);
+    txt("⚽  POLLA COMPIS · MUNDIAL 2026",mg,10,13,true,[255,255,255]);
+    txt("USA · CANADÁ · MÉXICO  |  11 Jun – 19 Jul 2026",mg,16,8,false,[200,216,240]);
+    y=22;
+
+    // Nombre y ref
+    banda([244,246,250],14);
+    txt("Participante:",mg,y+5,8,false,[100,100,100]);
+    txt(nomPart,mg+22,y+5,10,true,[10,22,40]);
+    txt("Ref: "+refCode,W-mg,y+5,7,false,[150,150,150]);
+    doc.setFontSize(7);doc.setTextColor(150,150,150);
+    doc.text(fechaStr,W-mg,y+10,{align:"right"});
+    y+=14;
+
+    // Separador
+    doc.setDrawColor(220,220,220);doc.setLineWidth(0.3);
+    doc.line(mg,y+2,W-mg,y+2);y+=6;
+
+    // ---- FUNCIÓN TABLA PARTIDO ----
+    function bloqueGrupo(g){
+      checkY(40);
+      // Cabecera grupo
+      banda([10,22,40],7);
+      txt("GRUPO "+g+" · "+GEQ[g].join("  ·  "),mg,y+5,8,true,[255,255,255]);
+      y+=7;
+
+      // Partidos
+      var pats=PG.filter(function(p){return p.g===g;});
+      pats.forEach(function(p,idx){
+        checkY(8);
+        var pr=pronos[p.id];
+        var score=(pr&&pr.gl!=null&&pr.gv!=null)?(pr.gl+"–"+pr.gv):"–";
+        var bg=idx%2===0?[255,255,255]:[248,249,250];
+        doc.setFillColor(bg[0],bg[1],bg[2]);
+        doc.rect(mg,y,W-mg*2,6,"F");
+        // Local
+        doc.setFontSize(8);doc.setFont("helvetica","normal");doc.setTextColor(30,30,30);
+        doc.text(p.l,mg+2,y+4);
+        // Score centrado
+        doc.setFont("helvetica","bold");doc.setTextColor(200,16,46);
+        doc.text(score,(W)/2,y+4,{align:"center"});
+        // Visitante
+        doc.setFont("helvetica","normal");doc.setTextColor(30,30,30);
+        doc.text(p.v,W-mg-2,y+4,{align:"right"});
+        // Fecha
+        doc.setFontSize(6);doc.setTextColor(170,170,170);
+        doc.text(p.f,W-mg-2,y+4+2.5,{align:"right"});
+        y+=6;
+      });
+
+      // Mini tabla clasificación
+      checkY(20);
+      var res=clasGrupo(g);
+      var posIcons=["1°","2°","3°","4°"];
+      doc.setFillColor(240,244,255);
+      doc.rect(mg,y,W-mg*2,6,"F");
+      doc.setFontSize(7);doc.setFont("helvetica","bold");doc.setTextColor(10,22,40);
+      doc.text("Clasificación pronosticada:",mg+2,y+4);
+      y+=6;
+      res.orden.forEach(function(eq,i){
+        checkY(6);
+        var bg2=i<2?[232,245,232]:[255,255,255];
+        doc.setFillColor(bg2[0],bg2[1],bg2[2]);
+        doc.rect(mg,y,W-mg*2,5,"F");
+        doc.setFontSize(7);doc.setFont("helvetica",i<2?"bold":"normal");
+        doc.setTextColor(i<2?27:80,i<2?94:80,i<2?32:80);
+        var st=res.stats[eq];
+        doc.text(posIcons[i]+" "+eq,mg+2,y+3.5);
+        doc.text("Pts:"+st.pts+" DG:"+(st.dg>=0?"+":"")+st.dg+" GF:"+st.gf,W-mg-2,y+3.5,{align:"right"});
+        y+=5;
+      });
+      y+=3;
+    }
+
+    // ---- GRUPOS ----
+    checkY(10);
+    banda([200,16,46],7);
+    txt("FASE DE GRUPOS",mg,y+5,9,true,[255,255,255]);
+    y+=7;y+=2;
+
+    GK.forEach(function(g){bloqueGrupo(g);});
+
+    // ---- ELIMINATORIAS ----
+    var fasesElim=[
+      {lbl:"DIECISEISAVOS DE FINAL",ids:[73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88]},
+      {lbl:"OCTAVOS DE FINAL",ids:[89,90,91,92,93,94,95,96]},
+      {lbl:"CUARTOS DE FINAL",ids:[97,98,99,100]},
+      {lbl:"SEMIFINALES",ids:[101,102]},
+      {lbl:"3ER Y 4TO PUESTO",ids:[103]},
+      {lbl:"GRAN FINAL",ids:[104]}
+    ];
+
+    fasesElim.forEach(function(fase){
+      checkY(12);
+      banda([200,16,46],7);
+      txt(fase.lbl,mg,y+5,9,true,[255,255,255]);
+      y+=7;y+=2;
+
+      fase.ids.forEach(function(id,idx){
+        checkY(8);
+        var pr=pronos[id];
+        var nomL=pr&&pr.pl?pr.pl:("Equipo "+id+"L");
+        var nomV=pr&&pr.pv?pr.pv:("Equipo "+id+"V");
+        var score=(pr&&pr.gl!=null&&pr.gv!=null)?(pr.gl+"–"+pr.gv):"–";
+        var bg=idx%2===0?[255,255,255]:[248,249,250];
+        doc.setFillColor(bg[0],bg[1],bg[2]);
+        doc.rect(mg,y,W-mg*2,6,"F");
+        doc.setFontSize(8);doc.setFont("helvetica","normal");doc.setTextColor(30,30,30);
+        doc.text(nomL,mg+2,y+4);
+        doc.setFont("helvetica","bold");doc.setTextColor(200,16,46);
+        doc.text(score,(W)/2,y+4,{align:"center"});
+        doc.setFont("helvetica","normal");doc.setTextColor(30,30,30);
+        doc.text(nomV,W-mg-2,y+4,{align:"right"});
+        y+=6;
+      });
+      y+=3;
+    });
+
+    // ---- CUADRO DE HONOR ----
+    checkY(12);
+    banda([10,22,40],7);
+    txt("CUADRO DE HONOR",mg,y+5,9,true,[255,255,255]);
+    y+=7;y+=2;
+
+    var honorLbls={campeon:"🏆 Campeón",subcampeon:"🥈 Subcampeón",tercero_h:"🥉 Tercer puesto",bota_oro:"⚽ Bota de Oro",bota_plata:"⚽ Bota de Plata",bota_bronce:"⚽ Bota de Bronce",balon_oro:"🏅 Balón de Oro",balon_plata:"🏅 Balón de Plata",balon_bronce:"🏅 Balón de Bronce",guante_oro:"🧤 Guante de Oro"};
+    var honorPts={campeon:40,subcampeon:25,tercero_h:15,bota_oro:15,bota_plata:10,bota_bronce:7,balon_oro:15,balon_plata:10,balon_bronce:7,guante_oro:15};
+
+    Object.keys(honorLbls).forEach(function(k,idx){
+      checkY(7);
+      var bg=idx%2===0?[255,255,255]:[248,249,250];
+      doc.setFillColor(bg[0],bg[1],bg[2]);
+      doc.rect(mg,y,W-mg*2,6,"F");
+      // Etiqueta sin emoji para compatibilidad
+      var lbl=honorLbls[k].replace(/[\u0000-\u001F\u007F-\uFFFF]/g,"").trim()||k;
+      doc.setFontSize(8);doc.setFont("helvetica","normal");doc.setTextColor(80,80,80);
+      doc.text(lbl,mg+2,y+4);
+      doc.setFont("helvetica","bold");doc.setTextColor(10,22,40);
+      doc.text(hvals[k]||"—",W-mg-20,y+4);
+      doc.setFontSize(7);doc.setFont("helvetica","normal");doc.setTextColor(150,150,150);
+      doc.text(honorPts[k]+"pts",W-mg-2,y+4,{align:"right"});
+      y+=6;
+    });
+
+    // ---- PIE DE PÁGINA en todas las páginas ----
+    var totalPags=doc.getNumberOfPages();
+    for(var pg=1;pg<=totalPags;pg++){
+      doc.setPage(pg);
+      doc.setFillColor(10,22,40);
+      doc.rect(0,287,W,10,"F");
+      doc.setFontSize(7);doc.setFont("helvetica","normal");doc.setTextColor(200,216,240);
+      doc.text("Polla Compis 2026  ·  "+nomPart+"  ·  Ref: "+refCode,mg,293);
+      doc.text("Pág. "+pg+" / "+totalPags,W-mg,293,{align:"right"});
+    }
+
+    // ---- GUARDAR ----
+    var filename="PollaCompis2026_"+nomPart.replace(/[^a-zA-Z0-9]/g,"_")+".pdf";
+    doc.save(filename);
+    btn.textContent="✓ PDF descargado";
+    btn.style.background="#1B5E20";
+    btn.disabled=false;
+
+  } catch(err){
+    console.error(err);
+    btn.textContent="⬇ Descargar mi comprobante PDF";
+    btn.disabled=false;
+    alert("Error generando el PDF: "+err.message);
+  }
+}
+</script>
+</body>
+</html>
