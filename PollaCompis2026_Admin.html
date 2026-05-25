@@ -1184,6 +1184,8 @@ function construirPDFAdmin(p){
     console.error(err);
     alert("Error generando el PDF: "+err.message);
   }
+}
+
 // Event listener delegado para radio buttons de penales en resultados del admin
 document.addEventListener("change",function(e){
   if(e.target&&e.target.type==="radio"&&e.target.name&&e.target.name.indexOf("rpen_")===0){
@@ -1199,3 +1201,5 @@ document.addEventListener("change",function(e){
   }
 });
 </script>
+</body>
+</html>
