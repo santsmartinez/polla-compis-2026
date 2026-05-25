@@ -624,6 +624,16 @@ function rendRF(){
         html+="<input class='hin' style='font-size:12px;padding:5px 8px' type='text' placeholder='Equipo visitante…' id='rrv_"+p.id+"' value='"+rvVal+"'>";
         html+="</div>";
         html+="<div class='prow prow-e' style='border:none;padding:4px 0'><div class='el' style='color:#999;font-size:11px'>Marcador (120')</div><input class='nin' type='number' min='0' max='20' placeholder='-' id='rgl_"+p.id+"' value='"+(r.gl!==undefined?r.gl:"")+"'><div class='vsep'>–</div><input class='nin' type='number' min='0' max='20' placeholder='-' id='rgv_"+p.id+"' value='"+(r.gv!==undefined?r.gv:"")+"'><div class='ev' style='color:#999;font-size:11px'>Goles visitante</div></div>";
+        // Radio buttons de penales (aparecen siempre en eliminatorias — admin sabe si hubo empate)
+        var penW=r.penWin||"";
+        html+="<div style='display:flex;align-items:center;gap:8px;padding:4px 0 8px;font-size:11px;color:#E65100;flex-wrap:wrap'>";
+        html+="<span style='font-weight:600'>⚽ Penales (si hubo empate) — clasifica:</span>";
+        html+="<label style='display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 9px;border-radius:6px;border:1.5px solid #FFD54F;background:"+(penW==="L"?"#E65100":"#fff")+";color:"+(penW==="L"?"#fff":"#E65100")+";font-size:12px;font-weight:600'>"+
+              "<input type='radio' name='rpen_"+p.id+"' value='L' "+(penW==="L"?"checked":"")+" style='display:none'> Local</label>";
+        html+="<label style='display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 9px;border-radius:6px;border:1.5px solid #FFD54F;background:"+(penW==="V"?"#E65100":"#fff")+";color:"+(penW==="V"?"#fff":"#E65100")+";font-size:12px;font-weight:600'>"+
+              "<input type='radio' name='rpen_"+p.id+"' value='V' "+(penW==="V"?"checked":"")+" style='display:none'> Visitante</label>";
+        html+="<label style='display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 9px;border-radius:6px;border:1.5px solid #DDD;background:"+(penW===""?"#EEE":"#fff")+";color:#888;font-size:12px'>"+
+              "<input type='radio' name='rpen_"+p.id+"' value='' "+(penW===""?"checked":"")+" style='display:none'> Sin penales</label>";
         html+="</div>";
       } else {
         html+="<div class='prow prow-g'><div class='el'>"+p.l+(p.col?"<span class='col'>COL</span>":"")+"</div><input class='nin' type='number' min='0' max='20' placeholder='-' id='rgl_"+p.id+"' value='"+(r.gl!==undefined?r.gl:"")+"'><div class='vsep'>–</div><input class='nin' type='number' min='0' max='20' placeholder='-' id='rgv_"+p.id+"' value='"+(r.gv!==undefined?r.gv:"")+"'><div class='ev'>"+p.v+"</div></div>";
@@ -651,6 +661,9 @@ async function saveRes(){
         var rv=document.getElementById("rrv_"+id);
         u.local=rl?rl.value.trim():(pa?pa.l:"");
         u.visitante=rv?rv.value.trim():(pa?pa.v:"");
+        // Guardar ganador de penales
+        var penRadio=document.querySelector("input[name='rpen_"+id+"']:checked");
+        u.penWin=penRadio?penRadio.value:null;
       } else {
         u.local=pa?pa.l:"";
         u.visitante=pa?pa.v:"";
@@ -663,7 +676,7 @@ async function saveRes(){
       var u=ups[i];
       await sbfetch("resultados?partido_id=eq."+u.partido_id,{method:"DELETE",headers:{"Prefer":"return=minimal"}});
       await sbfetch("resultados",{method:"POST",headers:{"Prefer":"return=minimal"},body:JSON.stringify(u)});
-      res[u.partido_id]={gl:u.gl,gv:u.gv,rl:u.local,rv:u.visitante};
+      res[u.partido_id]={gl:u.gl,gv:u.gv,rl:u.local,rv:u.visitante,penWin:u.penWin||null};
     }
     var m=document.getElementById("rm");m.textContent=ups.length+" resultado"+(ups.length!==1?"s":"")+" guardados.";m.className="msg msok";
     rendSt();
@@ -698,8 +711,8 @@ function calcC(){
           var rv=(real.rv||"").trim().toLowerCase();
           var pl=(pr.pl||"").trim().toLowerCase();
           var pv=(pr.pv||"").trim().toLowerCase();
-          // Ganador real del partido
-          var ganador=real.gl>real.gv?rl:real.gl<real.gv?rv:"";
+          // Ganador real del partido (considerar penWin si hubo empate)
+          var ganador=real.gl>real.gv?rl:real.gl<real.gv?rv:(real.penWin==="L"?rl:real.penWin==="V"?rv:"");
           // ¿El participante pronosticó quién ganaba en posición correcta?
           if(ganador&&pl&&pv){
             var cruceEx=(rl===pl&&rv===pv);
@@ -718,7 +731,7 @@ function calcC(){
           var rv2=(real.rv||"").trim().toLowerCase();
           var pl2=(pr.pl||"").trim().toLowerCase();
           var pv2=(pr.pv||"").trim().toLowerCase();
-          var ganador2=real.gl>real.gv?rl2:real.gl<real.gv?rv2:"";
+          var ganador2=real.gl>real.gv?rl2:real.gl<real.gv?rv2:(real.penWin==="L"?rl2:real.penWin==="V"?rv2:"");
           if(ganador2&&pl2&&pv2){
             var cruceEx2=(rl2===pl2&&rv2===pv2);
             var ganProno2=pr.gl>pr.gv?pl2:pr.gl<pr.gv?pv2:"";
@@ -809,10 +822,10 @@ function resolverSlot(slot){
     if(!r||r.gl==null)return slot; // sin resultado aún
     if(r.gl>r.gv)return r.rl||slot;
     if(r.gv>r.gl)return r.rv||slot;
-    // Empate: ganó por penales (buscamos en los pronósticos quién avanzó — usamos rl/rv como local avanzó)
-    // En eliminatorias el Admin guarda el ganador real en rl si hay penales?
-    // No — el campo pen no está en res. Usamos "Local (pen)" como fallback
-    return(r.rl||"Local")+" (pen)";
+    // Empate: ganó por penales — usar penWin si está disponible
+    if(r.penWin==="L")return r.rl||slot;
+    if(r.penWin==="V")return r.rv||slot;
+    return(r.rl||"Local")+" (pen?)";
   }
   // Perdedor de partido N
   var mL=slot.match(/^L(\d+)$/);
@@ -822,7 +835,9 @@ function resolverSlot(slot){
     if(!r2||r2.gl==null)return slot;
     if(r2.gl>r2.gv)return r2.rv||slot;
     if(r2.gv>r2.gl)return r2.rl||slot;
-    return(r2.rv||"Visitante")+" (pen)";
+    if(r2.penWin==="L")return r2.rv||slot;
+    if(r2.penWin==="V")return r2.rl||slot;
+    return(r2.rv||"Visitante")+" (pen?)";
   }
   // Slots tipo "1A","2B","3ABCDF" — devolver tal cual (grupos aún no iniciados)
   return slot;
@@ -1080,27 +1095,25 @@ function construirPDFAdmin(p){
           y+=3.5;
         }
 
-        // FIX v3: Penales — parseInt siempre, mostrar ganador con nombre resuelto
-        var penL=pr&&pr.penL!=null?parseInt(pr.penL):null;
-        var penV=pr&&pr.penV!=null?parseInt(pr.penV):null;
-        if(glP!==null&&gvP!==null&&glP===gvP&&penL!==null&&penV!==null){
+        // FIX v4: Penales — usar penWin (radio button) en lugar de penL/penV
+        if(glP!==null&&gvP!==null&&glP===gvP&&pr&&pr.penWin){
           checkY(5);
           doc.setFillColor(255,248,225);
           doc.rect(mg,y,W-mg*2,4.5,"F");
           doc.setFontSize(6.5);doc.setFont("helvetica","normal");doc.setTextColor(230,81,0);
-          var ganPen=penL>penV?nomL:(penV>penL?nomV:"Empate");
-          doc.text("Penales prono: "+penL+" - "+penV+"   clasifica: "+ganPen,mg+2,y+3);
+          var ganPen=pr.penWin==="L"?nomL:pr.penWin==="V"?nomV:"?";
+          doc.text("Penales prono — clasifica: "+ganPen,mg+2,y+3);
           y+=4.5;
         }
 
         // Penales reales si existen en resultado
-        if(real&&real.penL!=null&&real.penV!=null){
+        if(real&&real.penWin){
           checkY(5);
           doc.setFillColor(240,255,240);
           doc.rect(mg,y,W-mg*2,4.5,"F");
           doc.setFontSize(6.5);doc.setFont("helvetica","normal");doc.setTextColor(27,94,32);
-          var ganPenReal=parseInt(real.penL)>parseInt(real.penV)?(realNomL||"Local"):(realNomV||"Visit.");
-          doc.text("Penales real: "+real.penL+" - "+real.penV+"   clasifica: "+ganPenReal,mg+2,y+3);
+          var ganPenReal=real.penWin==="L"?(realNomL||"Local"):(realNomV||"Visit.");
+          doc.text("Penales real — clasifica: "+ganPenReal,mg+2,y+3);
           y+=4.5;
         }
       });
@@ -1171,7 +1184,18 @@ function construirPDFAdmin(p){
     console.error(err);
     alert("Error generando el PDF: "+err.message);
   }
-}
+// Event listener delegado para radio buttons de penales en resultados del admin
+document.addEventListener("change",function(e){
+  if(e.target&&e.target.type==="radio"&&e.target.name&&e.target.name.indexOf("rpen_")===0){
+    var radios=document.querySelectorAll("input[name='"+e.target.name+"']");
+    radios.forEach(function(r){
+      var lbl=r.parentElement;
+      if(lbl&&lbl.tagName==="LABEL"){
+        var sel=(r===e.target&&r.value!=="");
+        lbl.style.background=sel?"#E65100":"#fff";
+        lbl.style.color=sel?"#fff":(r.value===""?"#888":"#E65100");
+      }
+    });
+  }
+});
 </script>
-</body>
-</html>

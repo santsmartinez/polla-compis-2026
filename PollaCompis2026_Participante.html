@@ -61,11 +61,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 .gtbl .pos2{background:#F0F4FF}
 .gtbl .pos3{background:#F9F9F9}
 .gtbl .pos4{background:#FFF}
-/* ---- PENALES (B3 FIX) ---- */
-.pen-row{display:none;align-items:center;gap:8px;padding:5px 0 3px;font-size:11px;color:#E65100;background:#FFF8E1;border-radius:6px;padding:5px 10px;margin-top:4px}
+/* ---- PENALES (radio button fix) ---- */
+.pen-row{display:none;align-items:center;gap:10px;padding:6px 10px;font-size:12px;color:#E65100;background:#FFF8E1;border-radius:6px;margin-top:4px;flex-wrap:wrap}
 .pen-row.show{display:flex}
-.pen-in{width:38px;height:30px;text-align:center;border:1.5px solid #FFD54F;border-radius:6px;background:#fff;font-size:14px;font-weight:600;color:#E65100}
-.pen-in::-webkit-outer-spin-button,.pen-in::-webkit-inner-spin-button{-webkit-appearance:none}
+.pen-opt{display:flex;align-items:center;gap:5px;cursor:pointer;font-size:13px;font-weight:600;padding:5px 10px;border-radius:6px;border:1.5px solid #FFD54F;background:#fff;color:#E65100;transition:background .15s,color .15s}
+.pen-opt input[type=radio]{display:none}
+.pen-opt.sel{background:#E65100;color:#fff;border-color:#E65100}
 /* ---- ELIM NAMES (propagación B2 FIX) ---- */
 .ename-disp{font-size:11px;color:#555;background:#F0F4FF;border-radius:4px;padding:2px 6px;display:inline-block;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 </style>
@@ -867,12 +868,10 @@ function resolveCod(cod){
     if(pr&&pr.pl&&pr.gl!=null&&pr.gv!=null){
       if(pr.gl>pr.gv)return pr.pl;
       if(pr.gl<pr.gv)return pr.pv;
-      // Empate a 120min: consultar penales para decidir quién clasifica
-      if(pr.penL!=null&&pr.penV!=null){
-        if(pr.penL>pr.penV)return pr.pl;
-        if(pr.penV>pr.penL)return pr.pv;
-      }
-      return pr.pl; // fallback si penales no están ingresados aún
+      // Empate a 120min: consultar penWin para decidir quién clasifica
+      if(pr.penWin==="L")return pr.pl;
+      if(pr.penWin==="V")return pr.pv;
+      return pr.pl; // fallback temporal hasta que se seleccione ganador
     }
     return cod;
   }
@@ -884,10 +883,8 @@ function resolveCod(cod){
       if(pr2.gl>pr2.gv)return pr2.pv;
       if(pr2.gl<pr2.gv)return pr2.pl;
       // Empate a 120min: el perdedor de penales va al 3er puesto
-      if(pr2.penL!=null&&pr2.penV!=null){
-        if(pr2.penL>pr2.penV)return pr2.pv;
-        if(pr2.penV>pr2.penL)return pr2.pl;
-      }
+      if(pr2.penWin==="L")return pr2.pv;
+      if(pr2.penWin==="V")return pr2.pl;
       return pr2.pv; // fallback
     }
     return cod;
@@ -953,15 +950,15 @@ function setPL(id,campo,val){
   pronos[id][campo]=val;
 }
 
-// Verifica si hay empate (para mostrar penales)
-function checkPenales(id,inL,inV,penRow,penInL,penInV){
+// Verifica si hay empate (para mostrar selector de penales)
+function checkPenales(id,inL,inV,penRow){
   var gl=parseInt(inL.value);
   var gv=parseInt(inV.value);
   if(!isNaN(gl)&&!isNaN(gv)&&gl===gv){
     penRow.classList.add("show");
   } else {
     penRow.classList.remove("show");
-    if(pronos[id]){pronos[id].penL=null;pronos[id].penV=null;}
+    if(pronos[id]){pronos[id].penWin=null;}
   }
 }
 
@@ -1025,15 +1022,28 @@ function mkElimRow(id,nomL,nomV,f,cl,cv){
   evDiv.innerHTML="<span style='font-size:11px;color:#888'>Visitante</span>";
   row.appendChild(elDiv);row.appendChild(inL);row.appendChild(sep);row.appendChild(inV);row.appendChild(evDiv);
 
-  // Fila de penales (B3 FIX)
+  // Fila de penales — radio button: ¿quién gana en penales?
   var penRow=document.createElement("div");penRow.className="pen-row";
-  penRow.innerHTML="⚽ Penales: ";
-  var penInL=document.createElement("input");penInL.type="number";penInL.min="0";penInL.max="30";penInL.placeholder="-";penInL.className="pen-in";
-  penRow.appendChild(penInL);
-  penRow.appendChild(document.createTextNode("–"));
-  var penInV=document.createElement("input");penInV.type="number";penInV.min="0";penInV.max="30";penInV.placeholder="-";penInV.className="pen-in";
-  penRow.appendChild(penInV);
-  var penNote=document.createElement("span");penNote.style.cssText="font-size:10px;color:#999;margin-left:6px";penNote.textContent="(no suma pts, solo determina quién clasifica)";
+  var penLbl=document.createElement("span");penLbl.textContent="⚽ Penales — clasifica:";penLbl.style.cssText="font-size:11px;font-weight:600;white-space:nowrap";
+  penRow.appendChild(penLbl);
+
+  // Opción Local
+  var optL=document.createElement("label");optL.className="pen-opt"+(pronos[id]&&pronos[id].penWin==="L"?" sel":"");
+  var rdL=document.createElement("input");rdL.type="radio";rdL.name="pen_"+id;rdL.value="L";
+  if(pronos[id]&&pronos[id].penWin==="L")rdL.checked=true;
+  optL.appendChild(rdL);
+  var txtL=document.createElement("span");
+  penRow.appendChild(optL);
+
+  // Opción Visitante
+  var optV=document.createElement("label");optV.className="pen-opt"+(pronos[id]&&pronos[id].penWin==="V"?" sel":"");
+  var rdV=document.createElement("input");rdV.type="radio";rdV.name="pen_"+id;rdV.value="V";
+  if(pronos[id]&&pronos[id].penWin==="V")rdV.checked=true;
+  optV.appendChild(rdV);
+  var txtV=document.createElement("span");
+  penRow.appendChild(optV);
+
+  var penNote=document.createElement("span");penNote.style.cssText="font-size:10px;color:#999;margin-left:2px";penNote.textContent="(solo define quién clasifica, no suma pts)";
   penRow.appendChild(penNote);
 
   var fd=document.createElement("div");fd.className="fr";fd.textContent=f;
@@ -1051,20 +1061,43 @@ function mkElimRow(id,nomL,nomV,f,cl,cv){
     }
   }
 
+  // Actualizar etiquetas dinámicas de los radio buttons con nombre de equipos
+  function updPenLabels(){
+    var nl=document.getElementById("ln_"+id);
+    var nv=document.getElementById("vn_"+id);
+    var labelL=nl?nl.textContent.trim():nomL||"Local";
+    var labelV=nv?nv.textContent.trim():nomV||"Visitante";
+    txtL.textContent=labelL;
+    txtV.textContent=labelV;
+  }
+  optL.appendChild(txtL);
+  optV.appendChild(txtV);
+  // Llamar una vez para inicializar etiquetas
+  updPenLabels();
+
   inL.addEventListener("input",function(){
     setP(id,"gl",this.value);
     syncNames();
-    checkPenales(id,inL,inV,penRow,penInL,penInV);
+    updPenLabels();
+    checkPenales(id,inL,inV,penRow);
     updNombresElim();
   });
   inV.addEventListener("input",function(){
     setP(id,"gv",this.value);
     syncNames();
-    checkPenales(id,inL,inV,penRow,penInL,penInV);
+    updPenLabels();
+    checkPenales(id,inL,inV,penRow);
     updNombresElim();
   });
-  penInL.addEventListener("input",function(){setPL(id,"penL",parseInt(this.value)||null);});
-  penInV.addEventListener("input",function(){setPL(id,"penV",parseInt(this.value)||null);});
+
+  function setPenWin(val){
+    setPL(id,"penWin",val);
+    optL.classList.toggle("sel",val==="L");
+    optV.classList.toggle("sel",val==="V");
+    updNombresElim();
+  }
+  rdL.addEventListener("change",function(){if(this.checked)setPenWin("L");});
+  rdV.addEventListener("change",function(){if(this.checked)setPenWin("V");});
 
   return wrap;
 }
@@ -1415,6 +1448,8 @@ function construirPDF(){
           if(penLW!==null&&penVW!==null){
             return limpiarNombrePDF(penLW>penVW?pr.pl:pr.pv);
           }
+          if(pr.penWin==="L")return limpiarNombrePDF(pr.pl);
+          if(pr.penWin==="V")return limpiarNombrePDF(pr.pv);
           return limpiarNombrePDF(pr.pl);
         }
         return slot;
@@ -1432,6 +1467,8 @@ function construirPDF(){
           if(penLL!==null&&penVL!==null){
             return limpiarNombrePDF(penLL>penVL?pr2.pv:pr2.pl);
           }
+          if(pr2.penWin==="L")return limpiarNombrePDF(pr2.pv);
+          if(pr2.penWin==="V")return limpiarNombrePDF(pr2.pl);
           return limpiarNombrePDF(pr2.pv);
         }
         return slot;
@@ -1485,16 +1522,14 @@ function construirPDF(){
         doc.text(nomVtr,W-mg-2,y+4,{align:"right"});
         y+=6;
 
-        // FIX v3: penales con parseInt siempre
-        var penL=pr&&pr.penL!=null?parseInt(pr.penL):null;
-        var penV=pr&&pr.penV!=null?parseInt(pr.penV):null;
-        if(glP!==null&&gvP!==null&&glP===gvP&&penL!==null&&penV!==null){
+        // Penales — mostrar ganador si hubo empate y se seleccionó penWin
+        if(glP!==null&&gvP!==null&&glP===gvP&&pr&&pr.penWin){
           checkY(6);
           doc.setFillColor(255,248,225);
           doc.rect(mg,y,W-mg*2,5,"F");
           doc.setFontSize(7);doc.setFont("helvetica","normal");doc.setTextColor(230,81,0);
-          var ganPen=penL>penV?nomL:(penV>penL?nomV:"Empate");
-          doc.text("Penales: "+penL+" - "+penV+"   clasifica: "+ganPen,mg+2,y+3.5);
+          var ganPen=pr.penWin==="L"?nomL:pr.penWin==="V"?nomV:"?";
+          doc.text("Penales — clasifica: "+ganPen,mg+2,y+3.5);
           y+=5;
         }
       });
