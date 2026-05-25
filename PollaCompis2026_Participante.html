@@ -193,7 +193,7 @@ var PG=[
   {id:13,l:"Bélgica",v:"Egipto",g:"G",f:"15 Jun 15:00"},{id:14,l:"Irán",v:"Nueva Zelanda",g:"G",f:"15 Jun 21:00"},{id:38,l:"Bélgica",v:"Irán",g:"G",f:"21 Jun 15:00"},{id:40,l:"Nueva Zelanda",v:"Egipto",g:"G",f:"21 Jun 21:00"},{id:63,l:"Egipto",v:"Irán",g:"G",f:"26 Jun 23:00"},{id:64,l:"Nueva Zelanda",v:"Bélgica",g:"G",f:"26 Jun 23:00"},
   {id:15,l:"España",v:"Cabo Verde",g:"H",f:"15 Jun 12:00"},{id:16,l:"Arabia Saudita",v:"Uruguay",g:"H",f:"15 Jun 18:00"},{id:37,l:"España",v:"Arabia Saudita",g:"H",f:"21 Jun 12:00"},{id:39,l:"Uruguay",v:"Cabo Verde",g:"H",f:"21 Jun 18:00"},{id:65,l:"Cabo Verde",v:"Arabia Saudita",g:"H",f:"26 Jun 20:00"},{id:66,l:"Uruguay",v:"España",g:"H",f:"26 Jun 20:00"},
   {id:17,l:"Francia",v:"Senegal",g:"I",f:"16 Jun 15:00"},{id:18,l:"Irak",v:"Noruega",g:"I",f:"16 Jun 18:00"},{id:41,l:"Francia",v:"Irak",g:"I",f:"22 Jun 17:00"},{id:42,l:"Noruega",v:"Senegal",g:"I",f:"22 Jun 20:00"},{id:61,l:"Noruega",v:"Francia",g:"I",f:"26 Jun 15:00"},{id:62,l:"Senegal",v:"Irak",g:"I",f:"26 Jun 15:00"},
-  {id:19,l:"Argentina",v:"Argelia",g:"J",f:"16 Jun 21:00"},{id:20,l:"Austria",v:"Jordania",g:"J",f:"17 Jun 00:00"},{id:43,l:"Argentina",v:"Austria",g:"J",f:"22 Jun 13:00"},{id:44,l:"Jordania",v:"Argelia",g:"J",f:"22 Jun 23:00"},{id:69,l:"Argelia",v:"Austria",g:"J",f:"27 Jun 22:00"},{id:70,l:"Jordania",v:"Argelia",g:"J",f:"27 Jun 22:00"},
+  {id:19,l:"Argentina",v:"Argelia",g:"J",f:"16 Jun 21:00"},{id:20,l:"Austria",v:"Jordania",g:"J",f:"17 Jun 00:00"},{id:43,l:"Argentina",v:"Jordania",g:"J",f:"22 Jun 13:00"},{id:44,l:"Austria",v:"Argelia",g:"J",f:"22 Jun 23:00"},{id:69,l:"Argentina",v:"Austria",g:"J",f:"27 Jun 22:00"},{id:70,l:"Jordania",v:"Argelia",g:"J",f:"27 Jun 22:00"},
   {id:21,l:"Portugal",v:"RD Congo",g:"K",f:"17 Jun 13:00"},{id:24,l:"Uzbekistán",v:"Colombia",g:"K",f:"17 Jun 22:00",col:true},{id:45,l:"Portugal",v:"Uzbekistán",g:"K",f:"23 Jun 13:00"},{id:48,l:"Colombia",v:"RD Congo",g:"K",f:"23 Jun 22:00",col:true},{id:71,l:"Colombia",v:"Portugal",g:"K",f:"27 Jun 19:30",col:true},{id:72,l:"RD Congo",v:"Uzbekistán",g:"K",f:"27 Jun 19:30"},
   {id:22,l:"Inglaterra",v:"Croacia",g:"L",f:"17 Jun 16:00"},{id:23,l:"Ghana",v:"Panamá",g:"L",f:"17 Jun 19:00"},{id:46,l:"Inglaterra",v:"Ghana",g:"L",f:"23 Jun 16:00"},{id:47,l:"Panamá",v:"Croacia",g:"L",f:"23 Jun 19:00"},{id:67,l:"Panamá",v:"Inglaterra",g:"L",f:"27 Jun 17:00"},{id:68,l:"Croacia",v:"Ghana",g:"L",f:"27 Jun 17:00"}
 ];
@@ -1381,6 +1381,77 @@ function construirPDF(){
       {lbl:"GRAN FINAL",ids:[104]}
     ];
 
+    // FIX v3: limpiar emojis de nombres para PDF (definida fuera del loop)
+    function limpiarNombrePDF(n){
+      if(!n)return"";
+      return n.replace(/[\u{1F300}-\u{1FFFF}]|[\u{1F100}-\u{1F1FF}]|[\u2600-\u27FF]/gu,"").replace(/\s+/g," ").trim();
+    }
+
+    // FIX v3: resolver nombre de equipo desde pronos[] encadenando fases
+    function resolverNombrePDF(slot){
+      if(!slot)return"";
+      var m1=slot.match(/^([1-4])([A-L])$/);
+      if(m1){
+        var pos=parseInt(m1[1])-1;
+        var g=m1[2];
+        var r=clasGrupo(g);
+        return limpiarNombrePDF(r.orden[pos]||slot);
+      }
+      var D16SL={"3ABCDF":74,"3CDFGH":77,"3CEFHI":79,"3EHIJK":80,"3BEFIJ":81,"3AEHIJ":82,"3EFGIJ":85,"3DEIJL":87};
+      if(D16SL[slot]!==undefined){
+        var eq=getMejorTerceroParaPartido(D16SL[slot]);
+        return limpiarNombrePDF(eq||slot);
+      }
+      var mw=slot.match(/^W([0-9]+)$/);
+      if(mw){
+        var pid=parseInt(mw[1]);
+        var pr=pronos[pid];
+        if(pr&&pr.pl&&pr.gl!=null&&pr.gv!=null){
+          var glW=parseInt(pr.gl),gvW=parseInt(pr.gv);
+          if(glW>gvW)return limpiarNombrePDF(pr.pl);
+          if(gvW>glW)return limpiarNombrePDF(pr.pv);
+          var penLW=pr.penL!=null?parseInt(pr.penL):null;
+          var penVW=pr.penV!=null?parseInt(pr.penV):null;
+          if(penLW!==null&&penVW!==null){
+            return limpiarNombrePDF(penLW>penVW?pr.pl:pr.pv);
+          }
+          return limpiarNombrePDF(pr.pl);
+        }
+        return slot;
+      }
+      var ml=slot.match(/^L([0-9]+)$/);
+      if(ml){
+        var pid2=parseInt(ml[1]);
+        var pr2=pronos[pid2];
+        if(pr2&&pr2.pl&&pr2.gl!=null&&pr2.gv!=null){
+          var glL=parseInt(pr2.gl),gvL=parseInt(pr2.gv);
+          if(glL>gvL)return limpiarNombrePDF(pr2.pv);
+          if(gvL>glL)return limpiarNombrePDF(pr2.pl);
+          var penLL=pr2.penL!=null?parseInt(pr2.penL):null;
+          var penVL=pr2.penV!=null?parseInt(pr2.penV):null;
+          if(penLL!==null&&penVL!==null){
+            return limpiarNombrePDF(penLL>penVL?pr2.pv:pr2.pl);
+          }
+          return limpiarNombrePDF(pr2.pv);
+        }
+        return slot;
+      }
+      return limpiarNombrePDF(slot);
+    }
+
+    var SLOTS_PDF={
+      73:["2A","2B"],74:["1E","3ABCDF"],75:["1F","2C"],76:["1C","2F"],
+      77:["1I","3CDFGH"],78:["2E","2I"],79:["1A","3CEFHI"],80:["1L","3EHIJK"],
+      81:["1D","3BEFIJ"],82:["1G","3AEHIJ"],83:["2K","2L"],84:["1H","2J"],
+      85:["1B","3EFGIJ"],86:["1J","2H"],87:["1K","3DEIJL"],88:["2D","2G"],
+      89:["W73","W75"],90:["W74","W77"],91:["W76","W78"],92:["W79","W80"],
+      93:["W83","W84"],94:["W81","W82"],95:["W86","W88"],96:["W85","W87"],
+      97:["W89","W90"],98:["W93","W94"],99:["W91","W92"],100:["W95","W96"],
+      101:["W97","W98"],102:["W99","W100"],
+      103:["L101","L102"],
+      104:["W101","W102"]
+    };
+
     fasesElim.forEach(function(fase){
       checkY(12);
       banda([200,16,46],7);
@@ -1390,31 +1461,40 @@ function construirPDF(){
       fase.ids.forEach(function(id,idx){
         checkY(10);
         var pr=pronos[id];
-        // Limpiar emojis de banderas de los nombres para PDF
-        function limpiarNombre(n){return n?n.replace(/[\u{1F300}-\u{1FFFF}]|[\u{1F100}-\u{1F1FF}]|[\u2600-\u27FF]|\s+/gu," ").trim():n;}
-        var nomL=limpiarNombre(pr&&pr.pl?pr.pl:("Equipo "+id+"L"));
-        var nomV=limpiarNombre(pr&&pr.pv?pr.pv:("Equipo "+id+"V"));
-        var score=(pr&&pr.gl!=null&&pr.gv!=null)?(pr.gl+"\u2013"+pr.gv):"\u2013";
-        var hayEmpate=(pr&&pr.gl!=null&&pr.gv!=null&&parseInt(pr.gl)===parseInt(pr.gv));
+        var slotPair=SLOTS_PDF[id]||["—","—"];
+
+        var nomLraw=(pr&&pr.pl)?pr.pl:resolverNombrePDF(slotPair[0]);
+        var nomVraw=(pr&&pr.pv)?pr.pv:resolverNombrePDF(slotPair[1]);
+        var nomL=limpiarNombrePDF(nomLraw)||slotPair[0];
+        var nomV=limpiarNombrePDF(nomVraw)||slotPair[1];
+
+        var glP=pr&&pr.gl!=null?parseInt(pr.gl):null;
+        var gvP=pr&&pr.gv!=null?parseInt(pr.gv):null;
+        var score=(glP!==null&&gvP!==null)?(glP+"\u2013"+gvP):"\u2013";
+
         var bg=idx%2===0?[255,255,255]:[248,249,250];
         doc.setFillColor(bg[0],bg[1],bg[2]);
         doc.rect(mg,y,W-mg*2,6,"F");
         doc.setFontSize(8);doc.setFont("helvetica","normal");doc.setTextColor(30,30,30);
-        doc.text(nomL,mg+2,y+4);
+        var nomLtr=nomL.length>22?nomL.substring(0,20)+"…":nomL;
+        var nomVtr=nomV.length>22?nomV.substring(0,20)+"…":nomV;
+        doc.text(nomLtr,mg+2,y+4);
         doc.setFont("helvetica","bold");doc.setTextColor(200,16,46);
         doc.text(score,(W)/2,y+4,{align:"center"});
         doc.setFont("helvetica","normal");doc.setTextColor(30,30,30);
-        doc.text(nomV,W-mg-2,y+4,{align:"right"});
+        doc.text(nomVtr,W-mg-2,y+4,{align:"right"});
         y+=6;
-        // Si hubo empate, mostrar penales si están ingresados
-        if(hayEmpate&&pr&&pr.penL!=null&&pr.penV!=null){
+
+        // FIX v3: penales con parseInt siempre
+        var penL=pr&&pr.penL!=null?parseInt(pr.penL):null;
+        var penV=pr&&pr.penV!=null?parseInt(pr.penV):null;
+        if(glP!==null&&gvP!==null&&glP===gvP&&penL!==null&&penV!==null){
           checkY(6);
           doc.setFillColor(255,248,225);
           doc.rect(mg,y,W-mg*2,5,"F");
           doc.setFontSize(7);doc.setFont("helvetica","normal");doc.setTextColor(230,81,0);
-          var penScore="Penales: "+pr.penL+" - "+pr.penV;
-          var ganPen=pr.penL>pr.penV?nomL:(pr.penV>pr.penL?nomV:"–");
-          doc.text(penScore+" (clasifica: "+ganPen+")",mg+2,y+3.5);
+          var ganPen=penL>penV?nomL:(penV>penL?nomV:"Empate");
+          doc.text("Penales: "+penL+" - "+penV+"   clasifica: "+ganPen,mg+2,y+3.5);
           y+=5;
         }
       });
