@@ -243,16 +243,77 @@ document.getElementById("btnsavehon").addEventListener("click",saveHon);
 document.getElementById("btncd").addEventListener("click",function(){document.getElementById("dc").style.display="none";});
 
 async function load(){
-  var rP=await sbfetch("participantes?order=creado_en.asc&select=*").then(function(r){return r.json();});
-  var rR=await sbfetch("resultados?select=*").then(function(r){return r.json();});
-  var rH=await sbfetch("config?clave=eq.honor_real&select=valor").then(function(r){return r.json();});
-  parts=Array.isArray(rP)?rP:[];
-  res={};
-  if(Array.isArray(rR))rR.forEach(function(r){
-    res[r.partido_id]={gl:r.gl,gv:r.gv,rl:r.local||"",rv:r.visitante||""};
-  });
-  if(rH&&rH[0])try{hR=JSON.parse(rH[0].valor);}catch(e){hR={};}
-  rendSt();rendLi();bFB();rendRF();rendHF();
+  // Mostrar estado de carga
+  var liEl=document.getElementById("li");
+  if(liEl)liEl.innerHTML="<p style='font-size:13px;color:#888;padding:8px 0'>⏳ Cargando datos desde Supabase…</p>";
+
+  try{
+    // Llamada participantes
+    var respP=await sbfetch("participantes?order=creado_en.asc&select=*");
+    if(!respP.ok){
+      var errTxt=await respP.text();
+      throw new Error("Supabase /participantes — HTTP "+respP.status+": "+errTxt.slice(0,200));
+    }
+    var rP=await respP.json();
+
+    // Llamada resultados
+    var respR=await sbfetch("resultados?select=*");
+    if(!respR.ok){
+      var errTxt2=await respR.text();
+      throw new Error("Supabase /resultados — HTTP "+respR.status+": "+errTxt2.slice(0,200));
+    }
+    var rR=await respR.json();
+
+    // Llamada config (honor real)
+    var respH=await sbfetch("config?clave=eq.honor_real&select=valor");
+    if(!respH.ok){
+      var errTxt3=await respH.text();
+      throw new Error("Supabase /config — HTTP "+respH.status+": "+errTxt3.slice(0,200));
+    }
+    var rH=await respH.json();
+
+    // Procesar datos
+    parts=Array.isArray(rP)?rP:[];
+    res={};
+    if(Array.isArray(rR))rR.forEach(function(r){
+      res[r.partido_id]={gl:r.gl,gv:r.gv,rl:r.local||"",rv:r.visitante||""};
+    });
+    if(rH&&rH[0])try{hR=JSON.parse(rH[0].valor);}catch(e){hR={};}
+
+    // Limpiar error anterior si existía
+    var prevErr=document.getElementById("load-err");
+    if(prevErr)prevErr.remove();
+
+    rendSt();rendLi();bFB();rendRF();rendHF();
+
+  }catch(e){
+    console.error("Error cargando datos:",e);
+    // Mostrar error visible con diagnóstico
+    var errBox=document.getElementById("load-err");
+    if(!errBox){
+      errBox=document.createElement("div");
+      errBox.id="load-err";
+      errBox.style.cssText="background:#FFEBEE;border:1px solid #FFCDD2;border-radius:10px;padding:1rem;margin-bottom:.75rem;font-size:13px;color:#B71C1C;line-height:1.7";
+      var bodyEl=document.querySelector(".body");
+      if(bodyEl)bodyEl.insertBefore(errBox,bodyEl.firstChild);
+    }
+    var esProblemaSupabase=(e.message&&(e.message.indexOf("503")>=0||e.message.indexOf("Failed to fetch")>=0||e.message.indexOf("NetworkError")>=0||e.message.indexOf("404")>=0));
+    errBox.innerHTML=
+      "<b>⚠️ Error al cargar datos</b><br>"+
+      "<span style='color:#555;font-size:12px'>"+escHtml(e.message)+"</span><br><br>"+
+      (esProblemaSupabase?
+        "<b>Posible causa:</b> El proyecto de Supabase puede estar <b>pausado por inactividad</b> (se pausa tras 7 días sin uso).<br>"+
+        "→ Ve a <a href='https://supabase.com' target='_blank' style='color:#C8102E'>supabase.com</a>, inicia sesión, abre el proyecto <b>polla-compis-2026</b> y espera que reactive (1-2 min).<br>":
+        "<b>Posible causa:</b> Sin conexión a internet o error en la URL de Supabase.<br>")+
+      "<button onclick='load()' style='margin-top:8px;padding:7px 18px;background:#C8102E;color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer'>↺ Reintentar</button>";
+    // Mostrar lista vacía con mensaje
+    parts=[];
+    rendSt();rendLi();
+  }
+}
+
+function escHtml(s){
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 }
 
 function rendSt(){
@@ -278,7 +339,9 @@ function rendLi(){
     var pil=document.createElement("span");pil.className="pill "+(p.validado?"pok":"ppen");pil.textContent=p.validado?"✓ Validado":"Pendiente";
     var bv=document.createElement("button");bv.className="bsm bver";bv.textContent="Ver pronósticos";
     (function(pid){bv.addEventListener("click",function(){verD(pid);});})(p.id);
-    row.appendChild(num);row.appendChild(nom);row.appendChild(can);row.appendChild(pil);row.appendChild(bv);
+    var bpdf=document.createElement("button");bpdf.className="bsm bpdf";bpdf.textContent="⬇ PDF";
+    (function(pid){bpdf.addEventListener("click",function(){generarPDFAdmin(pid);});})(p.id);
+    row.appendChild(num);row.appendChild(nom);row.appendChild(can);row.appendChild(pil);row.appendChild(bv);row.appendChild(bpdf);
     if(!p.validado){
       var bval=document.createElement("button");bval.className="bsm bval";bval.textContent="✓ Validar";
       (function(pid){bval.addEventListener("click",function(){valP(pid);});})(p.id);
@@ -614,6 +677,295 @@ function rendPts(){
   html+="<b>Honor:</b> 🏆40 · 🥈25 · 🥉15 · ⚽15/10/7 · 🏅15/10/7 · 🧤15 · <b>Total honor:</b> 159pts<br>";
   html+="<b>Premios:</b> 65% / 25% / 10% · <b>Máximo teórico:</b> 1.676 pts</div>";
   document.getElementById("ptsbody").innerHTML=html;
+}
+
+// ============================================================
+// GENERADOR DE PDF — COMPROBANTE DESDE ADMIN
+// ============================================================
+function generarPDFAdmin(id){
+  var p=parts.find(function(x){return x.id===id;});
+  if(!p){alert("Participante no encontrado.");return;}
+  if(typeof window.jspdf==="undefined"){
+    var s=document.createElement("script");
+    s.src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+    s.onload=function(){construirPDFAdmin(p);};
+    s.onerror=function(){alert("Error cargando jsPDF. Verifica conexión a internet.");};
+    document.head.appendChild(s);
+  } else {
+    construirPDFAdmin(p);
+  }
+}
+
+function construirPDFAdmin(p){
+  try{
+    var {jsPDF}=window.jspdf;
+    var doc=new jsPDF({orientation:"portrait",unit:"mm",format:"a4"});
+    var W=210,mg=14,y=0;
+    var pronos=p.pronos||{};
+    var honor=p.honor||{};
+    var now=new Date();
+    var fechaStr=now.toLocaleDateString("es-CO",{day:"2-digit",month:"long",year:"numeric"})+" · "+now.toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit"});
+    var refCode="PC2026-ADM-"+now.getTime().toString(36).toUpperCase();
+
+    function newPage(){doc.addPage();y=0;}
+    function checkY(n){if(y+n>278)newPage();}
+    function banda(col,h){doc.setFillColor(col[0],col[1],col[2]);doc.rect(0,y,W,h,"F");}
+    function txt(t,x,fy,sz,bold,col){
+      doc.setFontSize(sz);doc.setFont("helvetica",bold?"bold":"normal");
+      doc.setTextColor(col?col[0]:30,col?col[1]:30,col?col[2]:30);
+      doc.text(t,x,fy);
+    }
+    function limpiar(n){
+      if(!n)return "";
+      return n.replace(/[\u{1F300}-\u{1FFFF}]|[\u{1F100}-\u{1F1FF}]|[\u2600-\u27FF]/gu," ").replace(/\s+/g," ").trim();
+    }
+
+    // ---- ENCABEZADO ----
+    banda([10,22,40],22);
+    txt("POLLA COMPIS  ·  MUNDIAL 2026",mg,10,13,true,[255,255,255]);
+    txt("USA  ·  CANADA  ·  MEXICO   |   11 Jun - 19 Jul 2026",mg,16,8,false,[200,216,240]);
+    y=22;
+
+    // Franja datos participante
+    banda([244,246,250],14);
+    txt("Participante:",mg,y+5,8,false,[100,100,100]);
+    txt(p.nombre,mg+24,y+5,10,true,[10,22,40]);
+    txt(p.validado?"VALIDADO":"PENDIENTE",W-mg,y+5,7,true,p.validado?[27,94,32]:[230,81,0]);
+    doc.setFontSize(7);doc.setTextColor(150,150,150);
+    doc.text(fechaStr,W-mg,y+10,{align:"right"});
+    y+=14;
+    doc.setDrawColor(220,220,220);doc.setLineWidth(0.3);
+    doc.line(mg,y+2,W-mg,y+2);y+=6;
+
+    // ============================================================
+    // FASE DE GRUPOS — por grupo
+    // ============================================================
+    var GK=["A","B","C","D","E","F","G","H","I","J","K","L"];
+    var GEQ={
+      A:["México","Sudáfrica","Corea del Sur","Rep. Checa"],
+      B:["Canadá","Bosnia y Herz.","Catar","Suiza"],
+      C:["Brasil","Marruecos","Haití","Escocia"],
+      D:["EE.UU.","Paraguay","Australia","Turquía"],
+      E:["Alemania","Curazao","Costa de Marfil","Ecuador"],
+      F:["Países Bajos","Japón","Suecia","Túnez"],
+      G:["Bélgica","Egipto","Irán","Nueva Zelanda"],
+      H:["España","Cabo Verde","Arabia Saudita","Uruguay"],
+      I:["Francia","Senegal","Irak","Noruega"],
+      J:["Argentina","Argelia","Austria","Jordania"],
+      K:["Portugal","RD Congo","Uzbekistán","Colombia"],
+      L:["Inglaterra","Croacia","Ghana","Panamá"]
+    };
+
+    checkY(10);
+    banda([200,16,46],7);
+    txt("FASE DE GRUPOS",mg,y+5,9,true,[255,255,255]);
+    y+=7;y+=2;
+
+    var gruposParts={
+      A:[1,2,25,28,53,54],B:[3,5,26,27,51,52],C:[6,7,29,30,49,50],
+      D:[4,8,31,32,59,60],E:[9,10,33,34,55,56],F:[11,12,35,36,57,58],
+      G:[13,14,38,40,63,64],H:[15,16,37,39,65,66],I:[17,18,41,42,61,62],
+      J:[19,20,43,44,69,70],K:[21,24,45,48,71,72],L:[22,23,46,47,67,68]
+    };
+    var gruposNames={
+      1:{l:"México",v:"Sudáfrica",f:"11 Jun"},2:{l:"Corea del Sur",v:"Rep. Checa",f:"11 Jun"},
+      25:{l:"Rep. Checa",v:"Sudáfrica",f:"18 Jun"},28:{l:"México",v:"Corea del Sur",f:"18 Jun"},
+      53:{l:"Sudáfrica",v:"Corea del Sur",f:"24 Jun"},54:{l:"Rep. Checa",v:"México",f:"24 Jun"},
+      3:{l:"Canadá",v:"Bosnia y Herz.",f:"12 Jun"},5:{l:"Catar",v:"Suiza",f:"13 Jun"},
+      26:{l:"Suiza",v:"Bosnia y Herz.",f:"18 Jun"},27:{l:"Canadá",v:"Catar",f:"18 Jun"},
+      51:{l:"Suiza",v:"Canadá",f:"24 Jun"},52:{l:"Bosnia y Herz.",v:"Catar",f:"24 Jun"},
+      6:{l:"Brasil",v:"Marruecos",f:"13 Jun"},7:{l:"Haití",v:"Escocia",f:"13 Jun"},
+      29:{l:"Brasil",v:"Haití",f:"19 Jun"},30:{l:"Escocia",v:"Marruecos",f:"19 Jun"},
+      49:{l:"Escocia",v:"Brasil",f:"24 Jun"},50:{l:"Marruecos",v:"Haití",f:"24 Jun"},
+      4:{l:"EE.UU.",v:"Paraguay",f:"12 Jun"},8:{l:"Australia",v:"Turquía",f:"14 Jun"},
+      31:{l:"Turquía",v:"Paraguay",f:"19 Jun"},32:{l:"EE.UU.",v:"Australia",f:"19 Jun"},
+      59:{l:"Turquía",v:"EE.UU.",f:"25 Jun"},60:{l:"Paraguay",v:"Australia",f:"25 Jun"},
+      9:{l:"Alemania",v:"Curazao",f:"14 Jun"},10:{l:"Costa de Marfil",v:"Ecuador",f:"14 Jun"},
+      33:{l:"Alemania",v:"Costa de Marfil",f:"20 Jun"},34:{l:"Ecuador",v:"Curazao",f:"20 Jun"},
+      55:{l:"Curazao",v:"Costa de Marfil",f:"25 Jun"},56:{l:"Ecuador",v:"Alemania",f:"25 Jun"},
+      11:{l:"Países Bajos",v:"Japón",f:"14 Jun"},12:{l:"Suecia",v:"Túnez",f:"14 Jun"},
+      35:{l:"Países Bajos",v:"Suecia",f:"20 Jun"},36:{l:"Túnez",v:"Japón",f:"21 Jun"},
+      57:{l:"Japón",v:"Suecia",f:"25 Jun"},58:{l:"Túnez",v:"Países Bajos",f:"25 Jun"},
+      13:{l:"Bélgica",v:"Egipto",f:"15 Jun"},14:{l:"Irán",v:"Nueva Zelanda",f:"15 Jun"},
+      38:{l:"Bélgica",v:"Irán",f:"21 Jun"},40:{l:"Nueva Zelanda",v:"Egipto",f:"21 Jun"},
+      63:{l:"Egipto",v:"Irán",f:"26 Jun"},64:{l:"Nueva Zelanda",v:"Bélgica",f:"26 Jun"},
+      15:{l:"España",v:"Cabo Verde",f:"15 Jun"},16:{l:"Arabia Saudita",v:"Uruguay",f:"15 Jun"},
+      37:{l:"España",v:"Arabia Saudita",f:"21 Jun"},39:{l:"Uruguay",v:"Cabo Verde",f:"21 Jun"},
+      65:{l:"Cabo Verde",v:"Arabia Saudita",f:"26 Jun"},66:{l:"Uruguay",v:"España",f:"26 Jun"},
+      17:{l:"Francia",v:"Senegal",f:"16 Jun"},18:{l:"Irak",v:"Noruega",f:"16 Jun"},
+      41:{l:"Francia",v:"Irak",f:"22 Jun"},42:{l:"Noruega",v:"Senegal",f:"22 Jun"},
+      61:{l:"Noruega",v:"Francia",f:"26 Jun"},62:{l:"Senegal",v:"Irak",f:"26 Jun"},
+      19:{l:"Argentina",v:"Argelia",f:"16 Jun"},20:{l:"Austria",v:"Jordania",f:"17 Jun"},
+      43:{l:"Argentina",v:"Austria",f:"22 Jun"},44:{l:"Jordania",v:"Argelia",f:"22 Jun"},
+      69:{l:"Argelia",v:"Austria",f:"27 Jun"},70:{l:"Jordania",v:"Argelia",f:"27 Jun"},
+      21:{l:"Portugal",v:"RD Congo",f:"17 Jun"},24:{l:"Uzbekistán",v:"Colombia",f:"17 Jun"},
+      45:{l:"Portugal",v:"Uzbekistán",f:"23 Jun"},48:{l:"Colombia",v:"RD Congo",f:"23 Jun"},
+      71:{l:"Colombia",v:"Portugal",f:"27 Jun"},72:{l:"RD Congo",v:"Uzbekistán",f:"27 Jun"},
+      22:{l:"Inglaterra",v:"Croacia",f:"17 Jun"},23:{l:"Ghana",v:"Panamá",f:"17 Jun"},
+      46:{l:"Inglaterra",v:"Ghana",f:"23 Jun"},47:{l:"Panamá",v:"Croacia",f:"23 Jun"},
+      67:{l:"Panamá",v:"Inglaterra",f:"27 Jun"},68:{l:"Croacia",v:"Ghana",f:"27 Jun"}
+    };
+
+    GK.forEach(function(g){
+      checkY(12);
+      // Cabecera grupo
+      doc.setFillColor(30,42,70);
+      doc.rect(mg,y,W-mg*2,6,"F");
+      doc.setFontSize(8);doc.setFont("helvetica","bold");doc.setTextColor(255,255,255);
+      doc.text("GRUPO "+g+"  ·  "+GEQ[g].join("  ·  "),mg+2,y+4);
+      y+=6;
+
+      gruposParts[g].forEach(function(id,idx){
+        checkY(6);
+        var pa=gruposNames[id];if(!pa)return;
+        var pr=pronos[id];
+        var score=(pr&&pr.gl!=null&&pr.gv!=null)?(pr.gl+"-"+pr.gv):"  -  ";
+        var real=res[id];
+        var realScore=real?(real.gl+"-"+real.gv):"";
+        var bg=idx%2===0?[255,255,255]:[248,249,250];
+        doc.setFillColor(bg[0],bg[1],bg[2]);
+        doc.rect(mg,y,W-mg*2,5.5,"F");
+        doc.setFontSize(7.5);doc.setFont("helvetica","normal");doc.setTextColor(30,30,30);
+        doc.text(pa.l,mg+2,y+3.8);
+        doc.setFont("helvetica","bold");doc.setTextColor(200,16,46);
+        doc.text(score,W/2,y+3.8,{align:"center"});
+        doc.setFont("helvetica","normal");doc.setTextColor(30,30,30);
+        doc.text(pa.v,W-mg-2,y+3.8,{align:"right"});
+        if(realScore){
+          doc.setFontSize(6);doc.setTextColor(100,100,100);
+          doc.text("real:"+realScore,mg+2,y+3.8+2.2);
+        }
+        doc.setFontSize(6);doc.setTextColor(180,180,180);
+        doc.text(pa.f,W-mg-2,y+3.8+2.2,{align:"right"});
+        y+=5.5;
+      });
+      y+=2;
+    });
+
+    // ============================================================
+    // FASES ELIMINATORIAS
+    // ============================================================
+    var fasesElim=[
+      {lbl:"DIECISEISAVOS DE FINAL",ids:[73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88]},
+      {lbl:"OCTAVOS DE FINAL",ids:[89,90,91,92,93,94,95,96]},
+      {lbl:"CUARTOS DE FINAL",ids:[97,98,99,100]},
+      {lbl:"SEMIFINALES",ids:[101,102]},
+      {lbl:"3ER Y 4TO PUESTO",ids:[103]},
+      {lbl:"GRAN FINAL",ids:[104]}
+    ];
+
+    fasesElim.forEach(function(fase){
+      checkY(12);
+      banda([200,16,46],7);
+      txt(fase.lbl,mg,y+5,9,true,[255,255,255]);
+      y+=7;y+=2;
+
+      fase.ids.forEach(function(id,idx){
+        checkY(12);
+        var pr=pronos[id];
+        var nomL=limpiar(pr&&pr.pl?pr.pl:("—"));
+        var nomV=limpiar(pr&&pr.pv?pr.pv:("—"));
+        var score=(pr&&pr.gl!=null&&pr.gv!=null)?(pr.gl+"-"+pr.gv):"  -  ";
+        var real=res[id];
+        var realScore=real?(real.gl+"-"+real.gv):"";
+        var realNomL=real&&real.rl?limpiar(real.rl):"";
+        var realNomV=real&&real.rv?limpiar(real.rv):"";
+
+        var bg=idx%2===0?[255,255,255]:[248,249,250];
+        doc.setFillColor(bg[0],bg[1],bg[2]);
+        doc.rect(mg,y,W-mg*2,5.5,"F");
+        doc.setFontSize(7.5);doc.setFont("helvetica","normal");doc.setTextColor(30,30,30);
+        doc.text(nomL,mg+2,y+3.8);
+        doc.setFont("helvetica","bold");doc.setTextColor(200,16,46);
+        doc.text(score,W/2,y+3.8,{align:"center"});
+        doc.setFont("helvetica","normal");doc.setTextColor(30,30,30);
+        doc.text(nomV,W-mg-2,y+3.8,{align:"right"});
+        // Resultado real si existe
+        if(realScore){
+          doc.setFontSize(6);doc.setTextColor(100,100,100);
+          var realStr="real: "+(realNomL||"Local")+" "+realScore+" "+(realNomV||"Visit.");
+          doc.text(realStr,mg+2,y+3.8+2.2);
+        }
+        y+=5.5;
+
+        // Penales si hubo empate
+        if(pr&&pr.gl!=null&&pr.gv!=null&&parseInt(pr.gl)===parseInt(pr.gv)&&pr.penL!=null&&pr.penV!=null){
+          checkY(5);
+          doc.setFillColor(255,248,225);
+          doc.rect(mg,y,W-mg*2,4.5,"F");
+          doc.setFontSize(6.5);doc.setFont("helvetica","normal");doc.setTextColor(230,81,0);
+          var ganPen=pr.penL>pr.penV?nomL:(pr.penV>pr.penL?nomV:"—");
+          doc.text("Penales: "+pr.penL+" - "+pr.penV+"   (clasifica: "+ganPen+")",mg+2,y+3);
+          y+=4.5;
+        }
+      });
+      y+=2;
+    });
+
+    // ============================================================
+    // CUADRO DE HONOR
+    // ============================================================
+    checkY(12);
+    banda([10,22,40],7);
+    txt("CUADRO DE HONOR",mg,y+5,9,true,[255,255,255]);
+    y+=7;y+=2;
+
+    var honorDef=[
+      {k:"campeon",l:"Campeon",pts:40},{k:"subcampeon",l:"Subcampeon",pts:25},{k:"tercero_h",l:"Tercer puesto",pts:15},
+      {k:"bota_oro",l:"Bota de Oro",pts:15},{k:"bota_plata",l:"Bota de Plata",pts:10},{k:"bota_bronce",l:"Bota de Bronce",pts:7},
+      {k:"balon_oro",l:"Balon de Oro",pts:15},{k:"balon_plata",l:"Balon de Plata",pts:10},{k:"balon_bronce",l:"Balon de Bronce",pts:7},
+      {k:"guante_oro",l:"Guante de Oro",pts:15}
+    ];
+    honorDef.forEach(function(h,idx){
+      checkY(7);
+      var val=honor[h.k]||"—";
+      var realVal=hR[h.k]||"";
+      var acierto=realVal&&val.trim().toLowerCase()===realVal.trim().toLowerCase();
+      var bg=idx%2===0?[255,255,255]:[248,249,250];
+      doc.setFillColor(bg[0],bg[1],bg[2]);
+      doc.rect(mg,y,W-mg*2,6,"F");
+      doc.setFontSize(8);doc.setFont("helvetica","normal");doc.setTextColor(80,80,80);
+      doc.text(h.l,mg+2,y+4);
+      doc.setFont("helvetica","bold");doc.setTextColor(10,22,40);
+      doc.text(val,W-mg-28,y+4);
+      // Badge acierto/fallo si hay resultado real
+      if(realVal){
+        if(acierto){
+          doc.setFillColor(27,94,32);doc.rect(W-mg-18,y+1,17,4,"F");
+          doc.setFontSize(6.5);doc.setFont("helvetica","bold");doc.setTextColor(255,255,255);
+          doc.text("+"+h.pts+"pts",W-mg-9.5,y+3.8,{align:"center"});
+        } else {
+          doc.setFillColor(245,245,245);doc.rect(W-mg-18,y+1,17,4,"F");
+          doc.setFontSize(6.5);doc.setFont("helvetica","normal");doc.setTextColor(150,150,150);
+          doc.text("real: "+realVal,W-mg-9.5,y+3.8,{align:"center"});
+        }
+      } else {
+        doc.setFontSize(7);doc.setFont("helvetica","normal");doc.setTextColor(150,150,150);
+        doc.text(h.pts+"pts",W-mg-2,y+4,{align:"right"});
+      }
+      y+=6;
+    });
+
+    // ============================================================
+    // PIE DE PÁGINA en todas las páginas
+    // ============================================================
+    var totalPags=doc.getNumberOfPages();
+    for(var pg=1;pg<=totalPags;pg++){
+      doc.setPage(pg);
+      doc.setFillColor(10,22,40);
+      doc.rect(0,287,W,10,"F");
+      doc.setFontSize(7);doc.setFont("helvetica","normal");doc.setTextColor(200,216,240);
+      doc.text("Polla Compis 2026  ·  "+p.nombre+"  ·  Ref: "+refCode,mg,293);
+      doc.text("Pag. "+pg+" / "+totalPags,W-mg,293,{align:"right"});
+    }
+
+    var filename="PollaCompis2026_"+p.nombre.replace(/[^a-zA-Z0-9]/g,"_")+".pdf";
+    doc.save(filename);
+
+  } catch(err){
+    console.error(err);
+    alert("Error generando el PDF: "+err.message);
+  }
 }
 </script>
 </body>

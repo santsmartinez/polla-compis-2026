@@ -193,7 +193,7 @@ var PG=[
   {id:13,l:"Bélgica",v:"Egipto",g:"G",f:"15 Jun 15:00"},{id:14,l:"Irán",v:"Nueva Zelanda",g:"G",f:"15 Jun 21:00"},{id:38,l:"Bélgica",v:"Irán",g:"G",f:"21 Jun 15:00"},{id:40,l:"Nueva Zelanda",v:"Egipto",g:"G",f:"21 Jun 21:00"},{id:63,l:"Egipto",v:"Irán",g:"G",f:"26 Jun 23:00"},{id:64,l:"Nueva Zelanda",v:"Bélgica",g:"G",f:"26 Jun 23:00"},
   {id:15,l:"España",v:"Cabo Verde",g:"H",f:"15 Jun 12:00"},{id:16,l:"Arabia Saudita",v:"Uruguay",g:"H",f:"15 Jun 18:00"},{id:37,l:"España",v:"Arabia Saudita",g:"H",f:"21 Jun 12:00"},{id:39,l:"Uruguay",v:"Cabo Verde",g:"H",f:"21 Jun 18:00"},{id:65,l:"Cabo Verde",v:"Arabia Saudita",g:"H",f:"26 Jun 20:00"},{id:66,l:"Uruguay",v:"España",g:"H",f:"26 Jun 20:00"},
   {id:17,l:"Francia",v:"Senegal",g:"I",f:"16 Jun 15:00"},{id:18,l:"Irak",v:"Noruega",g:"I",f:"16 Jun 18:00"},{id:41,l:"Francia",v:"Irak",g:"I",f:"22 Jun 17:00"},{id:42,l:"Noruega",v:"Senegal",g:"I",f:"22 Jun 20:00"},{id:61,l:"Noruega",v:"Francia",g:"I",f:"26 Jun 15:00"},{id:62,l:"Senegal",v:"Irak",g:"I",f:"26 Jun 15:00"},
-  {id:19,l:"Argentina",v:"Argelia",g:"J",f:"16 Jun 21:00"},{id:20,l:"Austria",v:"Jordania",g:"J",f:"17 Jun 00:00"},{id:43,l:"Argentina",v:"Austria",g:"J",f:"22 Jun 13:00"},{id:44,l:"Jordania",v:"Argelia",g:"J",f:"22 Jun 23:00"},{id:69,l:"Argentina",v:"Austria",g:"J",f:"27 Jun 22:00"},{id:70,l:"Jordania",v:"Argelia",g:"J",f:"27 Jun 22:00"},
+  {id:19,l:"Argentina",v:"Argelia",g:"J",f:"16 Jun 21:00"},{id:20,l:"Austria",v:"Jordania",g:"J",f:"17 Jun 00:00"},{id:43,l:"Argentina",v:"Austria",g:"J",f:"22 Jun 13:00"},{id:44,l:"Jordania",v:"Argelia",g:"J",f:"22 Jun 23:00"},{id:69,l:"Argelia",v:"Austria",g:"J",f:"27 Jun 22:00"},{id:70,l:"Jordania",v:"Argelia",g:"J",f:"27 Jun 22:00"},
   {id:21,l:"Portugal",v:"RD Congo",g:"K",f:"17 Jun 13:00"},{id:24,l:"Uzbekistán",v:"Colombia",g:"K",f:"17 Jun 22:00",col:true},{id:45,l:"Portugal",v:"Uzbekistán",g:"K",f:"23 Jun 13:00"},{id:48,l:"Colombia",v:"RD Congo",g:"K",f:"23 Jun 22:00",col:true},{id:71,l:"Colombia",v:"Portugal",g:"K",f:"27 Jun 19:30",col:true},{id:72,l:"RD Congo",v:"Uzbekistán",g:"K",f:"27 Jun 19:30"},
   {id:22,l:"Inglaterra",v:"Croacia",g:"L",f:"17 Jun 16:00"},{id:23,l:"Ghana",v:"Panamá",g:"L",f:"17 Jun 19:00"},{id:46,l:"Inglaterra",v:"Ghana",g:"L",f:"23 Jun 16:00"},{id:47,l:"Panamá",v:"Croacia",g:"L",f:"23 Jun 19:00"},{id:67,l:"Panamá",v:"Inglaterra",g:"L",f:"27 Jun 17:00"},{id:68,l:"Croacia",v:"Ghana",g:"L",f:"27 Jun 17:00"}
 ];
@@ -867,7 +867,12 @@ function resolveCod(cod){
     if(pr&&pr.pl&&pr.gl!=null&&pr.gv!=null){
       if(pr.gl>pr.gv)return pr.pl;
       if(pr.gl<pr.gv)return pr.pv;
-      return pr.pl;
+      // Empate a 120min: consultar penales para decidir quién clasifica
+      if(pr.penL!=null&&pr.penV!=null){
+        if(pr.penL>pr.penV)return pr.pl;
+        if(pr.penV>pr.penL)return pr.pv;
+      }
+      return pr.pl; // fallback si penales no están ingresados aún
     }
     return cod;
   }
@@ -878,7 +883,12 @@ function resolveCod(cod){
     if(pr2&&pr2.pl&&pr2.gl!=null&&pr2.gv!=null){
       if(pr2.gl>pr2.gv)return pr2.pv;
       if(pr2.gl<pr2.gv)return pr2.pl;
-      return pr2.pv;
+      // Empate a 120min: el perdedor de penales va al 3er puesto
+      if(pr2.penL!=null&&pr2.penV!=null){
+        if(pr2.penL>pr2.penV)return pr2.pv;
+        if(pr2.penV>pr2.penL)return pr2.pl;
+      }
+      return pr2.pv; // fallback
     }
     return cod;
   }
@@ -1378,11 +1388,14 @@ function construirPDF(){
       y+=7;y+=2;
 
       fase.ids.forEach(function(id,idx){
-        checkY(8);
+        checkY(10);
         var pr=pronos[id];
-        var nomL=pr&&pr.pl?pr.pl:("Equipo "+id+"L");
-        var nomV=pr&&pr.pv?pr.pv:("Equipo "+id+"V");
-        var score=(pr&&pr.gl!=null&&pr.gv!=null)?(pr.gl+"–"+pr.gv):"–";
+        // Limpiar emojis de banderas de los nombres para PDF
+        function limpiarNombre(n){return n?n.replace(/[\u{1F300}-\u{1FFFF}]|[\u{1F100}-\u{1F1FF}]|[\u2600-\u27FF]|\s+/gu," ").trim():n;}
+        var nomL=limpiarNombre(pr&&pr.pl?pr.pl:("Equipo "+id+"L"));
+        var nomV=limpiarNombre(pr&&pr.pv?pr.pv:("Equipo "+id+"V"));
+        var score=(pr&&pr.gl!=null&&pr.gv!=null)?(pr.gl+"\u2013"+pr.gv):"\u2013";
+        var hayEmpate=(pr&&pr.gl!=null&&pr.gv!=null&&parseInt(pr.gl)===parseInt(pr.gv));
         var bg=idx%2===0?[255,255,255]:[248,249,250];
         doc.setFillColor(bg[0],bg[1],bg[2]);
         doc.rect(mg,y,W-mg*2,6,"F");
@@ -1393,6 +1406,17 @@ function construirPDF(){
         doc.setFont("helvetica","normal");doc.setTextColor(30,30,30);
         doc.text(nomV,W-mg-2,y+4,{align:"right"});
         y+=6;
+        // Si hubo empate, mostrar penales si están ingresados
+        if(hayEmpate&&pr&&pr.penL!=null&&pr.penV!=null){
+          checkY(6);
+          doc.setFillColor(255,248,225);
+          doc.rect(mg,y,W-mg*2,5,"F");
+          doc.setFontSize(7);doc.setFont("helvetica","normal");doc.setTextColor(230,81,0);
+          var penScore="Penales: "+pr.penL+" - "+pr.penV;
+          var ganPen=pr.penL>pr.penV?nomL:(pr.penV>pr.penL?nomV:"–");
+          doc.text(penScore+" (clasifica: "+ganPen+")",mg+2,y+3.5);
+          y+=5;
+        }
       });
       y+=3;
     });
@@ -1411,8 +1435,8 @@ function construirPDF(){
       var bg=idx%2===0?[255,255,255]:[248,249,250];
       doc.setFillColor(bg[0],bg[1],bg[2]);
       doc.rect(mg,y,W-mg*2,6,"F");
-      // Etiqueta sin emoji para compatibilidad
-      var lbl=honorLbls[k].replace(/[\u0000-\u001F\u007F-\uFFFF]/g,"").trim()||k;
+      // Etiqueta sin emoji: eliminar solo emojis y caracteres especiales, conservar texto latino
+      var lbl=honorLbls[k].replace(/[\u{1F300}-\u{1FFFF}]|[\u2600-\u27FF]/gu,"").trim()||k;
       doc.setFontSize(8);doc.setFont("helvetica","normal");doc.setTextColor(80,80,80);
       doc.text(lbl,mg+2,y+4);
       doc.setFont("helvetica","bold");doc.setTextColor(10,22,40);
