@@ -276,7 +276,7 @@ async function load(){
     parts=Array.isArray(rP)?rP:[];
     res={};
     if(Array.isArray(rR))rR.forEach(function(r){
-      res[r.partido_id]={gl:r.gl,gv:r.gv,rl:r.local||"",rv:r.visitante||""};
+      res[r.partido_id]={gl:r.gl,gv:r.gv,rl:r.local||"",rv:r.visitante||"",penL:r.penL!=null?r.penL:null,penV:r.penV!=null?r.penV:null};
     });
     if(rH&&rH[0])try{hR=JSON.parse(rH[0].valor);}catch(e){hR={};}
 
@@ -367,7 +367,7 @@ async function delP(id,nom){
 // ============================================================
 // CALCULAR PUNTOS POR PARTIDO — lógica completa v2
 // FIX CRÍTICO: cruce exacto ahora funciona con rl/rv reales
-// FIX v2: +16pts Semis, +20pts Final (clasificado nueva regla)
+// FIX v3: penales correctos en eliminatorias + semis/final clasificado per-equipo
 // ============================================================
 function calcP(pr,real,fase){
   if(!real||real.gl==null||!pr||pr.gl==null)return null;
@@ -387,7 +387,6 @@ function calcP(pr,real,fase){
     var pl=(pr.pl||"").trim().toLowerCase();
     var pv=(pr.pv||"").trim().toLowerCase();
 
-    // ¿Tenemos los equipos reales ingresados?
     var tenemosEquipos=(rl!==""&&rv!=="");
     var tenemosProno=(pl!==""&&pv!=="");
 
@@ -395,31 +394,73 @@ function calcP(pr,real,fase){
     var ambosClasfn=false;
 
     if(tenemosEquipos&&tenemosProno){
-      // Cruce exacto: local=local Y visitante=visitante
       cruceExacto=(rl===pl&&rv===pv);
-      // Ambos clasificaron (en cualquier posición)
       ambosClasfn=((rl===pl||rl===pv)&&(rv===pl||rv===pv));
     }
 
-    // --- PUNTOS POR CLASIFICADO ---
-    // Normal (dieciseisavos a cuartos): si ambos clasificaron
+    // --- PUNTOS POR CLASIFICADO (D16 a Cuartos) ---
     if(reg.c>0&&ambosClasfn)t+=reg.c;
-
-    // Semis nuevas: 16pts si cada equipo que pronosticaste pasa a semis
-    // (esto se calcula per-equipo en calcSemiFinal, no aquí)
 
     // --- PUNTOS POR CRUCE EXACTO, SIGNO Y EXACTO ---
     if(cruceExacto||!tenemosEquipos){
-      // Si el cruce es exacto O si no hay datos de equipos (grupos sin cruce)
-      var sR2=real.gl>real.gv?"L":real.gl<real.gv?"V":"X";
-      var sP2=pr.gl>pr.gv?"L":pr.gl<pr.gv?"V":"X";
+      // Signo: quién ganó a 120'. Si empate → quién ganó penales define el signo "L" o "V"
+      var ganadorRealPos; // "L" o "V"
+      if(real.gl>real.gv) ganadorRealPos="L";
+      else if(real.gl<real.gv) ganadorRealPos="V";
+      else{
+        // Empate: penales reales deciden
+        var rpenL=real.penL!=null?parseInt(real.penL):null;
+        var rpenV=real.penV!=null?parseInt(real.penV):null;
+        if(rpenL!=null&&rpenV!=null) ganadorRealPos=(rpenL>rpenV?"L":"V");
+        else ganadorRealPos=null; // sin datos de penales aún
+      }
+
+      var ganadorPronoPos; // "L" o "V"
+      if(pr.gl>pr.gv) ganadorPronoPos="L";
+      else if(pr.gl<pr.gv) ganadorPronoPos="V";
+      else{
+        // Empate pronosticado: penales del pronóstico deciden
+        var ppenL=pr.penL!=null?parseInt(pr.penL):null;
+        var ppenV=pr.penV!=null?parseInt(pr.penV):null;
+        if(ppenL!=null&&ppenV!=null) ganadorPronoPos=(ppenL>ppenV?"L":"V");
+        else ganadorPronoPos=null;
+      }
+
       if(cruceExacto&&reg.x)t+=reg.x;
-      if(sR2===sP2)t+=reg.s;
+      if(ganadorRealPos!=null&&ganadorPronoPos!=null&&ganadorRealPos===ganadorPronoPos)t+=reg.s;
       if(real.gl===pr.gl&&real.gv===pr.gv)t+=reg.e;
     }
-    // Si clasificaron invertidos: solo clasificado (ya sumado arriba), nada más
+    // Si clasificaron invertidos: solo clasificado (ya sumado arriba)
   }
   return t;
+}
+
+// Helper: devuelve el equipo real que ganó un partido (local o visitante), usando penales si hay empate
+function ganadorReal(real){
+  if(!real||real.gl==null)return null;
+  if(real.gl>real.gv)return(real.rl||"").trim().toLowerCase();
+  if(real.gv>real.gl)return(real.rv||"").trim().toLowerCase();
+  var rpenL=real.penL!=null?parseInt(real.penL):null;
+  var rpenV=real.penV!=null?parseInt(real.penV):null;
+  if(rpenL!=null&&rpenV!=null){
+    if(rpenL>rpenV)return(real.rl||"").trim().toLowerCase();
+    if(rpenV>rpenL)return(real.rv||"").trim().toLowerCase();
+  }
+  return null;
+}
+
+// Helper: devuelve el equipo que el participante pronosticó ganador, usando sus penales si hay empate
+function ganadorProno(pr){
+  if(!pr||pr.gl==null)return null;
+  if(pr.gl>pr.gv)return(pr.pl||"").trim().toLowerCase();
+  if(pr.gv>pr.gl)return(pr.pv||"").trim().toLowerCase();
+  var ppenL=pr.penL!=null?parseInt(pr.penL):null;
+  var ppenV=pr.penV!=null?parseInt(pr.penV):null;
+  if(ppenL!=null&&ppenV!=null){
+    if(ppenL>ppenV)return(pr.pl||"").trim().toLowerCase();
+    if(ppenV>ppenL)return(pr.pv||"").trim().toLowerCase();
+  }
+  return null;
 }
 
 // ============================================================
@@ -511,13 +552,24 @@ function rendRF(){
       if(esElim){
         // En eliminatorias: campo nombre local, marcador, nombre visitante
         var rlVal=r.rl||"";var rvVal=r.rv||"";
+        var penLVal=r.penL!==undefined&&r.penL!==null?r.penL:"";
+        var penVVal=r.penV!==undefined&&r.penV!==null?r.penV:"";
+        var glVal=r.gl!==undefined?r.gl:"";
+        var gvVal=r.gv!==undefined?r.gv:"";
         html+="<div style='padding:8px 0;border-bottom:1px solid #EEF'>";
         html+="<div class='elim-names'>";
         html+="<input class='hin' style='font-size:12px;padding:5px 8px' type='text' placeholder='Equipo local…' id='rrl_"+p.id+"' value='"+rlVal+"'>";
         html+="<div class='elabel'>vs</div>";
         html+="<input class='hin' style='font-size:12px;padding:5px 8px' type='text' placeholder='Equipo visitante…' id='rrv_"+p.id+"' value='"+rvVal+"'>";
         html+="</div>";
-        html+="<div class='prow prow-e' style='border:none;padding:4px 0'><div class='el' style='color:#999;font-size:11px'>Marcador (120')</div><input class='nin' type='number' min='0' max='20' placeholder='-' id='rgl_"+p.id+"' value='"+(r.gl!==undefined?r.gl:"")+"'><div class='vsep'>–</div><input class='nin' type='number' min='0' max='20' placeholder='-' id='rgv_"+p.id+"' value='"+(r.gv!==undefined?r.gv:"")+"'><div class='ev' style='color:#999;font-size:11px'>Goles visitante</div></div>";
+        html+="<div class='prow prow-e' style='border:none;padding:4px 0'><div class='el' style='color:#999;font-size:11px'>Marcador (120')</div><input class='nin' type='number' min='0' max='20' placeholder='-' id='rgl_"+p.id+"' value='"+glVal+"'><div class='vsep'>–</div><input class='nin' type='number' min='0' max='20' placeholder='-' id='rgv_"+p.id+"' value='"+gvVal+"'><div class='ev' style='color:#999;font-size:11px'>Goles visitante</div></div>";
+        html+="<div id='penfila_"+p.id+"' style='display:"+(glVal!==''&&gvVal!==''&&parseInt(glVal)===parseInt(gvVal)?'flex':'none')+";align-items:center;gap:8px;padding:3px 0 5px 0;font-size:11px;color:#E65100'>";
+        html+="<span style='min-width:80px'>🥅 Penales:</span>";
+        html+="<input class='nin' type='number' min='0' max='20' placeholder='-' id='rpenL_"+p.id+"' value='"+penLVal+"' style='border-color:#FFD54F'>";
+        html+="<div class='vsep'>–</div>";
+        html+="<input class='nin' type='number' min='0' max='20' placeholder='-' id='rpenV_"+p.id+"' value='"+penVVal+"' style='border-color:#FFD54F'>";
+        html+="<span style='color:#999;font-size:10px'>(solo si hubo penales)</span>";
+        html+="</div>";
         html+="</div>";
       } else {
         html+="<div class='prow prow-g'><div class='el'>"+p.l+(p.col?"<span class='col'>COL</span>":"")+"</div><input class='nin' type='number' min='0' max='20' placeholder='-' id='rgl_"+p.id+"' value='"+(r.gl!==undefined?r.gl:"")+"'><div class='vsep'>–</div><input class='nin' type='number' min='0' max='20' placeholder='-' id='rgv_"+p.id+"' value='"+(r.gv!==undefined?r.gv:"")+"'><div class='ev'>"+p.v+"</div></div>";
@@ -525,6 +577,31 @@ function rendRF(){
     });
   });
   document.getElementById("rf").innerHTML=html;
+
+  // Mostrar/ocultar fila de penales según si marcador está empatado
+  if(esElim){
+    var fase2=FR.find(function(f){return f.id===fA;});
+    (fase2?fase2.ids:[]).forEach(function(id){
+      var glEl=document.getElementById("rgl_"+id);
+      var gvEl=document.getElementById("rgv_"+id);
+      var penFila=document.getElementById("penfila_"+id);
+      if(!glEl||!gvEl||!penFila)return;
+      function togPen(){
+        var gl=parseInt(glEl.value),gv=parseInt(gvEl.value);
+        if(!isNaN(gl)&&!isNaN(gv)&&gl===gv){
+          penFila.style.display="flex";
+        } else {
+          penFila.style.display="none";
+          var pL=document.getElementById("rpenL_"+id);
+          var pV=document.getElementById("rpenV_"+id);
+          if(pL)pL.value="";
+          if(pV)pV.value="";
+        }
+      }
+      glEl.addEventListener("input",togPen);
+      gvEl.addEventListener("input",togPen);
+    });
+  }
 }
 
 // ============================================================
@@ -543,8 +620,15 @@ async function saveRes(){
       if(esElim){
         var rl=document.getElementById("rrl_"+id);
         var rv=document.getElementById("rrv_"+id);
+        var rpenL=document.getElementById("rpenL_"+id);
+        var rpenV=document.getElementById("rpenV_"+id);
         u.local=rl?rl.value.trim():(pa?pa.l:"");
         u.visitante=rv?rv.value.trim():(pa?pa.v:"");
+        // Penales: solo guardar si ambos campos tienen valor Y el marcador está empatado
+        if(rpenL&&rpenV&&rpenL.value!==""&&rpenV.value!==""){
+          u.penL=parseInt(rpenL.value);
+          u.penV=parseInt(rpenV.value);
+        }
       } else {
         u.local=pa?pa.l:"";
         u.visitante=pa?pa.v:"";
@@ -557,7 +641,7 @@ async function saveRes(){
       var u=ups[i];
       await sbfetch("resultados?partido_id=eq."+u.partido_id,{method:"DELETE",headers:{"Prefer":"return=minimal"}});
       await sbfetch("resultados",{method:"POST",headers:{"Prefer":"return=minimal"},body:JSON.stringify(u)});
-      res[u.partido_id]={gl:u.gl,gv:u.gv,rl:u.local,rv:u.visitante};
+      res[u.partido_id]={gl:u.gl,gv:u.gv,rl:u.local,rv:u.visitante,penL:u.penL!=null?u.penL:null,penV:u.penV!=null?u.penV:null};
     }
     var m=document.getElementById("rm");m.textContent=ups.length+" resultado"+(ups.length!==1?"s":"")+" guardados.";m.className="msg msok";
     rendSt();
@@ -580,30 +664,34 @@ function calcC(){
         if(pr&&real&&pr.gl===real.gl&&pr.gv===real.gv)exactos++;
       }
 
-      // ★ NUEVO: puntos clasificado Semis (16pts por equipo que pasa a semis)
-      // Se evalúa en el partido de Cuartos correspondiente
+      // ★ SEMIS: 16pts por cada equipo del cruce de cuartos que pronosticaste en posición
+      //   correcta Y que avanza a semis. Máx 2×16=32 por partido de cuartos.
       if(pa.f==="cuartos"&&real&&pr){
         var reg=PTS.semis;
         if(reg.clasS>0){
-          // El ganador de cuartos va a semis. Si el participante pronosticó ese equipo en el cruce (cualquier posición) suma 16pts
-          // Pero SOLO si el cruce era exacto (local=local)
           var rl=(real.rl||"").trim().toLowerCase();
           var rv=(real.rv||"").trim().toLowerCase();
           var pl=(pr.pl||"").trim().toLowerCase();
           var pv=(pr.pv||"").trim().toLowerCase();
-          // Ganador real del partido
-          var ganador=real.gl>real.gv?rl:real.gl<real.gv?rv:"";
-          // ¿El participante pronosticó quién ganaba en posición correcta?
-          if(ganador&&pl&&pv){
-            var cruceEx=(rl===pl&&rv===pv);
-            var ganProno=pr.gl>pr.gv?pl:pr.gl<pr.gv?pv:"";
-            if(cruceEx&&ganador===ganProno)tot+=reg.clasS;
+          var cruceEx=(rl!=""&&rv!=""&&pl!=""&&pv!=""&&rl===pl&&rv===pv);
+          if(cruceEx){
+            var ganR=ganadorReal(real);
+            var perR=(ganR===rl)?rv:rl; // el perdedor (también clasifica a semis si ganó por penales va, el que pierde no va)
+            // En cuartos: quien gana va a semis (ganR). El que pierde queda eliminado.
+            // Pero AMBOS equipos del cruce clasificaron a cuartos; los 16pts son por pronosticar
+            // correctamente CADA equipo en su posición en este cruce. Se da por cada posición correcta:
+            // +16 si local pronosticado = local real Y local real clasifica (gana) a semis
+            // +16 si visitante pronosticado = visitante real Y visitante real clasifica (gana) a semis
+            // → En la práctica solo el ganador "clasifica a semis", así que máx 16pts por partido de cuartos.
+            var ganPronoPos=ganadorProno(pr);
+            var ganRealPos=ganadorReal(real);
+            if(ganRealPos!=null&&ganPronoPos!=null&&ganRealPos===ganPronoPos)tot+=reg.clasS;
           }
         }
       }
 
-      // ★ NUEVO: puntos clasificado Final (20pts por equipo que llega a la final)
-      // Se evalúa en el partido de Semis correspondiente
+      // ★ FINAL: 20pts por cada equipo del cruce de semis que pronosticaste en posición
+      //   correcta Y que llega a la final.
       if(pa.f==="semis"&&real&&pr){
         var reg2=PTS.final;
         if(reg2.clasF>0){
@@ -611,11 +699,11 @@ function calcC(){
           var rv2=(real.rv||"").trim().toLowerCase();
           var pl2=(pr.pl||"").trim().toLowerCase();
           var pv2=(pr.pv||"").trim().toLowerCase();
-          var ganador2=real.gl>real.gv?rl2:real.gl<real.gv?rv2:"";
-          if(ganador2&&pl2&&pv2){
-            var cruceEx2=(rl2===pl2&&rv2===pv2);
-            var ganProno2=pr.gl>pr.gv?pl2:pr.gl<pr.gv?pv2:"";
-            if(cruceEx2&&ganador2===ganProno2)tot+=reg2.clasF;
+          var cruceEx2=(rl2!=""&&rv2!=""&&pl2!=""&&pv2!=""&&rl2===pl2&&rv2===pv2);
+          if(cruceEx2){
+            var ganRealPos2=ganadorReal(real);
+            var ganPronoPos2=ganadorProno(pr);
+            if(ganRealPos2!=null&&ganPronoPos2!=null&&ganRealPos2===ganPronoPos2)tot+=reg2.clasF;
           }
         }
       }
@@ -697,9 +785,11 @@ function resolverSlot(slot){
     if(!r||r.gl==null)return slot; // sin resultado aún
     if(r.gl>r.gv)return r.rl||slot;
     if(r.gv>r.gl)return r.rv||slot;
-    // Empate: ganó por penales (buscamos en los pronósticos quién avanzó — usamos rl/rv como local avanzó)
-    // En eliminatorias el Admin guarda el ganador real en rl si hay penales?
-    // No — el campo pen no está en res. Usamos "Local (pen)" como fallback
+    // Empate a 120': usar penales reales guardados
+    if(r.penL!=null&&r.penV!=null){
+      if(r.penL>r.penV)return r.rl||slot;
+      if(r.penV>r.penL)return r.rv||slot;
+    }
     return(r.rl||"Local")+" (pen)";
   }
   // Perdedor de partido N
@@ -710,6 +800,11 @@ function resolverSlot(slot){
     if(!r2||r2.gl==null)return slot;
     if(r2.gl>r2.gv)return r2.rv||slot;
     if(r2.gv>r2.gl)return r2.rl||slot;
+    // Empate a 120': el perdedor de penales
+    if(r2.penL!=null&&r2.penV!=null){
+      if(r2.penL>r2.penV)return r2.rv||slot;
+      if(r2.penV>r2.penL)return r2.rl||slot;
+    }
     return(r2.rv||"Visitante")+" (pen)";
   }
   // Slots tipo "1A","2B","3ABCDF" — devolver tal cual (grupos aún no iniciados)
