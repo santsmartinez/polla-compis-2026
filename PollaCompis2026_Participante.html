@@ -1053,26 +1053,18 @@ function mkElimRow(id,nomL,nomV,f,cl,cv){
 
   inL.addEventListener("input",function(){
     setP(id,"gl",this.value);
+    syncNames();
     checkPenales(id,inL,inV,penRow,penInL,penInV);
     updNombresElim();
-    syncNames();
   });
   inV.addEventListener("input",function(){
     setP(id,"gv",this.value);
+    syncNames();
     checkPenales(id,inL,inV,penRow,penInL,penInV);
     updNombresElim();
-    syncNames();
   });
-  penInL.addEventListener("input",function(){
-    setPL(id,"penL",parseInt(this.value)||null);
-    updNombresElim();
-    syncNames();
-  });
-  penInV.addEventListener("input",function(){
-    setPL(id,"penV",parseInt(this.value)||null);
-    updNombresElim();
-    syncNames();
-  });
+  penInL.addEventListener("input",function(){setPL(id,"penL",parseInt(this.value)||null);});
+  penInV.addEventListener("input",function(){setPL(id,"penV",parseInt(this.value)||null);});
 
   return wrap;
 }
