@@ -196,6 +196,7 @@ var PG=[
   {id:17,l:"Francia",v:"Senegal",g:"I",f:"16 Jun 15:00"},{id:18,l:"Irak",v:"Noruega",g:"I",f:"16 Jun 18:00"},{id:41,l:"Francia",v:"Irak",g:"I",f:"22 Jun 17:00"},{id:42,l:"Noruega",v:"Senegal",g:"I",f:"22 Jun 20:00"},{id:61,l:"Noruega",v:"Francia",g:"I",f:"26 Jun 15:00"},{id:62,l:"Senegal",v:"Irak",g:"I",f:"26 Jun 15:00"},
   {id:19,l:"Argentina",v:"Argelia",g:"J",f:"16 Jun 21:00"},{id:20,l:"Austria",v:"Jordania",g:"J",f:"17 Jun 00:00"},{id:43,l:"Argentina",v:"Austria",g:"J",f:"22 Jun 13:00"},{id:44,l:"Jordania",v:"Argelia",g:"J",f:"22 Jun 23:00"},{id:69,l:"Argelia",v:"Austria",g:"J",f:"27 Jun 22:00"},{id:70,l:"Jordania",v:"Argentina",g:"J",f:"27 Jun 22:00"},
   {id:21,l:"Portugal",v:"RD Congo",g:"K",f:"17 Jun 13:00"},{id:24,l:"Uzbekistán",v:"Colombia",g:"K",f:"17 Jun 22:00",col:true},{id:45,l:"Portugal",v:"Uzbekistán",g:"K",f:"23 Jun 13:00"},{id:48,l:"Colombia",v:"RD Congo",g:"K",f:"23 Jun 22:00",col:true},{id:71,l:"Colombia",v:"Portugal",g:"K",f:"27 Jun 19:30",col:true},{id:72,l:"RD Congo",v:"Uzbekistán",g:"K",f:"27 Jun 19:30"},
+
   {id:22,l:"Inglaterra",v:"Croacia",g:"L",f:"17 Jun 16:00"},{id:23,l:"Ghana",v:"Panamá",g:"L",f:"17 Jun 19:00"},{id:46,l:"Inglaterra",v:"Ghana",g:"L",f:"23 Jun 16:00"},{id:47,l:"Panamá",v:"Croacia",g:"L",f:"23 Jun 19:00"},{id:67,l:"Panamá",v:"Inglaterra",g:"L",f:"27 Jun 17:00"},{id:68,l:"Croacia",v:"Ghana",g:"L",f:"27 Jun 17:00"}
 ];
 
@@ -1221,7 +1222,7 @@ function buildStep(i,cont){
     // GRUPO (con tabla en vivo B1)
     var g=GK[i];
     var fh=document.createElement("div");fh.className="fhdr";
-    fh.innerHTML="<h2>Grupo "+g+"</h2><div class='pts'>3pts signo · 5pts exacto · 2pts posición exacta en grupo</div>";
+    fh.innerHTML="<h2>Grupo "+g+"</h2><div class='pts'>3pts resultado · 5pts resultado exacto · 2pts posición exacta en grupo</div>";
     div.appendChild(fh);
 
     var gh=document.createElement("div");gh.className="ghdr";
