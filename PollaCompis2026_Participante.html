@@ -1400,7 +1400,7 @@ function construirPDF(){
     var now=new Date();
     var fechaStr=now.toLocaleDateString("es-CO",{day:"2-digit",month:"long",year:"numeric"})+" · "+now.toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit"});
     var refCode="PC2026-"+now.getTime().toString(36).toUpperCase();
-    var nomPart=document.getElementById("nom").value.trim()||"Participante";
+    var nomPart=limpiarNombrePDF(document.getElementById("nom").value.trim()||"Participante");
 
     // ---- UTILIDADES ----
     function newPage(){doc.addPage();y=0;}
@@ -1420,8 +1420,8 @@ function construirPDF(){
 
     // ---- ENCABEZADO ----
     banda([10,22,40],22);
-    txt("⚽  POLLA COMPIS · MUNDIAL 2026",mg,10,13,true,[255,255,255]);
-    txt("USA · CANADÁ · MÉXICO  |  11 Jun – 19 Jul 2026",mg,16,8,false,[200,216,240]);
+    txt("POLLA COMPIS · MUNDIAL 2026",mg,10,13,true,[255,255,255]);
+    txt("USA · CANADA · MEXICO  |  11 Jun - 19 Jul 2026",mg,16,8,false,[200,216,240]);
     y=22;
 
     // Nombre y ref
@@ -1430,7 +1430,7 @@ function construirPDF(){
     txt(nomPart,mg+22,y+5,10,true,[10,22,40]);
     txt("Ref: "+refCode,W-mg,y+5,7,false,[150,150,150]);
     doc.setFontSize(7);doc.setTextColor(150,150,150);
-    doc.text(fechaStr,W-mg,y+10,{align:"right"});
+    doc.text(limpiarNombrePDF(fechaStr),W-mg,y+10,{align:"right"});
     y+=14;
 
     // Separador
@@ -1514,7 +1514,16 @@ function construirPDF(){
     // FIX v3: limpiar emojis de nombres para PDF (definida fuera del loop)
     function limpiarNombrePDF(n){
       if(!n)return"";
-      return n.replace(/[\u{1F300}-\u{1FFFF}]|[\u{1F100}-\u{1F1FF}]|[\u2600-\u27FF]/gu,"").replace(/\s+/g," ").trim();
+      // 1. Quitar emojis
+      var s=n.replace(/[\u{1F300}-\u{1FFFF}]|[\u{1F100}-\u{1F1FF}]|[\u2600-\u27FF]/gu,"");
+      // 2. Normalizar tildes/acentos para Helvetica (no soporta UTF-8 completo)
+      s=s.normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+      s=s.replace(/\u00f1/g,"n").replace(/\u00d1/g,"N");
+      s=s.replace(/[\u0080-\u00ff]/g,function(c){
+        var map={"ü":"u","Ü":"U","ö":"o","Ö":"O","ä":"a","Ä":"A","ø":"o","å":"a","æ":"ae","Æ":"AE"};
+        return map[c]||c.normalize("NFD").replace(/[\u0300-\u036f]/g,"")||"?";
+      });
+      return s.replace(/\s+/g," ").trim();
     }
 
     // FIX v3: resolver nombre de equipo desde pronos[] encadenando fases
@@ -1639,7 +1648,7 @@ function construirPDF(){
     txt("CUADRO DE HONOR",mg,y+5,9,true,[255,255,255]);
     y+=7;y+=2;
 
-    var honorLbls={campeon:"🏆 Campeón",subcampeon:"🥈 Subcampeón",tercero_h:"🥉 Tercer puesto",bota_oro:"⚽ Bota de Oro",bota_plata:"⚽ Bota de Plata",bota_bronce:"⚽ Bota de Bronce",balon_oro:"🏅 Balón de Oro",balon_plata:"🏅 Balón de Plata",balon_bronce:"🏅 Balón de Bronce",guante_oro:"🧤 Guante de Oro"};
+    var honorLbls={campeon:"Campeon",subcampeon:"Subcampeon",tercero_h:"Tercer puesto",bota_oro:"Bota de Oro",bota_plata:"Bota de Plata",bota_bronce:"Bota de Bronce",balon_oro:"Balon de Oro",balon_plata:"Balon de Plata",balon_bronce:"Balon de Bronce",guante_oro:"Guante de Oro"};
     var honorPts={campeon:40,subcampeon:25,tercero_h:15,bota_oro:15,bota_plata:10,bota_bronce:7,balon_oro:15,balon_plata:10,balon_bronce:7,guante_oro:15};
 
     Object.keys(honorLbls).forEach(function(k,idx){
@@ -1647,12 +1656,11 @@ function construirPDF(){
       var bg=idx%2===0?[255,255,255]:[248,249,250];
       doc.setFillColor(bg[0],bg[1],bg[2]);
       doc.rect(mg,y,W-mg*2,6,"F");
-      // Etiqueta sin emoji: eliminar solo emojis y caracteres especiales, conservar texto latino
-      var lbl=honorLbls[k].replace(/[\u{1F300}-\u{1FFFF}]|[\u2600-\u27FF]/gu,"").trim()||k;
+      var lbl=honorLbls[k];
       doc.setFontSize(8);doc.setFont("helvetica","normal");doc.setTextColor(80,80,80);
       doc.text(lbl,mg+2,y+4);
       doc.setFont("helvetica","bold");doc.setTextColor(10,22,40);
-      doc.text(hvals[k]||"—",W-mg-20,y+4);
+      doc.text(limpiarNombrePDF(hvals[k]||"—"),W-mg-20,y+4);
       doc.setFontSize(7);doc.setFont("helvetica","normal");doc.setTextColor(150,150,150);
       doc.text(honorPts[k]+"pts",W-mg-2,y+4,{align:"right"});
       y+=6;

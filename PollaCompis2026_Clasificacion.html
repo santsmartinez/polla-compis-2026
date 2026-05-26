@@ -385,14 +385,14 @@ async function load(){
   try{
     var [rawParts, rawRes, rawCfg] = await Promise.all([
       sbfetch("participantes?validado=eq.true&select=id,nombre,pronos,honor&order=nombre"),
-      sbfetch("resultados?select=partido_id,gl,gv,local,visitante,penWin"),
+      sbfetch("resultados?select=partido_id,gl,gv,local,visitante,pen_win"),
       sbfetch("config?clave=eq.honor_real&select=valor")
     ]);
 
     // Construir res{}
     res={};
     rawRes.forEach(function(r){
-      res[r.partido_id]={gl:r.gl,gv:r.gv,rl:r.local||"",rv:r.visitante||"",penWin:r.penWin||null};
+      res[r.partido_id]={gl:r.gl,gv:r.gv,rl:r.local||"",rv:r.visitante||"",penWin:r.pen_win||null};
     });
 
     // Honor real
@@ -534,10 +534,12 @@ function renderDet(p){
       var prS=(pr&&pr.gl!=null&&pr.gv!=null)?(pr.gl+"–"+pr.gv):"–";
       var reS=(real&&real.gl!=null&&real.gv!=null)?(real.gl+"–"+real.gv):null;
 
-      // Nombres del cruce
+      // Nombres del cruce — prioridad: real ingresado por admin > pronóstico participante > slot genérico
       var nomL=pa.l,nomV=pa.v;
-      if(pr&&pr.pl)nomL=pr.pl;
-      if(pr&&pr.pv)nomV=pr.pv;
+      if(real&&real.rl)nomL=real.rl;
+      else if(pr&&pr.pl)nomL=pr.pl;
+      if(real&&real.rv)nomV=real.rv;
+      else if(pr&&pr.pv)nomV=pr.pv;
 
       var badge="";
       if(pts!==null){

@@ -115,6 +115,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
       <div style="display:flex;gap:8px;margin-top:.875rem;flex-wrap:wrap">
         <button class="btn btnr" id="btnsave">Guardar resultados</button>
         <button class="btn btng" id="btnref">↺ Actualizar</button>
+        <button class="btn" id="btnborrar" style="background:#fff;color:#B71C1C;border:1.5px solid #FFCDD2 !important;font-size:12px">🗑 Borrar todos los resultados</button>
       </div>
       <div class="msg" id="rm"></div>
     </div>
@@ -263,6 +264,7 @@ document.getElementById("btnsave").addEventListener("click",saveRes);
 document.getElementById("btnrecalc").addEventListener("click",calcC);
 document.getElementById("btnsavehon").addEventListener("click",saveHon);
 document.getElementById("btncd").addEventListener("click",function(){document.getElementById("dc").style.display="none";});
+document.getElementById("btnborrar").addEventListener("click",borrarTodosResultados);
 
 async function load(){
   // Mostrar estado de carga
@@ -298,7 +300,7 @@ async function load(){
     parts=Array.isArray(rP)?rP:[];
     res={};
     if(Array.isArray(rR))rR.forEach(function(r){
-      res[r.partido_id]={gl:r.gl,gv:r.gv,rl:r.local||"",rv:r.visitante||""};
+      res[r.partido_id]={gl:r.gl,gv:r.gv,rl:r.local||"",rv:r.visitante||"",penWin:r.pen_win||null};
     });
     if(rH&&rH[0])try{hR=JSON.parse(rH[0].valor);}catch(e){hR={};}
 
@@ -605,8 +607,144 @@ function puntajeFaseStr(reg){
 }
 
 // ============================================================
-// BOTONES DE FASE (Resultados)
+// MEJORES TERCEROS FIFA — calcular qué tercero va a cada slot
 // ============================================================
+function calcMejoresTerceros(){
+  var terceros=[];
+  var GK2=["A","B","C","D","E","F","G","H","I","J","K","L"];
+  GK2.forEach(function(g){
+    var clas=clasGrupoReal(g);
+    if(clas.length<3)return;
+    var t=clas[2]; // tercer lugar
+    var stats={pts:0,dg:0,gf:0};
+    GPIDS_G[g].forEach(function(pid){
+      var r=res[pid];if(!r||r.gl==null)return;
+      var pa=TODOS.find(function(p){return p.id===pid;});if(!pa)return;
+      var l=pa.l,v=pa.v,gl=r.gl,gv=r.gv;
+      if(l===t){stats.gf+=gl;stats.dg+=(gl-gv);stats.pts+=(gl>gv?3:gl===gv?1:0);}
+      if(v===t){stats.gf+=gv;stats.dg+=(gv-gl);stats.pts+=(gv>gl?3:gv===gl?1:0);}
+    });
+    terceros.push({team:t,grupo:g,pts:stats.pts,dg:stats.dg,gf:stats.gf});
+  });
+  // Ordenar: puntos > DG > GF > alfabético
+  terceros.sort(function(a,b){
+    if(b.pts!==a.pts)return b.pts-a.pts;
+    if(b.dg!==a.dg)return b.dg-a.dg;
+    if(b.gf!==a.gf)return b.gf-a.gf;
+    return a.grupo.localeCompare(b.grupo);
+  });
+  return terceros.slice(0,8);
+}
+
+// Tabla de asignación de mejores terceros a slots (FIFA oficial)
+// Fuente: combinaciones del Excel oficial — versión compacta
+var COMBOS_MAP={
+  "ABCD":{A:"C",B:"D",D:"A",E:"B"},"ABCE":{A:"C",B:"D",D:"A",E:"B"},
+  "ABCF":{A:"C",B:"D",D:"A",E:"F"},"ABCG":{A:"C",B:"D",D:"A",E:"G"},
+  "ABCH":{A:"C",B:"D",D:"A",E:"H"},"ABCI":{A:"C",B:"D",D:"A",E:"I"},
+  "ABCJ":{A:"C",B:"D",D:"A",E:"J"},"ABCK":{A:"C",B:"D",D:"A",E:"K"},
+  "ABCL":{A:"C",B:"D",D:"A",E:"L"},"ABDE":{A:"D",B:"E",D:"A",E:"B"},
+  "ABDF":{A:"D",B:"E",D:"A",E:"F"},"ABDG":{A:"D",B:"E",D:"A",E:"G"},
+  "ABEH":{A:"E",B:"H",D:"A",E:"B"},"ABFI":{A:"F",B:"I",D:"A",E:"B"},
+  "ACDE":{A:"D",B:"E",D:"C",E:"A"},"BCDE":{A:"D",B:"E",D:"C",E:"B"}
+};
+// NOTA: La tabla completa de 495 está embebida en el Participante.
+// El Admin usa una versión simplificada — cuando hay resultado real de grupos
+// se pueden leer los nombres desde res[] directamente.
+
+// Resuelve el nombre real del slot de 16avos desde los resultados reales de grupos
+function resolverSlot16(slot){
+  if(!slot)return"";
+  // Slots tipo "1A","2B","3ABCDF"
+  var m1=slot.match(/^([123])([A-L])$/);
+  if(m1){
+    var pos=parseInt(m1[1])-1,g=m1[2];
+    var clas=clasGrupoReal(g);
+    return clas[pos]||slot;
+  }
+  // Slots tipo "3ABCDF" — mejor tercero de esos grupos
+  var m3=slot.match(/^3([A-L]+)$/);
+  if(m3){
+    var mejores=calcMejoresTerceros();
+    var grupos_posibles=m3[1].split("");
+    // El mejor tercero que viene de uno de esos grupos
+    for(var i=0;i<mejores.length;i++){
+      if(grupos_posibles.indexOf(mejores[i].grupo)>=0)return mejores[i].team;
+    }
+    return slot;
+  }
+  return resolverSlot(slot);
+}
+
+// Nombre del partido para 16avos con nombres reales de grupos
+function nomPartido16(partido){
+  var nL=resolverSlot16(partido.l)||partido.l;
+  var nV=resolverSlot16(partido.v)||partido.v;
+  return{l:nL,v:nV};
+}
+
+// ============================================================
+// TABLA DE POSICIONES EN VIVO PARA UN GRUPO
+// ============================================================
+function htmlTablaGrupo(g){
+  var eq=GEQ_G[g];
+  var stats={};
+  eq.forEach(function(e){stats[e]={pts:0,dg:0,gf:0,pj:0};});
+  GPIDS_G[g].forEach(function(pid){
+    var r=res[pid];if(!r||r.gl==null||r.gv==null)return;
+    var pa=TODOS.find(function(p){return p.id===pid;});if(!pa)return;
+    var l=pa.l,v=pa.v,gl=r.gl,gv=r.gv;
+    stats[l].pj++;stats[v].pj++;
+    stats[l].gf+=gl;stats[l].dg+=(gl-gv);
+    stats[v].gf+=gv;stats[v].dg+=(gv-gl);
+    if(gl>gv)stats[l].pts+=3;else if(gl<gv)stats[v].pts+=3;
+    else{stats[l].pts+=1;stats[v].pts+=1;}
+  });
+  var sorted=eq.slice().sort(function(a,b){
+    if(stats[b].pts!==stats[a].pts)return stats[b].pts-stats[a].pts;
+    if(stats[b].dg!==stats[a].dg)return stats[b].dg-stats[a].dg;
+    if(stats[b].gf!==stats[a].gf)return stats[b].gf-stats[a].gf;
+    return a.localeCompare(b);
+  });
+  var h="<table style='width:100%;border-collapse:collapse;font-size:11px;margin-top:4px'>";
+  h+="<tr style='background:#F0F4FF;color:#444'><th style='padding:3px 4px;text-align:left'>Pos</th><th style='padding:3px 4px;text-align:left;min-width:90px'>Equipo</th><th style='padding:3px 4px;text-align:center'>PJ</th><th style='padding:3px 4px;text-align:center'>Pts</th><th style='padding:3px 4px;text-align:center'>DG</th><th style='padding:3px 4px;text-align:center'>GF</th></tr>";
+  sorted.forEach(function(eq2,i){
+    var s=stats[eq2];
+    var bg=i<2?"#E8F5E9":i===2?"#FFF8E1":"#FFF";
+    var pts_color=i<2?"#1B5E20":i===2?"#E65100":"#888";
+    h+="<tr style='background:"+bg+";border-bottom:1px solid #EEE'>";
+    h+="<td style='padding:3px 4px;font-weight:700;color:"+pts_color+";text-align:center'>"+(i+1)+"</td>";
+    h+="<td style='padding:3px 4px;font-weight:"+(i<2?"600":"400")+"'>"+eq2+"</td>";
+    h+="<td style='padding:3px 4px;text-align:center;color:#888'>"+s.pj+"</td>";
+    h+="<td style='padding:3px 4px;text-align:center;font-weight:700;color:"+pts_color+"'>"+s.pts+"</td>";
+    h+="<td style='padding:3px 4px;text-align:center;color:#555'>"+(s.dg>0?"+":"")+s.dg+"</td>";
+    h+="<td style='padding:3px 4px;text-align:center;color:#555'>"+s.gf+"</td>";
+    h+="</tr>";
+  });
+  h+="</table>";
+  return h;
+}
+
+// ============================================================
+// BORRAR TODOS LOS RESULTADOS
+// ============================================================
+async function borrarTodosResultados(){
+  if(!confirm("⚠️ ¿Borrar TODOS los resultados?\n\nEsto eliminará los 104 resultados ingresados y reinicia el torneo desde cero. Esta acción NO se puede deshacer."))return;
+  if(!confirm("Confirmación final: ¿Realmente deseas borrar todos los resultados?"))return;
+  try{
+    await sbfetch("resultados?partido_id=gte.1",{method:"DELETE",headers:{"Prefer":"return=minimal"}});
+    // También limpiar honor_real
+    await sbfetch("config?clave=eq.honor_real",{method:"DELETE",headers:{"Prefer":"return=minimal"}});
+    await sbfetch("config",{method:"POST",headers:{"Prefer":"return=minimal"},body:JSON.stringify({clave:"honor_real",valor:"{}"})});
+    res={};hR={};
+    var m=document.getElementById("rm");m.textContent="✓ Todos los resultados borrados. Puedes empezar desde cero.";m.className="msg msok";
+    rendSt();rendRF();rendHF();
+  }catch(e){
+    var m2=document.getElementById("rm");m2.textContent="Error al borrar: "+e.message;m2.className="msg mser";
+  }
+}
+
+
 function bFB(){
   var fb=document.getElementById("fb");fb.innerHTML="";
   FR.forEach(function(f){
@@ -620,7 +758,7 @@ function bFB(){
 }
 
 // ============================================================
-// RENDER RESULTADOS — FIX: campos local/visitante en eliminatorias
+// RENDER RESULTADOS — con tabla de grupos en vivo y nombres reales en 16avos
 // ============================================================
 function rendRF(){
   var fase=FR.find(function(f){return f.id===fA;});if(!fase)return;
@@ -636,20 +774,44 @@ function rendRF(){
   var gm={};pats.forEach(function(p){if(!gm[p.g])gm[p.g]=[];gm[p.g].push(p);});
 
   Object.keys(gm).forEach(function(g){
-    if(fA==="grupos")html+="<div style='font-size:11px;font-weight:600;color:#C8102E;padding:4px 0;text-transform:uppercase;letter-spacing:.05em'>Grupo "+g+"</div>";
+    if(fA==="grupos"){
+      html+="<div style='margin-top:8px;background:#0A1628;border-radius:8px 8px 0 0;padding:5px 10px;display:flex;justify-content:space-between;align-items:center'><span style='font-size:11px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.07em'>Grupo "+g+"</span><span style='font-size:10px;color:#C8D8F0'>"+GEQ_G[g].join(" · ")+"</span></div>";
+    } else if(fA==="dieciseisavos"){
+      html+="<div style='font-size:11px;font-weight:600;color:#C8102E;padding:6px 0 2px;text-transform:uppercase;letter-spacing:.05em'>Partido "+g+"</div>";
+    } else {
+      html+="<div style='font-size:11px;font-weight:600;color:#C8102E;padding:6px 0 2px;text-transform:uppercase;letter-spacing:.05em'>"+g+"</div>";
+    }
+
     gm[g].forEach(function(p){
       var r=res[p.id]||{};
+      var nL=p.l, nV=p.v;
       if(esElim){
-        // En eliminatorias: campo nombre local, marcador, nombre visitante
-        var rlVal=r.rl||"";var rvVal=r.rv||"";
+        // Resolver nombres reales para TODAS las fases eliminatorias
+        if(fA==="dieciseisavos"){
+          var nm=nomPartido16(p);
+          nL=nm.l;nV=nm.v;
+        } else {
+          // Octavos, cuartos, semis, tercer puesto, final: resolver cadena W/L
+          nL=resolverSlot(p.l)||p.l;
+          nV=resolverSlot(p.v)||p.v;
+        }
+      }
+      if(esElim){
+        var rlVal=r.rl||nL||"";var rvVal=r.rv||nV||"";
         html+="<div style='padding:8px 0;border-bottom:1px solid #EEF'>";
+        // Referencia del slot original para todas las fases eliminatorias
+        var slotRef=p.l+" vs "+p.v;
+        var slotResuelto=nL+" vs "+nV;
+        var slotCambia=(slotRef!==slotResuelto);
+        if(slotCambia){
+          html+="<div style='font-size:10px;color:#999;margin-bottom:4px'>Slot: <b style='color:#555'>"+p.l+"</b> vs <b style='color:#555'>"+p.v+"</b> → <span style='color:#1B5E20;font-weight:600'>"+nL+"</span> vs <span style='color:#1B5E20;font-weight:600'>"+nV+"</span></div>";
+        }
         html+="<div class='elim-names'>";
-        html+="<input class='hin' style='font-size:12px;padding:5px 8px' type='text' placeholder='Equipo local…' id='rrl_"+p.id+"' value='"+rlVal+"'>";
+        html+="<input class='hin' style='font-size:12px;padding:5px 8px' type='text' placeholder='Equipo local…' id='rrl_"+p.id+"' value='"+escHtml(rlVal)+"'>";
         html+="<div class='elabel'>vs</div>";
-        html+="<input class='hin' style='font-size:12px;padding:5px 8px' type='text' placeholder='Equipo visitante…' id='rrv_"+p.id+"' value='"+rvVal+"'>";
+        html+="<input class='hin' style='font-size:12px;padding:5px 8px' type='text' placeholder='Equipo visitante…' id='rrv_"+p.id+"' value='"+escHtml(rvVal)+"'>";
         html+="</div>";
         html+="<div class='prow prow-e' style='border:none;padding:4px 0'><div class='el' style='color:#999;font-size:11px'>Marcador (120')</div><input class='nin' type='number' min='0' max='20' placeholder='-' id='rgl_"+p.id+"' value='"+(r.gl!==undefined?r.gl:"")+"'><div class='vsep'>–</div><input class='nin' type='number' min='0' max='20' placeholder='-' id='rgv_"+p.id+"' value='"+(r.gv!==undefined?r.gv:"")+"'><div class='ev' style='color:#999;font-size:11px'>Goles visitante</div></div>";
-        // Radio buttons de penales (aparecen siempre en eliminatorias — admin sabe si hubo empate)
         var penW=r.penWin||"";
         html+="<div style='display:flex;align-items:center;gap:8px;padding:4px 0 8px;font-size:11px;color:#E65100;flex-wrap:wrap'>";
         html+="<span style='font-weight:600'>⚽ Penales (si hubo empate) — clasifica:</span>";
@@ -659,11 +821,25 @@ function rendRF(){
               "<input type='radio' name='rpen_"+p.id+"' value='V' "+(penW==="V"?"checked":"")+" style='display:none'> Visitante</label>";
         html+="<label style='display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 9px;border-radius:6px;border:1.5px solid #DDD;background:"+(penW===""?"#EEE":"#fff")+";color:#888;font-size:12px'>"+
               "<input type='radio' name='rpen_"+p.id+"' value='' "+(penW===""?"checked":"")+" style='display:none'> Sin penales</label>";
-        html+="</div>";
+        html+="</div></div>";
       } else {
-        html+="<div class='prow prow-g'><div class='el'>"+p.l+(p.col?"<span class='col'>COL</span>":"")+"</div><input class='nin' type='number' min='0' max='20' placeholder='-' id='rgl_"+p.id+"' value='"+(r.gl!==undefined?r.gl:"")+"'><div class='vsep'>–</div><input class='nin' type='number' min='0' max='20' placeholder='-' id='rgv_"+p.id+"' value='"+(r.gv!==undefined?r.gv:"")+"'><div class='ev'>"+p.v+"</div></div>";
+        html+="<div class='prow prow-g'><div class='el'>"+nL+(p.col?"<span class='col'>COL</span>":"")+"</div><input class='nin' type='number' min='0' max='20' placeholder='-' id='rgl_"+p.id+"' value='"+(r.gl!==undefined?r.gl:"")+"'><div class='vsep'>–</div><input class='nin' type='number' min='0' max='20' placeholder='-' id='rgv_"+p.id+"' value='"+(r.gv!==undefined?r.gv:"")+"'><div class='ev'>"+nV+"</div></div>";
       }
     });
+
+    // Tabla de clasificación del grupo en vivo (solo fase de grupos)
+    if(fA==="grupos"){
+      var tieneAlgunResultado=GPIDS_G[g]&&GPIDS_G[g].some(function(pid){var r2=res[pid];return r2&&r2.gl!=null;});
+      html+="<div style='padding:6px 0 10px;border-bottom:2px solid #DDE;margin-bottom:4px'>";
+      if(tieneAlgunResultado){
+        html+="<div style='font-size:10px;font-weight:600;color:#555;margin-bottom:2px;padding-top:4px'>📊 Clasificación Grupo "+g+" (en vivo)</div>";
+        html+=htmlTablaGrupo(g);
+        html+="<div style='font-size:9px;color:#AAA;margin-top:3px'>🟢 Clasificados · 🟡 Posible mejor tercero · Sin color: eliminado</div>";
+      } else {
+        html+="<div style='font-size:10px;color:#CCC;padding:4px 0;font-style:italic'>Sin resultados aún para Grupo "+g+"</div>";
+      }
+      html+="</div>";
+    }
   });
   document.getElementById("rf").innerHTML=html;
 }
@@ -688,7 +864,7 @@ async function saveRes(){
         u.visitante=rv?rv.value.trim():(pa?pa.v:"");
         // Guardar ganador de penales
         var penRadio=document.querySelector("input[name='rpen_"+id+"']:checked");
-        u.penWin=penRadio?penRadio.value:null;
+        u.pen_win=penRadio?penRadio.value:null;
       } else {
         u.local=pa?pa.l:"";
         u.visitante=pa?pa.v:"";
@@ -701,7 +877,7 @@ async function saveRes(){
       var u=ups[i];
       await sbfetch("resultados?partido_id=eq."+u.partido_id,{method:"DELETE",headers:{"Prefer":"return=minimal"}});
       await sbfetch("resultados",{method:"POST",headers:{"Prefer":"return=minimal"},body:JSON.stringify(u)});
-      res[u.partido_id]={gl:u.gl,gv:u.gv,rl:u.local,rv:u.visitante,penWin:u.penWin||null};
+      res[u.partido_id]={gl:u.gl,gv:u.gv,rl:u.local||"",rv:u.visitante||"",penWin:u.pen_win||null};
     }
     var m=document.getElementById("rm");m.textContent=ups.length+" resultado"+(ups.length!==1?"s":"")+" guardados.";m.className="msg msok";
     rendSt();
@@ -983,7 +1159,16 @@ function construirPDFAdmin(p){
     }
     function limpiar(n){
       if(!n)return "";
-      return n.replace(/[\u{1F300}-\u{1FFFF}]|[\u{1F100}-\u{1F1FF}]|[\u2600-\u27FF]/gu," ").replace(/\s+/g," ").trim();
+      // 1. Quitar emojis y símbolos
+      var s=n.replace(/[\u{1F300}-\u{1FFFF}]|[\u{1F100}-\u{1F1FF}]|[\u2600-\u27FF]/gu," ");
+      // 2. Normalizar tildes/acentos/ñ para Helvetica (no soporta UTF-8 completo)
+      s=s.normalize("NFD").replace(/[\u0300-\u036f]/g,""); // quita diacríticos
+      s=s.replace(/\u00f1/g,"n").replace(/\u00d1/g,"N"); // ñ→n, Ñ→N (no cubierto por NFD)
+      s=s.replace(/[\u0080-\u00ff]/g,function(c){
+        var map={"ü":"u","Ü":"U","ö":"o","Ö":"O","ä":"a","Ä":"A","ø":"o","å":"a","æ":"ae","Æ":"AE"};
+        return map[c]||c.normalize("NFD").replace(/[\u0300-\u036f]/g,"")||"?";
+      });
+      return s.replace(/\s+/g," ").trim();
     }
 
     // ---- ENCABEZADO ----
@@ -995,7 +1180,7 @@ function construirPDFAdmin(p){
     // Franja datos participante
     banda([244,246,250],14);
     txt("Participante:",mg,y+5,8,false,[100,100,100]);
-    txt(p.nombre,mg+24,y+5,10,true,[10,22,40]);
+    txt(limpiar(p.nombre),mg+24,y+5,10,true,[10,22,40]);
     txt(p.validado?"VALIDADO":"PENDIENTE",W-mg,y+5,7,true,p.validado?[27,94,32]:[230,81,0]);
     doc.setFontSize(7);doc.setTextColor(150,150,150);
     doc.text(fechaStr,W-mg,y+10,{align:"right"});
@@ -1211,7 +1396,7 @@ function construirPDFAdmin(p){
     ];
     honorDef.forEach(function(h,idx){
       checkY(7);
-      var val=honor[h.k]||"—";
+      var val=limpiar(honor[h.k]||"—");
       var realVal=hR[h.k]||"";
       var acierto=matchHonor(val,realVal);
       var bg=idx%2===0?[255,255,255]:[248,249,250];
@@ -1230,7 +1415,7 @@ function construirPDFAdmin(p){
         } else {
           doc.setFillColor(245,245,245);doc.rect(W-mg-18,y+1,17,4,"F");
           doc.setFontSize(6.5);doc.setFont("helvetica","normal");doc.setTextColor(150,150,150);
-          doc.text("real: "+realVal,W-mg-9.5,y+3.8,{align:"center"});
+          doc.text("real: "+limpiar(realVal),W-mg-9.5,y+3.8,{align:"center"});
         }
       } else {
         doc.setFontSize(7);doc.setFont("helvetica","normal");doc.setTextColor(150,150,150);
@@ -1248,11 +1433,11 @@ function construirPDFAdmin(p){
       doc.setFillColor(10,22,40);
       doc.rect(0,287,W,10,"F");
       doc.setFontSize(7);doc.setFont("helvetica","normal");doc.setTextColor(200,216,240);
-      doc.text("Polla Compis 2026  ·  "+p.nombre+"  ·  Ref: "+refCode,mg,293);
+      doc.text("Polla Compis 2026  ·  "+limpiar(p.nombre)+"  ·  Ref: "+refCode,mg,293);
       doc.text("Pag. "+pg+" / "+totalPags,W-mg,293,{align:"right"});
     }
 
-    var filename="PollaCompis2026_"+p.nombre.replace(/[^a-zA-Z0-9]/g,"_")+".pdf";
+    var filename="PollaCompis2026_"+limpiar(p.nombre).replace(/[^a-zA-Z0-9]/g,"_")+".pdf";
     doc.save(filename);
 
   } catch(err){
