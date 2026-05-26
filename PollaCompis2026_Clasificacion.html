@@ -135,6 +135,26 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 
 <script>
 // ============================================================
+// COMPARACIÓN FLEXIBLE DE HONOR (aliases + normalización + containment)
+// ============================================================
+function normH(s){
+  return (s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/\./g,"").replace(/\s+/g," ").trim();
+}
+function matchHonor(escrito,realRaw){
+  if(!realRaw||!escrito)return false;
+  var e=normH(escrito);
+  var aliases=realRaw.split(",").map(function(a){return normH(a);}).filter(function(a){return a.length>0;});
+  for(var i=0;i<aliases.length;i++){
+    var a=aliases[i];
+    if(!a)continue;
+    if(e===a)return true;
+    if(a.length>=4&&e.indexOf(a)>=0)return true;
+    if(e.length>=4&&a.indexOf(e)>=0)return true;
+  }
+  return false;
+}
+
+// ============================================================
 // CONEXIÓN SUPABASE
 // ============================================================
 var SB="https://ilqtntrquulwsrvxeuki.supabase.co";
@@ -340,7 +360,7 @@ function calcTotal(p){
   // Honor
   var hon=p.honor||{};
   HONOR_DEF.forEach(function(h){
-    if(hR[h.k]&&hon[h.k]&&hon[h.k].trim().toLowerCase()===hR[h.k].trim().toLowerCase())tot+=h.pts;
+    if(hR[h.k]&&hon[h.k]&&matchHonor(hon[h.k],hR[h.k]))tot+=h.pts;
   });
 
   // Posición en grupos (2pts/equipo si grupo completo)
@@ -540,13 +560,13 @@ function renderDet(p){
   // Cuadro de Honor
   html+='<div class="fase-hdr" style="margin-top:12px"><strong>🏅 Cuadro de Honor</strong>';
   var ptsHon=0;
-  HONOR_DEF.forEach(function(h){if(hR[h.k]&&honor[h.k]&&honor[h.k].trim().toLowerCase()===hR[h.k].trim().toLowerCase())ptsHon+=h.pts;});
+  HONOR_DEF.forEach(function(h){if(hR[h.k]&&honor[h.k]&&matchHonor(honor[h.k],hR[h.k]))ptsHon+=h.pts;});
   html+='<span>'+ptsHon+' pts</span></div>';
   html+='<div class="honor-grid">';
   HONOR_DEF.forEach(function(h){
     var v=honor[h.k]||"—";
     var rVal=hR[h.k]||"";
-    var match=rVal&&v.trim().toLowerCase()===rVal.trim().toLowerCase();
+    var match=matchHonor(v,rVal);
     var cls=!rVal?"":match?"ok":"no";
     html+='<div class="honor-item"><div class="hl">'+esc(h.l)+' ('+h.pts+'pts)</div><div class="hv '+cls+'">'+(match?"✓ ":"")+esc(v)+'</div></div>';
   });

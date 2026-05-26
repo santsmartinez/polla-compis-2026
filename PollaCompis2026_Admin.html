@@ -561,7 +561,7 @@ function verD(id){
   html+="<div class='fhdr2' style='margin-top:.75rem'><b style='font-size:13px'>Cuadro de Honor</b></div>";
   HONOR.forEach(function(h){
     var v=honor[h.k]||"—",r=hR[h.k]||"";
-    var m=r&&v.trim().toLowerCase()===r.trim().toLowerCase();
+    var m=matchHonor(v,r);
     html+="<div style='display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #EEF'><span style='flex:1;font-size:12px;color:#555'>"+h.l+"</span><span style='font-size:13px;font-weight:500'>"+v+"</span>"+(r?"<span class='"+(m?"tok":"tno")+"'>"+(m?"✓ +"+h.pts+"pts":"✗")+"</span>":"")+"</div>";
   });
   document.getElementById("db").innerHTML=html;
@@ -570,6 +570,31 @@ function verD(id){
 }
 
 function faseLbl(f){return{grupos:"Fase de Grupos",dieciseisavos:"Dieciseisavos",octavos:"Octavos",cuartos:"Cuartos",semis:"Semifinales",tercero:"3er Puesto",final:"Final"}[f]||f;}
+
+// ============================================================
+// COMPARACIÓN FLEXIBLE DE HONOR (aliases + normalización + containment)
+// ============================================================
+function normH(s){
+  // Quita tildes, pasa a minúsculas, quita puntos y espacios extra
+  return (s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/\./g,"").replace(/\s+/g," ").trim();
+}
+function matchHonor(escrito,realRaw){
+  // realRaw puede ser "Vinicius, Vini, Vini Jr, Vinicius Jr"
+  // escrito es lo que puso el participante
+  if(!realRaw||!escrito)return false;
+  var e=normH(escrito);
+  var aliases=realRaw.split(",").map(function(a){return normH(a);}).filter(function(a){return a.length>0;});
+  for(var i=0;i<aliases.length;i++){
+    var a=aliases[i];
+    if(!a)continue;
+    // A: igualdad exacta normalizada
+    if(e===a)return true;
+    // B: containment — el alias está en lo escrito o viceversa (mínimo 4 chars para evitar falsos)
+    if(a.length>=4&&e.indexOf(a)>=0)return true;
+    if(e.length>=4&&a.indexOf(e)>=0)return true;
+  }
+  return false;
+}
 function puntajeFaseStr(reg){
   var s=reg.s+"sig·"+reg.e+"ex";
   if(reg.c)s+="·"+reg.c+"cls";
@@ -680,6 +705,16 @@ async function saveRes(){
     }
     var m=document.getElementById("rm");m.textContent=ups.length+" resultado"+(ups.length!==1?"s":"")+" guardados.";m.className="msg msok";
     rendSt();
+    // Si se guardó la Final (104) o 3er puesto (103), auto-actualizar honor_real
+    var guardarHonorAuto=ups.some(function(u){return u.partido_id===104||u.partido_id===103;});
+    if(guardarHonorAuto){
+      autoHonorDesdeRes();
+      try{
+        await sbfetch("config?clave=eq.honor_real",{method:"DELETE",headers:{"Prefer":"return=minimal"}});
+        await sbfetch("config",{method:"POST",headers:{"Prefer":"return=minimal"},body:JSON.stringify({clave:"honor_real",valor:JSON.stringify(hR)})});
+        m.textContent+=" · Honor actualizado automáticamente ✓";
+      }catch(e2){m.textContent+=" (error actualizando honor)";}
+    }
   }catch(e){var m2=document.getElementById("rm");m2.textContent="Error al guardar.";m2.className="msg mser";}
 }
 
@@ -744,7 +779,7 @@ function calcC(){
     // Honor
     var hon=p.honor||{};
     HONOR.forEach(function(h){
-      if(hR[h.k]&&hon[h.k]&&hon[h.k].trim().toLowerCase()===hR[h.k].trim().toLowerCase())tot+=h.pts;
+      if(hR[h.k]&&hon[h.k]&&matchHonor(hon[h.k],hR[h.k]))tot+=h.pts;
     });
 
     // ★ Puntos por posición exacta en grupos (2pts por equipo, solo cuando grupo completo)
@@ -764,13 +799,53 @@ function calcC(){
 // ============================================================
 // HONOR
 // ============================================================
+function autoHonorDesdeRes(){
+  // Autocalcular ganadores reales desde resultados de Final (104) y 3er puesto (103)
+  var r104=res[104],r103=res[103];
+  var AUTO=["campeon","subcampeon","tercero_h"];
+  // Solo sobreescribir si tenemos resultado real
+  if(r104&&r104.gl!=null&&r104.gv!=null&&r104.rl&&r104.rv){
+    var rl=r104.rl,rv=r104.rv;
+    var camp,sub;
+    if(r104.gl>r104.gv){camp=rl;sub=rv;}
+    else if(r104.gv>r104.gl){camp=rv;sub=rl;}
+    else{camp=(r104.penWin==="L"?rl:rv);sub=(r104.penWin==="L"?rv:rl);}
+    hR["campeon"]=camp;hR["subcampeon"]=sub;
+  }
+  if(r103&&r103.gl!=null&&r103.gv!=null&&r103.rl&&r103.rv){
+    var rl3=r103.rl,rv3=r103.rv;
+    var ter;
+    if(r103.gl>r103.gv)ter=rl3;
+    else if(r103.gv>r103.gl)ter=rv3;
+    else ter=(r103.penWin==="L"?rl3:rv3);
+    hR["tercero_h"]=ter;
+  }
+}
+
 function rendHF(){
+  autoHonorDesdeRes();
+  var AUTO=["campeon","subcampeon","tercero_h"];
   var hrf=document.getElementById("hrf");hrf.innerHTML="";
+
+  // Nota informativa
+  var nota=document.createElement("div");
+  nota.style.cssText="background:#E8F5E9;border:1px solid #A5D6A7;border-radius:8px;padding:8px 12px;font-size:11px;color:#1B5E20;margin-bottom:10px";
+  nota.innerHTML="🏆 <b>Campeón, Subcampeón y 3er puesto</b> se autocalculan del resultado real de Final y 3er/4to puesto. Guarda primero esos resultados en la pestaña Resultados.<br><br>⚽ <b>Para jugadores:</b> puedes poner múltiples variaciones separadas por coma: <i>Vinicius, Vini, Vini Jr</i>. El sistema acepta cualquier variante que contenga el alias (sin tildes, sin mayúsculas).";
+  hrf.appendChild(nota);
+
   HONOR.forEach(function(h){
+    var isAuto=AUTO.indexOf(h.k)>=0;
     var row=document.createElement("div");row.style.cssText="display:flex;align-items:center;gap:8px;margin-bottom:.625rem;flex-wrap:wrap";
     var lbl=document.createElement("span");lbl.style.cssText="flex:0 0 160px;font-size:13px;color:#444";lbl.textContent=h.l+" ("+h.pts+"pts)";
-    var inp=document.createElement("input");inp.type="text";inp.placeholder="Ganador real…";inp.className="hin";inp.style.cssText="flex:1;min-width:120px";inp.value=hR[h.k]||"";
-    (function(hk){inp.addEventListener("input",function(){hR[hk]=this.value.trim();});})(h.k);
+    var inp=document.createElement("input");inp.type="text";inp.className="hin";inp.style.cssText="flex:1;min-width:120px";inp.value=hR[h.k]||"";
+    if(isAuto){
+      inp.readOnly=true;
+      inp.placeholder="Se calcula del resultado real";
+      inp.style.cssText+="background:#E8F5E9;color:#1B5E20;font-weight:600;cursor:not-allowed";
+    } else {
+      inp.placeholder="Ganador real…";
+      (function(hk){inp.addEventListener("input",function(){hR[hk]=this.value.trim();});})(h.k);
+    }
     row.appendChild(lbl);row.appendChild(inp);
     hrf.appendChild(row);
   });
@@ -1138,7 +1213,7 @@ function construirPDFAdmin(p){
       checkY(7);
       var val=honor[h.k]||"—";
       var realVal=hR[h.k]||"";
-      var acierto=realVal&&val.trim().toLowerCase()===realVal.trim().toLowerCase();
+      var acierto=matchHonor(val,realVal);
       var bg=idx%2===0?[255,255,255]:[248,249,250];
       doc.setFillColor(bg[0],bg[1],bg[2]);
       doc.rect(mg,y,W-mg*2,6,"F");
