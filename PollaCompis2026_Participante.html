@@ -1147,13 +1147,60 @@ function showH(){
   document.getElementById("benv").disabled=false;
   document.getElementById("pf").style.width="95%";
   document.getElementById("pt").textContent="Último paso";
+
+  // Autocalcular Campeón, Subcampeón y 3er puesto desde pronósticos
+  var p104=pronos[104]||{};var p103=pronos[103]||{};
+  var finL=p104.pl||"";var finV=p104.pv||"";
+  var gfL=p104.gl!=null?p104.gl:null;var gfV=p104.gv!=null?p104.gv:null;
+  var campeon="",subcampeon="",tercero="";
+  if(finL&&finV){
+    if(gfL!=null&&gfV!=null){
+      if(gfL>gfV){campeon=finL;subcampeon=finV;}
+      else if(gfV>gfL){campeon=finV;subcampeon=finL;}
+      else{// empate — penWin decide
+        if(p104.penWin==="L"){campeon=finL;subcampeon=finV;}
+        else if(p104.penWin==="V"){campeon=finV;subcampeon=finL;}
+        else{campeon=finL;subcampeon=finV;}// fallback
+      }
+    } else {campeon=finL;subcampeon=finV;}
+  }
+  var terL=p103.pl||"";var terV=p103.pv||"";
+  var gtL=p103.gl!=null?p103.gl:null;var gtV=p103.gv!=null?p103.gv:null;
+  if(terL&&terV){
+    if(gtL!=null&&gtV!=null){
+      if(gtL>gtV)tercero=terL;
+      else if(gtV>gtL)tercero=terV;
+      else{if(p103.penWin==="L")tercero=terL;else if(p103.penWin==="V")tercero=terV;else tercero=terL;}
+    } else {tercero=terL;}
+  }
+  hvals["campeon"]=campeon;
+  hvals["subcampeon"]=subcampeon;
+  hvals["tercero_h"]=tercero;
+
+  var AUTO=["campeon","subcampeon","tercero_h"];
   var hf=document.getElementById("hfields");hf.innerHTML="";
+
+  // Nota informativa para los automáticos
+  var nota=document.createElement("div");
+  nota.style.cssText="background:rgba(200,16,46,.1);border:1px solid rgba(200,16,46,.3);border-radius:8px;padding:8px 12px;font-size:11px;color:#C8102E;margin-bottom:10px";
+  nota.innerHTML="🏆 <strong>Campeón, Subcampeón y 3er puesto</strong> se completan automáticamente según tus pronósticos de Final y 3er/4to puesto.";
+  hf.appendChild(nota);
+
   HONOR.forEach(function(h){
     var row=document.createElement("div");row.className="hrow";
     var lbl=document.createElement("span");lbl.className="hlbl";lbl.textContent=h.l;
     var pts=document.createElement("span");pts.className="hpts";pts.textContent=h.pts+"pts";
-    var inp=document.createElement("input");inp.type="text";inp.placeholder="Apellido/nombre…";inp.className="hin";
-    (function(hk){inp.addEventListener("input",function(){hvals[hk]=this.value;});})(h.k);
+    var inp=document.createElement("input");inp.type="text";inp.className="hin";
+    if(AUTO.indexOf(h.k)>=0){
+      inp.value=hvals[h.k]||"";
+      inp.readOnly=true;
+      inp.style.cssText="background:#1a2a1a;color:#4CAF50;font-weight:600;cursor:not-allowed;opacity:.9";
+      inp.title="Se autorrellena según tus pronósticos";
+    } else {
+      inp.placeholder="Apellido/nombre…";
+      inp.value=hvals[h.k]||"";
+      (function(hk){inp.addEventListener("input",function(){hvals[hk]=this.value;});})(h.k);
+    }
     row.appendChild(lbl);row.appendChild(pts);row.appendChild(inp);hf.appendChild(row);
   });
   document.getElementById("hsec").scrollIntoView({behavior:"smooth"});
@@ -1243,11 +1290,61 @@ function buildStep(i,cont){
 }
 
 // ============================================================
-// ENVIAR
+// VALIDACIÓN COMPLETA ANTES DE ENVIAR
 // ============================================================
-async function enviar(){
+function validarTodo(){
+  // 1. Nombre
   var nom=document.getElementById("nom").value.trim();
-  if(!nom){showMsg("Escribe tu nombre para continuar.","err");return;}
+  if(!nom)return{ok:false,msg:"Escribe tu nombre completo antes de enviar."};
+
+  // 2. Todos los 72 partidos de grupos
+  var faltanGrupos=[];
+  PG.forEach(function(p){
+    var pr=pronos[p.id];
+    if(!pr||pr.gl==null||pr.gv==null||pr.gl===""||pr.gv==="")faltanGrupos.push(p.id);
+  });
+  if(faltanGrupos.length>0)return{ok:false,msg:"Faltan marcadores en "+faltanGrupos.length+" partido(s) de Fase de Grupos. Revisa todos los grupos."};
+
+  // 3. Todos los partidos eliminatorios (IDs 73–104)
+  var faltanElim=[];
+  ELIM.forEach(function(fase){
+    fase.ps.forEach(function(p){
+      var pr=pronos[p.id];
+      if(!pr||pr.gl==null||pr.gv==null||pr.gl===""||pr.gv==="")faltanElim.push(p.id);
+    });
+  });
+  if(faltanElim.length>0)return{ok:false,msg:"Faltan marcadores en "+faltanElim.length+" partido(s) eliminatorio(s). Revisa Dieciseisavos, Octavos, Cuartos, Semis, 3er puesto y Final."};
+
+  // 4. Penales: si hay empate en eliminatorias, debe tener penWin
+  var faltanPen=[];
+  ELIM.forEach(function(fase){
+    fase.ps.forEach(function(p){
+      var pr=pronos[p.id];
+      if(pr&&pr.gl!=null&&pr.gv!=null&&pr.gl===pr.gv&&!pr.penWin)faltanPen.push(p.id);
+    });
+  });
+  if(faltanPen.length>0)return{ok:false,msg:"Hay "+faltanPen.length+" partido(s) con empate sin ganador de penales seleccionado. Indica quién clasifica en penales."};
+
+  // 5. Cuadro de Honor — los 7 manuales deben estar llenos
+  var AUTO=["campeon","subcampeon","tercero_h"];
+  var faltanHon=[];
+  HONOR.forEach(function(h){
+    if(AUTO.indexOf(h.k)>=0)return;// automáticos
+    if(!hvals[h.k]||!hvals[h.k].trim())faltanHon.push(h.l);
+  });
+  if(faltanHon.length>0)return{ok:false,msg:"Faltan estos pronósticos en el Cuadro de Honor: "+faltanHon.map(function(l){return l.replace(/[🏆🥈🥉⚽🏅🧤]/gu,"").trim();}).join(", ")+"."};
+
+  // 6. Los 3 automáticos deben poder resolverse (tener pronóstico de Final)
+  if(!hvals["campeon"])return{ok:false,msg:"No tienes pronóstico para la Final. Completa el marcador de la Final primero."};
+
+  return{ok:true};
+}
+
+async function enviar(){
+  var val=validarTodo();
+  if(!val.ok){showMsg(val.msg,"err");return;}
+
+  var nom=document.getElementById("nom").value.trim();
   var btn=document.getElementById("benv");btn.disabled=true;btn.textContent="Enviando…";
   try{
     var r=await fetch(SB+"/rest/v1/participantes",{
