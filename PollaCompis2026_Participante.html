@@ -276,18 +276,17 @@ function clasGrupo(g){
     else{stats[p.l].pts+=1;stats[p.l].emp++;stats[p.v].pts+=1;stats[p.v].emp++;}
   });
 
-  // Ordenar: Pts > DG global > GF global > H2H(Pts>DG>GF) > alfa (FIFA 2026)
+  // Ordenar: Pts > H2H(Pts>DG>GF) > DG global > GF global > alfa (FIFA 2026 Art.13)
   var sorted=eq.slice().sort(function(a,b){
     if(stats[b].pts!==stats[a].pts)return stats[b].pts-stats[a].pts;
-    // DG global primero
-    if(stats[b].dg!==stats[a].dg)return stats[b].dg-stats[a].dg;
-    // GF global segundo
-    if(stats[b].gf!==stats[a].gf)return stats[b].gf-stats[a].gf;
-    // H2H solo si Pts+DG+GF global son iguales
+    // Step 1 FIFA: H2H entre los empatados en puntos
     var h2h=calcH2H([a,b],g);
     if(h2h[b].pts!==h2h[a].pts)return h2h[b].pts-h2h[a].pts;
     if(h2h[b].dg!==h2h[a].dg)return h2h[b].dg-h2h[a].dg;
     if(h2h[b].gf!==h2h[a].gf)return h2h[b].gf-h2h[a].gf;
+    // Step 2 FIFA: DG global y GF global
+    if(stats[b].dg!==stats[a].dg)return stats[b].dg-stats[a].dg;
+    if(stats[b].gf!==stats[a].gf)return stats[b].gf-stats[a].gf;
     return a.localeCompare(b);
   });
 

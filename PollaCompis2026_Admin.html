@@ -416,12 +416,10 @@ function clasGrupoReal(g){
     else if(gl<gv){stats[v].pts+=3;}
     else{stats[l].pts+=1;stats[v].pts+=1;}
   });
-  // Pts > DG global > GF global > H2H(Pts>DG>GF) > alfa (FIFA 2026)
+  // Pts > H2H(Pts>DG>GF) > DG global > GF global > alfa (FIFA 2026 Art.13)
   var sorted=eq.slice().sort(function(a,b){
     if(stats[b].pts!==stats[a].pts)return stats[b].pts-stats[a].pts;
-    if(stats[b].dg!==stats[a].dg)return stats[b].dg-stats[a].dg;
-    if(stats[b].gf!==stats[a].gf)return stats[b].gf-stats[a].gf;
-    // H2H entre los dos empatados
+    // Step 1 FIFA: H2H entre los empatados en puntos
     var h2h={};[a,b].forEach(function(e){h2h[e]={pts:0,dg:0,gf:0};});
     GPIDS_G[g].forEach(function(pid){
       var r=res[pid]; if(!r||r.gl==null||r.gv==null)return;
@@ -434,6 +432,9 @@ function clasGrupoReal(g){
     if(h2h[b].pts!==h2h[a].pts)return h2h[b].pts-h2h[a].pts;
     if(h2h[b].dg!==h2h[a].dg)return h2h[b].dg-h2h[a].dg;
     if(h2h[b].gf!==h2h[a].gf)return h2h[b].gf-h2h[a].gf;
+    // Step 2 FIFA: DG global y GF global
+    if(stats[b].dg!==stats[a].dg)return stats[b].dg-stats[a].dg;
+    if(stats[b].gf!==stats[a].gf)return stats[b].gf-stats[a].gf;
     return a.localeCompare(b);
   });
   return sorted; // [1°, 2°, 3°, 4°]
@@ -457,12 +458,10 @@ function clasGrupoProno(g, pronos){
     else if(gl<gv){stats[v].pts+=3;}
     else{stats[l].pts+=1;stats[v].pts+=1;}
   });
-  // Pts > DG global > GF global > H2H(Pts>DG>GF) > alfa (FIFA 2026)
+  // Pts > H2H(Pts>DG>GF) > DG global > GF global > alfa (FIFA 2026 Art.13)
   var sorted=eq.slice().sort(function(a,b){
     if(stats[b].pts!==stats[a].pts)return stats[b].pts-stats[a].pts;
-    if(stats[b].dg!==stats[a].dg)return stats[b].dg-stats[a].dg;
-    if(stats[b].gf!==stats[a].gf)return stats[b].gf-stats[a].gf;
-    // H2H entre los dos empatados
+    // Step 1 FIFA: H2H entre los empatados en puntos
     var h2h={};[a,b].forEach(function(e){h2h[e]={pts:0,dg:0,gf:0};});
     GPIDS_G[g].forEach(function(pid){
       var pr=pronos[pid]; if(!pr||pr.gl==null||pr.gv==null)return;
@@ -475,6 +474,9 @@ function clasGrupoProno(g, pronos){
     if(h2h[b].pts!==h2h[a].pts)return h2h[b].pts-h2h[a].pts;
     if(h2h[b].dg!==h2h[a].dg)return h2h[b].dg-h2h[a].dg;
     if(h2h[b].gf!==h2h[a].gf)return h2h[b].gf-h2h[a].gf;
+    // Step 2 FIFA: DG global y GF global
+    if(stats[b].dg!==stats[a].dg)return stats[b].dg-stats[a].dg;
+    if(stats[b].gf!==stats[a].gf)return stats[b].gf-stats[a].gf;
     return a.localeCompare(b);
   });
   return sorted;
