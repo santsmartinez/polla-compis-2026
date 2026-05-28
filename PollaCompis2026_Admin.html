@@ -367,7 +367,7 @@ function rendLi(){
     var nom=document.createElement("div");nom.className="pn";nom.textContent=p.nombre;
     var can=document.createElement("span");can.className="pc";can.textContent=p.canal||"";
     var pil=document.createElement("span");pil.className="pill "+(p.validado?"pok":"ppen");pil.textContent=p.validado?"✓ Validado":"Pendiente";
-    var bv=document.createElement("button");bv.className="bsm bver";bv.textContent="Ver pronósticos";
+    var bv=document.createElement("button");bv.className="bsm bver";bv.textContent="Ver puntos ▶";
     (function(pid){bv.addEventListener("click",function(){verD(pid);});})(p.id);
     var bpdf=document.createElement("button");bpdf.className="bsm bpdf";bpdf.textContent="⬇ PDF";
     (function(pid){bpdf.addEventListener("click",function(){generarPDFAdmin(pid);});})(p.id);
@@ -416,10 +416,14 @@ function clasGrupoReal(g){
     else if(gl<gv){stats[v].pts+=3;}
     else{stats[l].pts+=1;stats[v].pts+=1;}
   });
-  // Pts > H2H(Pts>DG>GF) > DG global > GF global > alfa (FIFA 2026 Art.13)
+  // FIFA 2026 Art.13 CORRECTO: Pts > DG global > GF global > H2H(Pts>DG>GF) > alfa
   var sorted=eq.slice().sort(function(a,b){
     if(stats[b].pts!==stats[a].pts)return stats[b].pts-stats[a].pts;
-    // Step 1 FIFA: H2H entre los empatados en puntos
+    // Step 1 FIFA: DG global entre todos los partidos del grupo
+    if(stats[b].dg!==stats[a].dg)return stats[b].dg-stats[a].dg;
+    // Step 2 FIFA: GF global
+    if(stats[b].gf!==stats[a].gf)return stats[b].gf-stats[a].gf;
+    // Step 3 FIFA: H2H entre los empatados (Pts > DG > GF)
     var h2h={};[a,b].forEach(function(e){h2h[e]={pts:0,dg:0,gf:0};});
     GPIDS_G[g].forEach(function(pid){
       var r=res[pid]; if(!r||r.gl==null||r.gv==null)return;
@@ -432,9 +436,7 @@ function clasGrupoReal(g){
     if(h2h[b].pts!==h2h[a].pts)return h2h[b].pts-h2h[a].pts;
     if(h2h[b].dg!==h2h[a].dg)return h2h[b].dg-h2h[a].dg;
     if(h2h[b].gf!==h2h[a].gf)return h2h[b].gf-h2h[a].gf;
-    // Step 2 FIFA: DG global y GF global
-    if(stats[b].dg!==stats[a].dg)return stats[b].dg-stats[a].dg;
-    if(stats[b].gf!==stats[a].gf)return stats[b].gf-stats[a].gf;
+    // Step 4: alfabético
     return a.localeCompare(b);
   });
   return sorted; // [1°, 2°, 3°, 4°]
@@ -578,37 +580,136 @@ function calcP(pr,real,fase){
 // ============================================================
 function verD(id){
   var p=parts.find(function(x){return x.id===id;});if(!p)return;
-  document.getElementById("dttl").textContent="Pronósticos · "+p.nombre;
+  document.getElementById("dttl").textContent="Desglose de puntos \u00b7 "+p.nombre;
   var pronos=p.pronos||{},honor=p.honor||{};
   var fo=["grupos","dieciseisavos","octavos","cuartos","semis","tercero","final"];
   var fMap={};
   TODOS.forEach(function(pa){if(!fMap[pa.f])fMap[pa.f]=[];fMap[pa.f].push(pa);});
-  var html="";
+
+  // Calcular totales por fase (igual que calcC)
+  var GK=["A","B","C","D","E","F","G","H","I","J","K","L"];
+  var totalPts=0,totalExactos=0;
+  var ptsPorFase={};fo.forEach(function(f){ptsPorFase[f]=0;});
+  var ptsHonor=0,ptsPosGrupo=0;
+
+  TODOS.forEach(function(pa){
+    var pr=pronos[pa.id],real=res[pa.id];
+    var pts=calcP(pr,real,pa.f);
+    if(pts!==null&&pts>0){ptsPorFase[pa.f]=(ptsPorFase[pa.f]||0)+pts;totalPts+=pts;}
+    if(pr&&real&&pr.gl===real.gl&&pr.gv===real.gv)totalExactos++;
+    if(pa.f==="cuartos"&&real&&pr){
+      var regS=PTS.semis;
+      if(regS.clasS>0){
+        var rl=(real.rl||"").trim().toLowerCase(),rv=(real.rv||"").trim().toLowerCase();
+        var pl=(pr.pl||"").trim().toLowerCase(),pv=(pr.pv||"").trim().toLowerCase();
+        if(rl&&rv&&pl&&pv){
+          var gan=real.gl>real.gv?rl:real.gl<real.gv?rv:(real.penWin==="L"?rl:real.penWin==="V"?rv:"");
+          var ganP=pr.gl>pr.gv?pl:pr.gl<pr.gv?pv:(pr.penWin==="L"?pl:pr.penWin==="V"?pv:"");
+          if(gan&&ganP&&gan===ganP){ptsPorFase["semis"]=(ptsPorFase["semis"]||0)+regS.clasS;totalPts+=regS.clasS;}
+        }
+      }
+    }
+    if(pa.f==="semis"&&real&&pr){
+      var regF=PTS.final;
+      if(regF.clasF>0){
+        var rl2=(real.rl||"").trim().toLowerCase(),rv2=(real.rv||"").trim().toLowerCase();
+        var pl2=(pr.pl||"").trim().toLowerCase(),pv2=(pr.pv||"").trim().toLowerCase();
+        if(rl2&&rv2&&pl2&&pv2){
+          var gan2=real.gl>real.gv?rl2:real.gl<real.gv?rv2:(real.penWin==="L"?rl2:real.penWin==="V"?rv2:"");
+          var ganP2=pr.gl>pr.gv?pl2:pr.gl<pr.gv?pv2:(pr.penWin==="L"?pl2:pr.penWin==="V"?pv2:"");
+          if(gan2&&ganP2&&gan2===ganP2){ptsPorFase["final"]=(ptsPorFase["final"]||0)+regF.clasF;totalPts+=regF.clasF;}
+        }
+      }
+    }
+  });
+  HONOR.forEach(function(h){
+    if(hR[h.k]&&honor[h.k]&&matchHonor(honor[h.k],hR[h.k])){ptsHonor+=h.pts;totalPts+=h.pts;}
+  });
+  GK.forEach(function(g){
+    var pp=ptsGrupoPos(g,pronos);
+    if(pp>0){ptsPosGrupo+=pp;ptsPorFase["grupos"]=(ptsPorFase["grupos"]||0)+pp;totalPts+=pp;}
+  });
+
+  // Tarjeta resumen
+  var html="<div style='background:linear-gradient(135deg,#C8102E 0%,#8B0000 100%);color:#fff;border-radius:12px;padding:16px 20px;margin-bottom:16px'>";
+  html+="<div style='font-size:28px;font-weight:700;letter-spacing:-0.5px'>"+totalPts+"<span style='font-size:14px;font-weight:400;opacity:.8;margin-left:6px'>pts totales</span></div>";
+  html+="<div style='font-size:12px;opacity:.75;margin-top:2px'>"+totalExactos+" resultado"+(totalExactos!==1?"s":""+" exacto"+(totalExactos!==1?"s":""))+"</div>";
+  html+="<div style='display:flex;flex-wrap:wrap;gap:6px;margin-top:12px'>";
+  var faseLabels={grupos:"Grupos",dieciseisavos:"16avos",octavos:"8avos",cuartos:"Cuartos",semis:"Semis",tercero:"3er P.",final:"Final"};
+  fo.forEach(function(f){
+    var pp=ptsPorFase[f]||0;
+    if(pp>0)html+="<div style='background:rgba(255,255,255,.2);border-radius:6px;padding:3px 9px;font-size:12px'><b>"+pp+"</b> "+faseLabels[f]+"</div>";
+  });
+  if(ptsHonor>0)html+="<div style='background:rgba(255,255,255,.2);border-radius:6px;padding:3px 9px;font-size:12px'><b>"+ptsHonor+"</b> Honor</div>";
+  html+="</div></div>";
+
+  // Detalle por fase — solo filas con pts > 0
   fo.forEach(function(fase){
     var pats=fMap[fase]||[];if(!pats.length)return;
-    var reg=PTS[fase];
-    html+="<div class='fhdr2'><b style='font-size:13px'>"+faseLbl(fase)+"</b><span>"+puntajeFaseStr(reg)+"</span></div>";
     var gm={};pats.forEach(function(pa){if(!gm[pa.g])gm[pa.g]=[];gm[pa.g].push(pa);});
+    var rowsFase="";
     Object.keys(gm).forEach(function(g){
-      if(fase==="grupos")html+="<div style='font-size:10px;font-weight:600;color:#C8102E;padding:2px 0;text-transform:uppercase'>Grupo "+g+"</div>";
+      var rowsGrupo="";
       gm[g].forEach(function(pa){
         var pr=pronos[pa.id],real=res[pa.id];
         var pts=calcP(pr,real,fase);
-        var prS=(pr&&pr.gl!=null)?pr.gl+"–"+pr.gv:"–";
-        var reS=real?real.gl+"–"+real.gv:"?";
+        if(!pts||pts<=0)return;
+        var prS=(pr&&pr.gl!=null)?pr.gl+"\u2013"+pr.gv:"\u2013";
+        var reS=real?real.gl+"\u2013"+real.gv:"?";
         var prN=(pr&&pr.pl)?pr.pl+" vs "+pr.pv:"";
-        var badge=pts!==null?"<span class='"+(pts>0?(pts>=(reg.s+reg.e)?"tok":"tsig"):"tno")+"'>"+pts+"pts</span>":"";
-        html+="<div class='prow prow-g'><div class='el'>"+pa.l+(pa.col?"<span class='col'>COL</span>":"")+"</div><div style='text-align:center;font-size:13px;font-weight:600;color:"+(prS!=="–"?"#1B5E20":"#CCC")+"'>"+prS+"</div><div class='vsep'>·</div><div style='font-size:12px;color:#AAA;text-align:center'>"+reS+"</div><div class='ev'>"+pa.v+" "+badge+"</div></div>";
-        if(prN&&fase!=="grupos")html+="<div style='font-size:10px;color:#888;padding:1px 0 4px;text-align:center'>Pronóstico cruce: "+prN+"</div>";
+        var esExacto=(pr&&real&&pr.gl===real.gl&&pr.gv===real.gv);
+        var badge="<span class='"+(esExacto?"tok":"tsig")+"'>+"+pts+"pts</span>";
+        var motivo=fase==="grupos"?(esExacto?" <span style='font-size:10px;color:#888'>exacto</span>":" <span style='font-size:10px;color:#888'>signo</span>"):"";
+        var lNom=real&&real.rl?real.rl:pa.l;
+        var vNom=real&&real.rv?real.rv:pa.v;
+        rowsGrupo+="<div class='prow prow-g' style='background:#F7FFF7'>";
+        rowsGrupo+="<div class='el' style='color:#1B5E20;font-weight:500'>"+lNom+"</div>";
+        rowsGrupo+="<div style='text-align:center;font-size:13px;font-weight:700;color:#1B5E20'>"+prS+"</div>";
+        rowsGrupo+="<div class='vsep' style='color:#CCC'>\u00b7</div>";
+        rowsGrupo+="<div style='font-size:12px;color:#999;text-align:center'>"+reS+"</div>";
+        rowsGrupo+="<div class='ev'>"+vNom+" "+badge+motivo+"</div></div>";
+        if(prN&&fase!=="grupos")rowsGrupo+="<div style='font-size:10px;color:#888;padding:1px 0 4px;text-align:center'>Cruce: "+prN+"</div>";
       });
+      if(fase==="grupos"){
+        var ppg=ptsGrupoPos(g,pronos);
+        if(ppg>0){
+          var rr=clasGrupoReal(g),pp2=clasGrupoProno(g,pronos);
+          var acs=[];for(var ii=0;ii<4;ii++){if(rr[ii]===pp2[ii])acs.push((ii+1)+"\u00b0 "+rr[ii]);}
+          rowsGrupo+="<div style='background:#EAF6EA;border-radius:6px;padding:5px 10px;margin:3px 0;font-size:12px;color:#1B5E20'>";
+          rowsGrupo+="<b>+"+ppg+"pts</b> posici\u00f3n Grupo "+g;
+          if(acs.length)rowsGrupo+=" \u2014 "+acs.join(", ");
+          rowsGrupo+="</div>";
+        }
+      }
+      if(rowsGrupo){
+        if(fase==="grupos")rowsFase+="<div style='font-size:10px;font-weight:700;color:#C8102E;padding:4px 0 2px;text-transform:uppercase;letter-spacing:.5px'>Grupo "+g+"</div>";
+        rowsFase+=rowsGrupo;
+      }
     });
+    if(rowsFase){
+      var fp=ptsPorFase[fase]||0;
+      html+="<div class='fhdr2'><b style='font-size:13px'>"+faseLbl(fase)+"</b><span style='font-size:13px;font-weight:700;color:#C8102E'>"+fp+" pts</span></div>";
+      html+=rowsFase;
+    }
   });
-  html+="<div class='fhdr2' style='margin-top:.75rem'><b style='font-size:13px'>Cuadro de Honor</b></div>";
+
+  // Honor — solo aciertos
+  var honorRows="";
   HONOR.forEach(function(h){
-    var v=honor[h.k]||"—",r=hR[h.k]||"";
-    var m=matchHonor(v,r);
-    html+="<div style='display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #EEF'><span style='flex:1;font-size:12px;color:#555'>"+h.l+"</span><span style='font-size:13px;font-weight:500'>"+v+"</span>"+(r?"<span class='"+(m?"tok":"tno")+"'>"+(m?"✓ +"+h.pts+"pts":"✗")+"</span>":"")+"</div>";
+    var v=honor[h.k]||"",r=hR[h.k]||"";
+    if(r&&v&&matchHonor(v,r)){
+      honorRows+="<div style='display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #EEF'>";
+      honorRows+="<span style='flex:1;font-size:12px;color:#555'>"+h.l+"</span>";
+      honorRows+="<span style='font-size:13px;font-weight:500;color:#1B5E20'>"+v+"</span>";
+      honorRows+="<span class='tok'>\u2713 +"+h.pts+"pts</span></div>";
+    }
   });
+  if(honorRows){
+    html+="<div class='fhdr2' style='margin-top:.75rem'><b style='font-size:13px'>Cuadro de Honor</b><span style='font-size:13px;font-weight:700;color:#C8102E'>"+ptsHonor+" pts</span></div>";
+    html+=honorRows;
+  }
+  if(totalPts===0)html+="<p style='font-size:13px;color:#888;text-align:center;padding:20px'>A\u00fan no hay resultados ingresados o este participante no ha sumado puntos.</p>";
+
   document.getElementById("db").innerHTML=html;
   document.getElementById("dc").style.display="block";
   document.getElementById("dc").scrollIntoView({behavior:"smooth"});

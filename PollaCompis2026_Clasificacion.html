@@ -88,6 +88,30 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 .honor-item .hv.no{color:#666}
 .close-btn{background:rgba(255,255,255,.1);border:none;color:#fff;padding:6px 14px;border-radius:6px;font-size:12px;cursor:pointer;margin-top:.75rem;display:block;width:100%;font-weight:500}
 .close-btn:hover{background:rgba(255,255,255,.15)}
+.res-card{background:linear-gradient(135deg,#C8102E 0%,#7B0020 100%);border-radius:10px;padding:14px 16px;margin-bottom:12px}
+.res-card .total{font-size:28px;font-weight:800;color:#fff;letter-spacing:-.5px}
+.res-card .sub{font-size:11px;color:rgba(255,255,255,.7);margin-top:1px}
+.res-card .chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
+.chip{background:rgba(255,255,255,.2);border-radius:5px;padding:2px 8px;font-size:11px;color:#fff}
+.chip b{font-weight:700}
+.hit-row{display:flex;align-items:center;gap:6px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:12px}
+.hit-row:last-child{border-bottom:none}
+.hit-l{flex:1;text-align:right;color:#C8D8F0;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hit-s{width:56px;text-align:center;flex-shrink:0}
+.hit-prono{font-size:13px;font-weight:800;color:#22C55E}
+.hit-real{font-size:9px;color:#8899B8;margin-top:1px}
+.hit-v{flex:1;color:#C8D8F0;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hit-badge{flex-shrink:0;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:800}
+.hb-ex{background:#1B5E20;color:#A5D6A7}
+.hb-sg{background:#E65100;color:#FFD54F}
+.pos-row{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.15);border-radius:6px;padding:5px 10px;font-size:11px;color:#86EFAC;margin:3px 0}
+.hon-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:4px}
+.hon-item{background:rgba(255,255,255,.04);border-radius:6px;padding:6px 8px;border:1px solid rgba(255,255,255,.07)}
+.hon-item .hl{font-size:9px;color:#8899B8;text-transform:uppercase;letter-spacing:.04em}
+.hon-item .hv{font-size:12px;font-weight:600;margin-top:2px}
+.hon-item .hv.ok{color:#22C55E}
+.hon-item .hv.nd{color:#4A5568}
+.hon-item .hv.pend{color:#8899B8}
 
 /* NOTA ACTUALIZACION */
 .refresh-note{text-align:center;font-size:10px;color:#4A5568;padding:.5rem 0;margin-bottom:.5rem}
@@ -470,7 +494,7 @@ function render(){
     var cls=rowClasses[i]||"";
     html+='<div class="row '+cls+'" onclick="toggleDet(\''+p.id+'\')">';
     html+='<div class="pos">'+(medals[i]||i+1)+'</div>';
-    html+='<div class="nom">'+esc(p.nombre)+'<span class="tag">clic para ver pronósticos</span></div>';
+    html+='<div class="nom">'+esc(p.nombre)+'<span class="tag">▾ ver desglose de puntos</span></div>';
     html+='<div class="exactos">'+p.exactos+'</div>';
     html+='<div class="pts-cell"><div class="pts-big">'+p.pts+'</div><div class="pts-lbl">pts</div></div>';
     html+='</div>';
@@ -497,110 +521,123 @@ function toggleDet(id){
 }
 
 // ============================================================
-// RENDER DETALLE: partidos por fase + cuadro de honor
+// RENDER DETALLE: solo aciertos, con tarjeta resumen
 // ============================================================
 function renderDet(p){
-  var pronos=p.pronos||{};var honor=p.honor||{};
-  var html='<div class="det-hdr" onclick="toggleDet(\''+p.id+'\')">';
-  html+='<h3>'+esc(p.nombre)+'</h3>';
-  html+='<div style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;color:#8899B8">'+p.exactos+' exactos</span><span class="det-pts">'+p.pts+' pts</span><span style="font-size:18px">▲</span></div>';
-  html+='</div>';
+  var pronos=p.pronos||{},honor=p.honor||{};
+  var GK=Object.keys(GEQ_G);
+  var FASE_LABELS={grupos:"Grupos",dieciseisavos:"16avos",octavos:"Octavos",cuartos:"Cuartos",semis:"Semis",tercero:"3er P.",final:"Final"};
+
+  // Calcular totales por fase
+  var ptsPorFase={};FASES_ORD.forEach(function(f){ptsPorFase[f]=0;});
+  var ptsHonor=0,totalPts=p.pts;
+
+  TODOS.forEach(function(pa){
+    var pr=pronos[pa.id],real=res[pa.id];
+    var pts=calcP(pr,real,pa.f);
+    if(pts&&pts>0)ptsPorFase[pa.f]=(ptsPorFase[pa.f]||0)+pts;
+    if(pa.f==="cuartos"&&real&&pr){
+      var regS=PTS.semis;if(!regS.clasS)return;
+      var rl=(real.rl||"").trim().toLowerCase(),rv=(real.rv||"").trim().toLowerCase();
+      var pl=(pr.pl||"").trim().toLowerCase(),pv=(pr.pv||"").trim().toLowerCase();
+      var gan=real.gl>real.gv?rl:real.gl<real.gv?rv:(real.penWin==="L"?rl:real.penWin==="V"?rv:"");
+      var ganP=pr.gl>pr.gv?pl:pr.gl<pr.gv?pv:"";
+      if(gan&&ganP&&rl===pl&&rv===pv&&gan===ganP)ptsPorFase["semis"]=(ptsPorFase["semis"]||0)+regS.clasS;
+    }
+    if(pa.f==="semis"&&real&&pr){
+      var regF=PTS.final;if(!regF.clasF)return;
+      var rl2=(real.rl||"").trim().toLowerCase(),rv2=(real.rv||"").trim().toLowerCase();
+      var pl2=(pr.pl||"").trim().toLowerCase(),pv2=(pr.pv||"").trim().toLowerCase();
+      var gan2=real.gl>real.gv?rl2:real.gl<real.gv?rv2:(real.penWin==="L"?rl2:real.penWin==="V"?rv2:"");
+      var ganP2=pr.gl>pr.gv?pl2:pr.gl<pr.gv?pv2:"";
+      if(gan2&&ganP2&&rl2===pl2&&rv2===pv2&&gan2===ganP2)ptsPorFase["final"]=(ptsPorFase["final"]||0)+regF.clasF;
+    }
+  });
+  GK.forEach(function(g){var pp=ptsGrupoPos(g,pronos);if(pp>0)ptsPorFase["grupos"]=(ptsPorFase["grupos"]||0)+pp;});
+  HONOR_DEF.forEach(function(h){if(hR[h.k]&&honor[h.k]&&matchHonor(honor[h.k],hR[h.k]))ptsHonor+=h.pts;});
+
+  // Cabecera (clickeable para cerrar)
+  var html='<div class="det-hdr" onclick="toggleDet(\''+p.id+'\')"><h3>'+esc(p.nombre)+'</h3>';
+  html+='<div style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;color:#8899B8">'+p.exactos+' exactos</span><span class="det-pts">'+p.pts+' pts</span><span style="font-size:18px">\u25b2</span></div></div>';
   html+='<div class="det-body">';
 
+  // Tarjeta resumen
+  html+='<div class="res-card">';
+  html+='<div class="total">'+totalPts+'<span style="font-size:14px;font-weight:400;opacity:.8;margin-left:5px">pts</span></div>';
+  html+='<div class="sub">'+p.exactos+' resultado'+(p.exactos!==1?'s':'')+' exacto'+(p.exactos!==1?'s':'')+'</div>';
+  html+='<div class="chips">';
+  FASES_ORD.forEach(function(f){
+    var pp=ptsPorFase[f]||0;
+    if(pp>0)html+='<div class="chip"><b>'+pp+'</b> '+FASE_LABELS[f]+'</div>';
+  });
+  if(ptsHonor>0)html+='<div class="chip"><b>'+ptsHonor+'</b> Honor</div>';
+  html+='</div></div>';
+
+  // Detalle por fase — solo aciertos
   FASES_ORD.forEach(function(fase){
     var pats=TODOS.filter(function(pa){return pa.f===fase;});
     if(!pats.length)return;
+    var rows="";
+    var gm={};pats.forEach(function(pa){if(!gm[pa.g])gm[pa.g]=[];gm[pa.g].push(pa);});
+    var fpts=ptsPorFase[fase]||0;
+    if(!fpts)return; // fase sin puntos: saltar sección completa
 
-    // Calcular pts de esta fase
-    var ptsFase=0;
-    pats.forEach(function(pa){
-      var pr=pronos[pa.id],real=res[pa.id];
-      var pts=calcP(pr,real,fase);
-      if(pts!==null)ptsFase+=pts;
-    });
-    // Sumar bonus semis/final
-    if(fase==="cuartos"){
-      pats.forEach(function(pa){
+    // Agrupar por grupo
+    Object.keys(gm).forEach(function(g){
+      var gRows="";
+      gm[g].forEach(function(pa){
         var pr=pronos[pa.id],real=res[pa.id];
-        if(!real||!pr)return;
-        var reg=PTS.semis;if(!reg.clasS)return;
-        var rl=(real.rl||"").trim().toLowerCase();var rv=(real.rv||"").trim().toLowerCase();
-        var pl=(pr.pl||"").trim().toLowerCase();var pv=(pr.pv||"").trim().toLowerCase();
-        var gan=real.gl>real.gv?rl:real.gl<real.gv?rv:(real.penWin==="L"?rl:real.penWin==="V"?rv:"");
-        if(gan&&pl&&pv&&(rl===pl&&rv===pv)){
-          var gP=pr.gl>pr.gv?pl:pr.gl<pr.gv?pv:"";
-          if(gan===gP)ptsFase+=reg.clasS;
-        }
+        var pts=calcP(pr,real,fase);
+        if(!pts||pts<=0)return;
+        var prS=(pr&&pr.gl!=null)?pr.gl+"\u2013"+pr.gv:"\u2013";
+        var reS=(real&&real.gl!=null)?real.gl+"\u2013"+real.gv:null;
+        var esExacto=(pr&&real&&pr.gl===real.gl&&pr.gv===real.gv);
+        var lNom=real&&real.rl?real.rl:pa.l;
+        var vNom=real&&real.rv?real.rv:pa.v;
+        var motivo=fase==="grupos"?(esExacto?" exacto":" signo"):"";
+        gRows+='<div class="hit-row">';
+        gRows+='<div class="hit-l">'+esc(lNom)+'</div>';
+        gRows+='<div class="hit-s"><div class="hit-prono">'+prS+'</div>'+(reS?'<div class="hit-real">real: '+reS+'</div>':'')+'</div>';
+        gRows+='<div class="hit-v">'+esc(vNom)+'</div>';
+        gRows+='<span class="hit-badge '+(esExacto?"hb-ex":"hb-sg")+'">+'+pts+'pts'+(motivo?' '+motivo:'')+'</span>';
+        gRows+='</div>';
       });
-    }
-    if(fase==="semis"){
-      pats.forEach(function(pa){
-        var pr=pronos[pa.id],real=res[pa.id];
-        if(!real||!pr)return;
-        var reg2=PTS.final;if(!reg2.clasF)return;
-        var rl2=(real.rl||"").trim().toLowerCase();var rv2=(real.rv||"").trim().toLowerCase();
-        var pl2=(pr.pl||"").trim().toLowerCase();var pv2=(pr.pv||"").trim().toLowerCase();
-        var gan2=real.gl>real.gv?rl2:real.gl<real.gv?rv2:(real.penWin==="L"?rl2:real.penWin==="V"?rv2:"");
-        if(gan2&&pl2&&pv2&&(rl2===pl2&&rv2===pv2)){
-          var gP2=pr.gl>pr.gv?pl2:pr.gl<pr.gv?pv2:"";
-          if(gan2===gP2)ptsFase+=reg2.clasF;
+      // Posición exacta en grupo
+      if(fase==="grupos"){
+        var ppg=ptsGrupoPos(g,pronos);
+        if(ppg>0){
+          var rr=clasGrupoReal(g),pp2=clasGrupoProno(g,pronos);
+          var acs=[];for(var ii=0;ii<4;ii++){if(rr[ii]===pp2[ii])acs.push((ii+1)+"\u00b0 "+rr[ii]);}
+          gRows+='<div class="pos-row">\u2605 +'+ppg+'pts posici\u00f3n Grupo '+g+(acs.length?" \u2014 "+acs.join(", "):"")+' </div>';
         }
-      });
-    }
-    // Pos grupos
-    if(fase==="grupos"){
-      Object.keys(GEQ_G).forEach(function(g){ptsFase+=ptsGrupoPos(g,pronos);});
-    }
-
-    html+='<div class="fase-hdr"><strong>'+FASE_LBL[fase]+'</strong><span>'+ptsFase+' pts</span></div>';
-
-    pats.forEach(function(pa){
-      var pr=pronos[pa.id],real=res[pa.id];
-      var pts=calcP(pr,real,pa.f);
-      var prS=(pr&&pr.gl!=null&&pr.gv!=null)?(pr.gl+"–"+pr.gv):"–";
-      var reS=(real&&real.gl!=null&&real.gv!=null)?(real.gl+"–"+real.gv):null;
-
-      // Nombres del cruce — prioridad: real ingresado por admin > pronóstico participante > slot genérico
-      var nomL=pa.l,nomV=pa.v;
-      if(real&&real.rl)nomL=real.rl;
-      else if(pr&&pr.pl)nomL=pr.pl;
-      if(real&&real.rv)nomV=real.rv;
-      else if(pr&&pr.pv)nomV=pr.pv;
-
-      var badge="";
-      if(pts!==null){
-        var reg=PTS[pa.f]||PTS.grupos;
-        var cls=pts>=reg.s+reg.e?"mb-ok":pts>0?"mb-sig":"mb-nd";
-        badge='<span class="match-badge '+cls+'">'+pts+'pts</span>';
-      } else {
-        badge='<span class="match-badge mb-nd">–</span>';
       }
-
-      html+='<div class="match-row">';
-      html+='<div class="match-l">'+esc(nomL)+'</div>';
-      html+='<div class="match-s'+(prS==="–"?" nd":"")+'">'+prS+(reS?'<div style="font-size:9px;color:#8899B8">'+reS+'</div>':'')+'</div>';
-      html+='<div class="match-v">'+esc(nomV)+'</div>';
-      html+=badge;
-      html+='</div>';
+      if(gRows)rows+=gRows;
     });
+
+    if(rows){
+      html+='<div class="fase-hdr"><strong>'+FASE_LBL[fase]+'</strong><span>'+fpts+' pts</span></div>';
+      html+=rows;
+    }
   });
 
-  // Cuadro de Honor
-  html+='<div class="fase-hdr" style="margin-top:12px"><strong>🏅 Cuadro de Honor</strong>';
-  var ptsHon=0;
-  HONOR_DEF.forEach(function(h){if(hR[h.k]&&honor[h.k]&&matchHonor(honor[h.k],hR[h.k]))ptsHon+=h.pts;});
-  html+='<span>'+ptsHon+' pts</span></div>';
-  html+='<div class="honor-grid">';
+  // Cuadro de Honor: aciertos primero, luego pendientes/fallados
+  html+='<div class="fase-hdr" style="margin-top:10px"><strong>\ud83c\udfc5 Cuadro de Honor</strong><span>'+ptsHonor+' pts</span></div>';
+  html+='<div class="hon-grid">';
   HONOR_DEF.forEach(function(h){
-    var v=honor[h.k]||"—";
+    var v=honor[h.k]||"";
     var rVal=hR[h.k]||"";
-    var match=matchHonor(v,rVal);
-    var cls=!rVal?"":match?"ok":"no";
-    html+='<div class="honor-item"><div class="hl">'+esc(h.l)+' ('+h.pts+'pts)</div><div class="hv '+cls+'">'+(match?"✓ ":"")+esc(v)+'</div></div>';
+    var match=rVal&&v&&matchHonor(v,rVal);
+    var cls=match?"ok":(!rVal?"pend":"nd");
+    var prefix=match?"\u2713 ":"";
+    var display=v||"\u2014";
+    html+='<div class="hon-item">';
+    html+='<div class="hl">'+esc(h.l)+' +'+h.pts+'pts</div>';
+    html+='<div class="hv '+cls+'">'+prefix+esc(display)+'</div>';
+    html+='</div>';
   });
   html+='</div>';
 
-  html+='<button class="close-btn" onclick="toggleDet(\''+p.id+'\')">▲ Cerrar</button>';
+  html+='<button class="close-btn" onclick="toggleDet(\''+p.id+'\')">\u25b2 Cerrar</button>';
   html+='</div>';
   return html;
 }

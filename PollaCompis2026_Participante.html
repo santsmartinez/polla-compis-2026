@@ -970,7 +970,7 @@ function mkRow(id,l,v,f,isCol,grupoContenedor){
   var wrap=document.createElement("div");
   var row=document.createElement("div");row.className="prow";
   var elDiv=document.createElement("div");elDiv.className="el";
-  elDiv.innerHTML=flag(l)+l+(isCol?" <span class='col'>COL</span>":"");
+  elDiv.innerHTML=flag(l)+l;
   var inL=document.createElement("input");inL.type="number";inL.min="0";inL.max="20";inL.placeholder="-";inL.className="nin";
   var sep=document.createElement("div");sep.className="vsep";sep.textContent="–";
   var inV=document.createElement("input");inV.type="number";inV.min="0";inV.max="20";inV.placeholder="-";inV.className="nin";
