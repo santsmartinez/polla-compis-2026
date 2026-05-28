@@ -185,7 +185,11 @@ var SB="https://ilqtntrquulwsrvxeuki.supabase.co";
 var SK="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlscXRudHJxdXVsd3NydnhldWtpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0MzkwMDYsImV4cCI6MjA5NTAxNTAwNn0.eKMyKBGfAmwfgRcPcdr8ABrmeecmOcKbSXiFCXAuIvQ";
 
 function sbfetch(path){
-  return fetch(SB+"/rest/v1/"+path,{headers:{"apikey":SK,"Authorization":"Bearer "+SK}}).then(function(r){return r.json();});
+  return fetch(SB+"/rest/v1/"+path,{headers:{"apikey":SK,"Authorization":"Bearer "+SK}})
+    .then(function(r){
+      if(!r.ok)throw new Error("HTTP "+r.status+" al cargar: "+path);
+      return r.json();
+    });
 }
 
 // ============================================================
@@ -459,7 +463,17 @@ async function load(){
     updateLiveText(true);
 
   }catch(e){
-    document.getElementById("main").innerHTML='<div class="err-box">⚠️ No se pudo cargar la clasificación. Verifica tu conexión e intenta de nuevo.<br><button onclick="load()" style="margin-top:.5rem;background:#C8102E;color:#fff;border:none;padding:6px 16px;border-radius:6px;cursor:pointer;font-size:12px">Reintentar</button></div>';
+    var msg=e&&e.message?e.message:"Error desconocido";
+    var esCors=msg.toLowerCase().indexOf("fetch")<0&&msg.toLowerCase().indexOf("http")<0;
+    var detalle="";
+    if(msg.indexOf("503")>=0||msg.indexOf("502")>=0){
+      detalle="<br><span style='font-size:11px;opacity:.8'>El proyecto de Supabase está pausado. Entra a <b>supabase.com</b>, abre el proyecto y espera que reactive (~1 min).</span>";
+    } else if(msg.indexOf("401")>=0||msg.indexOf("403")>=0){
+      detalle="<br><span style='font-size:11px;opacity:.8'>Error de permisos en Supabase. El admin debe ejecutar el SQL de permisos (GRANT/RLS).</span>";
+    } else if(msg.indexOf("Failed to fetch")>=0||esCors){
+      detalle="<br><span style='font-size:11px;opacity:.8'>No se pudo conectar. Verifica que el proyecto de Supabase esté activo y que tengas internet.</span>";
+    }
+    document.getElementById("main").innerHTML='<div class="err-box">⚠️ <b>'+msg+'</b>'+detalle+'<br><br><button onclick="load()" style="margin-top:.25rem;background:#C8102E;color:#fff;border:none;padding:6px 16px;border-radius:6px;cursor:pointer;font-size:12px">↺ Reintentar</button></div>';
     updateLiveText(false);
   }
 }

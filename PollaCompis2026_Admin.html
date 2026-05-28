@@ -1640,8 +1640,55 @@ function calcC(){
   }).sort(function(a,b){return b.pts-a.pts||b.exactos-a.exactos;});
 
   var medals=["🥇","🥈","🥉"];
+  var GK2=["A","B","C","D","E","F","G","H","I","J","K","L"];
+  var FASE_CHIP={grupos:"Gr",dieciseisavos:"16",octavos:"8",cuartos:"4",semis:"SF",tercero:"3P",final:"F"};
   document.getElementById("cb").innerHTML=clas.map(function(p,i){
-    return "<div class='crow'><div style='font-size:16px;width:26px'>"+(medals[i]||i+1)+"</div><div style='flex:1;font-size:14px;font-weight:500'>"+p.nombre+"</div><span style='font-size:11px;color:#888;margin-right:8px'>"+p.exactos+" exacto"+(p.exactos!==1?"s":"")+"</span><span style='font-size:24px;font-weight:600;color:"+(i===0?"#C8102E":"#1a1a1a")+"'>"+p.pts+"</span><span style='font-size:11px;color:#888;margin-left:3px'>pts</span></div>";
+    // Calcular pts por fase para chips
+    var pronos=p.pronos||{};
+    var chips={};
+    TODOS.forEach(function(pa){
+      var pr=pronos[pa.id],real=res[pa.id];
+      var pts=calcP(pr,real,pa.f);
+      if(pts&&pts>0)chips[pa.f]=(chips[pa.f]||0)+pts;
+      if(pa.f==="cuartos"&&real&&pr){
+        var regS=PTS.semis;if(!regS.clasS)return;
+        var rl=(real.rl||"").trim().toLowerCase(),rv=(real.rv||"").trim().toLowerCase();
+        var pl=(pr.pl||"").trim().toLowerCase(),pv=(pr.pv||"").trim().toLowerCase();
+        var gan=real.gl>real.gv?rl:real.gl<real.gv?rv:(real.penWin==="L"?rl:real.penWin==="V"?rv:"");
+        var ganP=pr.gl>pr.gv?pl:pr.gl<pr.gv?pv:"";
+        if(gan&&ganP&&rl===pl&&rv===pv&&gan===ganP)chips["semis"]=(chips["semis"]||0)+regS.clasS;
+      }
+      if(pa.f==="semis"&&real&&pr){
+        var regF=PTS.final;if(!regF.clasF)return;
+        var rl2=(real.rl||"").trim().toLowerCase(),rv2=(real.rv||"").trim().toLowerCase();
+        var pl2=(pr.pl||"").trim().toLowerCase(),pv2=(pr.pv||"").trim().toLowerCase();
+        var gan2=real.gl>real.gv?rl2:real.gl<real.gv?rv2:(real.penWin==="L"?rl2:real.penWin==="V"?rv2:"");
+        var ganP2=pr.gl>pr.gv?pl2:pr.gl<pr.gv?pv2:"";
+        if(gan2&&ganP2&&rl2===pl2&&rv2===pv2&&gan2===ganP2)chips["final"]=(chips["final"]||0)+regF.clasF;
+      }
+    });
+    GK2.forEach(function(g){var pp=ptsGrupoPos(g,pronos);if(pp>0)chips["grupos"]=(chips["grupos"]||0)+pp;});
+    var hon=p.honor||{};
+    var honPts=0;HONOR.forEach(function(h){if(hR[h.k]&&hon[h.k]&&matchHonor(hon[h.k],hR[h.k]))honPts+=h.pts;});
+    var chipHtml="<div style='display:flex;flex-wrap:wrap;gap:3px;margin-top:4px'>";
+    ["grupos","dieciseisavos","octavos","cuartos","semis","tercero","final"].forEach(function(f){
+      var cp=chips[f]||0;
+      if(cp>0)chipHtml+="<span style='font-size:10px;background:#F0F4FF;color:#3949AB;border-radius:3px;padding:1px 5px;font-weight:600'>"+FASE_CHIP[f]+" "+cp+"</span>";
+    });
+    if(honPts>0)chipHtml+="<span style='font-size:10px;background:#FFF8E1;color:#F57F17;border-radius:3px;padding:1px 5px;font-weight:600'>Hon "+honPts+"</span>";
+    chipHtml+="</div>";
+    var borderColor=i===0?"#C8102E":i===1?"#888":i===2?"#CD7F32":"#EEF";
+    return "<div class='crow' style='cursor:pointer;border-left:3px solid "+borderColor+";padding-left:8px;transition:background .15s' onclick='verD(\""+p.id+"\")' onmouseenter='this.style.background=\"#F8F9FF\"' onmouseleave='this.style.background=\"\"'>"+
+      "<div style='font-size:16px;width:26px;flex-shrink:0'>"+(medals[i]||i+1)+"</div>"+
+      "<div style='flex:1;min-width:0'>"+
+        "<div style='font-size:14px;font-weight:600;color:#1a1a1a'>"+p.nombre+"</div>"+
+        chipHtml+
+      "</div>"+
+      "<div style='text-align:right;flex-shrink:0'>"+
+        "<div style='font-size:22px;font-weight:700;color:"+(i===0?"#C8102E":"#1a1a1a")+"'>"+p.pts+"<span style='font-size:11px;font-weight:400;color:#888;margin-left:2px'>pts</span></div>"+
+        "<div style='font-size:10px;color:#AAA;margin-top:1px'>"+p.exactos+" exacto"+(p.exactos!==1?"s":"")+"</div>"+
+      "</div>"+
+    "</div>";
   }).join("")||"<p style='font-size:13px;color:#888'>Sin datos aún.</p>";
 }
 
