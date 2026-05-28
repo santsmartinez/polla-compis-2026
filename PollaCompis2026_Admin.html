@@ -1642,9 +1642,11 @@ function calcC(){
   var medals=["🥇","🥈","🥉"];
   var GK2=["A","B","C","D","E","F","G","H","I","J","K","L"];
   var FASE_CHIP={grupos:"Gr",dieciseisavos:"16",octavos:"8",cuartos:"4",semis:"SF",tercero:"3P",final:"F"};
-  document.getElementById("cb").innerHTML=clas.map(function(p,i){
-    // Calcular pts por fase para chips
+
+  // Construir HTML con desglose inline por participante
+  var rowsHtml=clas.map(function(p,i){
     var pronos=p.pronos||{};
+    // ── chips por fase ──
     var chips={};
     TODOS.forEach(function(pa){
       var pr=pronos[pa.id],real=res[pa.id];
@@ -1678,19 +1680,144 @@ function calcC(){
     if(honPts>0)chipHtml+="<span style='font-size:10px;background:#FFF8E1;color:#F57F17;border-radius:3px;padding:1px 5px;font-weight:600'>Hon "+honPts+"</span>";
     chipHtml+="</div>";
     var borderColor=i===0?"#C8102E":i===1?"#888":i===2?"#CD7F32":"#EEF";
-    return "<div class='crow' style='cursor:pointer;border-left:3px solid "+borderColor+";padding-left:8px;transition:background .15s' onclick='verD(\""+p.id+"\")' onmouseenter='this.style.background=\"#F8F9FF\"' onmouseleave='this.style.background=\"\"'>"+
-      "<div style='font-size:16px;width:26px;flex-shrink:0'>"+(medals[i]||i+1)+"</div>"+
+
+    // ── fila clicable ──
+    var row="<div class='crow' id='crow_"+p.id+"' style='cursor:pointer;border-left:3px solid "+borderColor+";padding-left:8px;transition:background .15s;align-items:flex-start' onclick='toggleClasdet(\""+p.id+"\")'>"+
+      "<div style='font-size:16px;width:26px;flex-shrink:0;padding-top:2px'>"+(medals[i]||i+1)+"</div>"+
       "<div style='flex:1;min-width:0'>"+
         "<div style='font-size:14px;font-weight:600;color:#1a1a1a'>"+p.nombre+"</div>"+
         chipHtml+
       "</div>"+
       "<div style='text-align:right;flex-shrink:0'>"+
         "<div style='font-size:22px;font-weight:700;color:"+(i===0?"#C8102E":"#1a1a1a")+"'>"+p.pts+"<span style='font-size:11px;font-weight:400;color:#888;margin-left:2px'>pts</span></div>"+
-        "<div style='font-size:10px;color:#AAA;margin-top:1px'>"+p.exactos+" exacto"+(p.exactos!==1?"s":"")+"</div>"+
+        "<div style='font-size:10px;color:#AAA;margin-top:1px'>"+p.exactos+" exacto"+(p.exactos!==1?"s":"")+" ▾</div>"+
       "</div>"+
     "</div>";
-  }).join("")||"<p style='font-size:13px;color:#888'>Sin datos aún.</p>";
+
+    // ── panel desglose inline (oculto por defecto) ──
+    var det="<div id='clasdet_"+p.id+"' style='display:none;border-top:1px solid #EEF;padding:12px 8px 4px;background:#FAFBFF'>"+
+      buildClasDetHtml(p)+
+      "<button onclick='toggleClasdet(\""+p.id+"\")' style='margin-top:8px;background:#F0F4FF;border:none;color:#3949AB;padding:5px 14px;border-radius:6px;font-size:12px;cursor:pointer;font-weight:500;display:block;width:100%'>▲ Cerrar desglose</button>"+
+    "</div>";
+
+    return row+det;
+  }).join("");
+
+  document.getElementById("cb").innerHTML=rowsHtml||"<p style='font-size:13px;color:#888'>Sin datos aún.</p>";
 }
+
+function toggleClasdet(id){
+  var el=document.getElementById("clasdet_"+id);
+  var row=document.getElementById("crow_"+id);
+  if(!el)return;
+  var open=el.style.display!=="none";
+  // Cerrar todos
+  document.querySelectorAll("[id^='clasdet_']").forEach(function(d){d.style.display="none";});
+  if(!open){
+    el.style.display="block";
+    row.scrollIntoView({behavior:"smooth",block:"nearest"});
+  }
+}
+
+function buildClasDetHtml(p){
+  var pronos=p.pronos||{},honor=p.honor||{};
+  var GK=["A","B","C","D","E","F","G","H","I","J","K","L"];
+  var FASE_LABELS={grupos:"Grupos",dieciseisavos:"Dieciseisavos",octavos:"Octavos",cuartos:"Cuartos",semis:"Semis",tercero:"3er Puesto",final:"Final"};
+  var fo=["grupos","dieciseisavos","octavos","cuartos","semis","tercero","final"];
+
+  // Calcular pts por fase
+  var ptsPorFase={};fo.forEach(function(f){ptsPorFase[f]=0;});
+  var ptsHonor=0;
+  TODOS.forEach(function(pa){
+    var pr=pronos[pa.id],real=res[pa.id];
+    var pts=calcP(pr,real,pa.f);
+    if(pts&&pts>0)ptsPorFase[pa.f]=(ptsPorFase[pa.f]||0)+pts;
+    if(pa.f==="cuartos"&&real&&pr){
+      var regS=PTS.semis;if(!regS.clasS)return;
+      var rl=(real.rl||"").trim().toLowerCase(),rv=(real.rv||"").trim().toLowerCase();
+      var pl=(pr.pl||"").trim().toLowerCase(),pv=(pr.pv||"").trim().toLowerCase();
+      var gan=real.gl>real.gv?rl:real.gl<real.gv?rv:(real.penWin==="L"?rl:real.penWin==="V"?rv:"");
+      var ganP=pr.gl>pr.gv?pl:pr.gl<pr.gv?pv:"";
+      if(gan&&ganP&&rl===pl&&rv===pv&&gan===ganP)ptsPorFase["semis"]=(ptsPorFase["semis"]||0)+regS.clasS;
+    }
+    if(pa.f==="semis"&&real&&pr){
+      var regF=PTS.final;if(!regF.clasF)return;
+      var rl2=(real.rl||"").trim().toLowerCase(),rv2=(real.rv||"").trim().toLowerCase();
+      var pl2=(pr.pl||"").trim().toLowerCase(),pv2=(pr.pv||"").trim().toLowerCase();
+      var gan2=real.gl>real.gv?rl2:real.gl<real.gv?rv2:(real.penWin==="L"?rl2:real.penWin==="V"?rv2:"");
+      var ganP2=pr.gl>pr.gv?pl2:pr.gl<pr.gv?pv2:"";
+      if(gan2&&ganP2&&rl2===pl2&&rv2===pv2&&gan2===ganP2)ptsPorFase["final"]=(ptsPorFase["final"]||0)+regF.clasF;
+    }
+  });
+  GK.forEach(function(g){var pp=ptsGrupoPos(g,pronos);if(pp>0)ptsPorFase["grupos"]=(ptsPorFase["grupos"]||0)+pp;});
+  HONOR.forEach(function(h){if(hR[h.k]&&honor[h.k]&&matchHonor(honor[h.k],hR[h.k]))ptsHonor+=h.pts;});
+
+  var html="";
+  // Detalle por fase — solo aciertos
+  fo.forEach(function(fase){
+    var pats=TODOS.filter(function(pa){return pa.f===fase;});
+    if(!pats.length)return;
+    var fp=ptsPorFase[fase]||0;
+    if(!fp)return;
+    var fMap={};pats.forEach(function(pa){if(!fMap[pa.g])fMap[pa.g]=[];fMap[pa.g].push(pa);});
+    var rows="";
+    Object.keys(fMap).forEach(function(g){
+      var gr="";
+      fMap[g].forEach(function(pa){
+        var pr=pronos[pa.id],real=res[pa.id];
+        var pts=calcP(pr,real,fase);
+        if(!pts||pts<=0)return;
+        var prS=(pr&&pr.gl!=null)?pr.gl+"–"+pr.gv:"–";
+        var reS=(real&&real.gl!=null)?real.gl+"–"+real.gv:null;
+        var esExacto=(pr&&real&&pr.gl===real.gl&&pr.gv===real.gv);
+        var lNom=real&&real.rl?real.rl:pa.l;
+        var vNom=real&&real.rv?real.rv:pa.v;
+        var motivo=fase==="grupos"?(esExacto?" exacto":" signo"):"";
+        gr+="<div class='prow prow-g' style='background:#F7FFF7;font-size:12px'>"+
+          "<div class='el' style='color:#1B5E20;font-weight:500'>"+lNom+"</div>"+
+          "<div style='text-align:center;font-size:13px;font-weight:700;color:#1B5E20'>"+prS+"</div>"+
+          "<div class='vsep' style='color:#CCC'>·</div>"+
+          "<div style='font-size:11px;color:#999;text-align:center'>"+(reS||"?")+"</div>"+
+          "<div class='ev'><span class='"+(esExacto?"tok":"tsig")+"'>+"+pts+"pts"+motivo+"</span></div>"+
+        "</div>";
+      });
+      if(fase==="grupos"){
+        var ppg=ptsGrupoPos(g,pronos);
+        if(ppg>0){
+          var rr=clasGrupoReal(g),pp2=clasGrupoProno(g,pronos);
+          var acs=[];for(var ii=0;ii<4;ii++){if(rr[ii]===pp2[ii])acs.push((ii+1)+"° "+rr[ii]);}
+          gr+="<div style='background:#EAF6EA;border-radius:5px;padding:4px 8px;font-size:11px;color:#1B5E20;margin:2px 0'>"+
+            "★ +"+ppg+"pts posición Grupo "+g+(acs.length?" — "+acs.join(", "):"")+
+          "</div>";
+        }
+      }
+      if(gr)rows+=gr;
+    });
+    if(rows){
+      html+="<div style='font-size:11px;font-weight:700;color:#C8102E;background:#FFF5F5;padding:4px 8px;border-radius:5px;margin:6px 0 2px;display:flex;justify-content:space-between'>"+
+        "<span>"+FASE_LABELS[fase]+"</span><span>"+fp+" pts</span></div>";
+      html+=rows;
+    }
+  });
+
+  // Honor — solo aciertos
+  var honorRows="";
+  HONOR.forEach(function(h){
+    var v=honor[h.k]||"",r=hR[h.k]||"";
+    if(r&&v&&matchHonor(v,r)){
+      honorRows+="<div style='display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #EEF;font-size:12px'>"+
+        "<span style='flex:1;color:#555'>"+h.l+"</span>"+
+        "<span style='font-weight:600;color:#1B5E20'>"+v+"</span>"+
+        "<span class='tok'>✓ +"+h.pts+"pts</span></div>";
+    }
+  });
+  if(honorRows){
+    html+="<div style='font-size:11px;font-weight:700;color:#C8102E;background:#FFF5F5;padding:4px 8px;border-radius:5px;margin:6px 0 2px;display:flex;justify-content:space-between'>"+
+      "<span>Cuadro de Honor</span><span>"+ptsHonor+" pts</span></div>";
+    html+=honorRows;
+  }
+  if(!html)html="<p style='font-size:12px;color:#AAA;text-align:center;padding:12px'>Aún no hay resultados ingresados.</p>";
+  return html;
 
 // ============================================================
 // HONOR
