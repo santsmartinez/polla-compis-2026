@@ -562,9 +562,9 @@ function calcP(pr,real,fase){
       if(reg.x)t+=reg.x;
       if(sR2===sP2)t+=reg.s;
       if(real.gl===pr.gl&&real.gv===pr.gv)t+=reg.e;
-    } else if(!tenemosEquipos&&!tenemosProno){
-      // Sin datos de equipos en ninguna parte: otorgar signo y exacto
-      // (caso antiguo de dieciseisavos sin nombres — no debería ocurrir con el flujo normal)
+    } else if(!tenemosEquipos){
+      // Sin nombres reales ingresados: calcular signo y exacto igualmente
+      // (ocurre cuando el admin no ha ingresado los equipos reales aún)
       var sR3=real.gl>real.gv?"L":real.gl<real.gv?"V":"X";
       var sP3=pr.gl>pr.gv?"L":pr.gl<pr.gv?"V":"X";
       if(sR3===sP3)t+=reg.s;
@@ -1836,13 +1836,22 @@ function autoHonorDesdeRes(){
     else{camp=(r104.penWin==="L"?rl:rv);sub=(r104.penWin==="L"?rv:rl);}
     hR["campeon"]=camp;hR["subcampeon"]=sub;
   }
-  if(r103&&r103.gl!=null&&r103.gv!=null&&r103.rl&&r103.rv){
-    var rl3=r103.rl,rv3=r103.rv;
-    var ter;
-    if(r103.gl>r103.gv)ter=rl3;
-    else if(r103.gv>r103.gl)ter=rv3;
-    else ter=(r103.penWin==="L"?rl3:rv3);
-    hR["tercero_h"]=ter;
+  if(r103&&r103.gl!=null&&r103.gv!=null){
+    // Intentar usar nombres reales; si no están, buscar en res[103] resuelto
+    var rl3=r103.rl||"";var rv3=r103.rv||"";
+    // Si no hay nombres reales, intentar resolver desde los resultados encadenados
+    if(!rl3){var rSemi1=res[101];if(rSemi1){rl3=(r103.gl>r103.gv||r103.penWin==="L")?"":(rSemi1.rl||"");}}
+    if(rl3&&rv3){
+      var ter;
+      if(r103.gl>r103.gv)ter=rl3;
+      else if(r103.gv>r103.gl)ter=rv3;
+      else ter=(r103.penWin==="L"?rl3:rv3);
+      if(ter)hR["tercero_h"]=ter;
+    } else if(rl3||rv3){
+      // Al menos uno disponible
+      var ter2=(r103.gl>r103.gv?rl3:rv3)||rl3||rv3;
+      if(ter2)hR["tercero_h"]=ter2;
+    }
   }
 }
 
