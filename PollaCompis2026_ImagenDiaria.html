@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Polla Compis 2026 · Imagen del Día</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap');
+
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--rojo:#C8102E;--azul:#0A1628;--oro:#FFD700;}
+body{font-family:'DM Sans',sans-serif;background:#0A1628;color:#fff;min-height:100vh;padding:1.5rem 1rem 4rem}
+
+.ctrl{max-width:680px;margin:0 auto 1.5rem}
+.ctrl h1{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:1px;color:#fff;margin-bottom:4px}
+.ctrl p{font-size:13px;color:#8899B8;margin-bottom:1.25rem}
+.ctrl-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+.fld{flex:1;min-width:160px}
+.fld label{display:block;font-size:11px;color:#8899B8;font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}
+select{width:100%;padding:9px 12px;background:#132038;border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#fff;font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer}
+select:focus{outline:none;border-color:#C8102E}
+option{background:#132038}
+.btn{padding:10px 22px;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:transform .1s;white-space:nowrap}
+.btn:active{transform:scale(.97)}
+.btn-gen{background:#C8102E;color:#fff}
+.btn-dl{background:#FFD700;color:#0A1628}
+.btn-dl:disabled{opacity:.4;cursor:not-allowed}
+
+#preview{max-width:680px;margin:0 auto}
+.card-wrap{display:none}
+.card-wrap.show{display:block}
+
+#card{background:#0A1628;border-radius:16px;overflow:hidden;position:relative;width:100%;font-family:'DM Sans',sans-serif;}
+
+.card-top{background:linear-gradient(135deg,#C8102E 0%,#8B0020 100%);padding:18px 22px 16px;position:relative;overflow:hidden}
+.card-top::before{content:'';position:absolute;right:-30px;top:-30px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.06)}
+.card-top::after{content:'';position:absolute;right:40px;bottom:-50px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.04)}
+.card-brand{display:flex;align-items:center;justify-content:space-between;position:relative;z-index:1}
+.card-brand h2{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1.5px;color:#fff}
+.card-brand .badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:3px 10px;font-size:10px;font-weight:700;letter-spacing:.08em;color:#fff}
+
+.partido-hero{padding:20px 22px 18px;border-bottom:1px solid rgba(255,255,255,.07)}
+.fase-chip{display:inline-block;background:rgba(200,16,46,.2);border:1px solid rgba(200,16,46,.4);border-radius:5px;padding:2px 8px;font-size:10px;font-weight:700;color:#FF8A80;letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px}
+.equipos{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px}
+.equipo-l{text-align:right}
+.equipo-r{text-align:left}
+.eq-flag{font-size:30px;display:block;margin-bottom:4px}
+.eq-name{font-size:17px;font-weight:700;color:#fff;line-height:1.2}
+.vs-sep{text-align:center}
+.vs-txt{font-family:'Bebas Neue',sans-serif;font-size:26px;color:rgba(255,255,255,.2);display:block}
+
+.prono-section{padding:16px 22px 20px}
+.prono-title{font-size:10px;font-weight:700;color:#8899B8;text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.prono-title::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.07)}
+.prono-grid{display:flex;flex-direction:column;gap:7px}
+.prono-row{display:grid;grid-template-columns:1fr 80px 1fr;align-items:center;gap:8px;background:rgba(255,255,255,.04);border-radius:8px;padding:9px 12px;border:1px solid rgba(255,255,255,.06)}
+.prono-row:nth-child(even){background:rgba(255,255,255,.02)}
+.pr-nombre{font-size:13px;font-weight:600;color:#E0E8F0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pr-score{text-align:center}
+.pr-score-val{font-family:'Bebas Neue',sans-serif;font-size:22px;color:#FFD700;letter-spacing:1px;display:block;line-height:1}
+.pr-score-nd{font-size:13px;color:#4A5568;display:block;line-height:1;padding:4px 0}
+.pr-signo{text-align:right}
+.pr-signo-val{display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.05em}
+.sig-L{background:rgba(34,197,94,.15);color:#86EFAC;border:1px solid rgba(34,197,94,.25)}
+.sig-V{background:rgba(200,16,46,.15);color:#FCA5A5;border:1px solid rgba(200,16,46,.25)}
+.sig-X{background:rgba(255,215,0,.12);color:#FDE68A;border:1px solid rgba(255,215,0,.2)}
+
+.card-foot{background:rgba(255,255,255,.03);border-top:1px solid rgba(255,255,255,.06);padding:10px 22px;display:flex;justify-content:space-between;align-items:center}
+.foot-txt{font-size:10px;color:#4A5568}
+.foot-logo{font-family:'Bebas Neue',sans-serif;font-size:14px;color:#C8102E;letter-spacing:1px}
+
+.ld{text-align:center;padding:2rem;color:#8899B8;font-size:13px}
+.err{color:#FF8A80;font-size:13px;background:rgba(200,16,46,.1);border:1px solid rgba(200,16,46,.2);border-radius:8px;padding:10px 14px;margin-top:1rem}
+</style>
+</head>
+<body>
+
+<div class="ctrl">
+  <h1>⚽ Imagen del Día</h1>
+  <p>Selecciona el partido y genera la imagen para compartir en WhatsApp.</p>
+  <div class="ctrl-row">
+    <div class="fld">
+      <label>Partido</label>
+      <select id="selPartido"></select>
+    </div>
+    <button class="btn btn-gen" id="btnGen">Generar imagen</button>
+    <button class="btn btn-dl" id="btnDl" disabled>⬇ Descargar PNG</button>
+  </div>
+  <div id="genMsg"></div>
+</div>
+
+<div id="preview">
+  <div class="card-wrap" id="cardWrap">
+    <div id="card"></div>
+  </div>
+</div>
+
+<script>
+var SB="https://ilqtntrquulwsrvxeuki.supabase.co";
+var SK="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlscXRudHJxdXVsd3NydnhldWtpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0MzkwMDYsImV4cCI6MjA5NTAxNTAwNn0.eKMyKBGfAmwfgRcPcdr8ABrmeecmOcKbSXiFCXAuIvQ";
+
+var TODOS=[
+  {id:1,l:"México",v:"Sudáfrica",f:"11 Jun 15:00",fase:"Grupo A"},{id:2,l:"Corea del Sur",v:"Rep. Checa",f:"11 Jun 22:00",fase:"Grupo A"},
+  {id:3,l:"Canadá",v:"Bosnia y Herz.",f:"12 Jun 15:00",fase:"Grupo B"},{id:4,l:"EE.UU.",v:"Paraguay",f:"12 Jun 21:00",fase:"Grupo D"},
+  {id:5,l:"Catar",v:"Suiza",f:"13 Jun 15:00",fase:"Grupo B"},{id:6,l:"Brasil",v:"Marruecos",f:"13 Jun 18:00",fase:"Grupo C"},{id:7,l:"Haití",v:"Escocia",f:"13 Jun 21:00",fase:"Grupo C"},
+  {id:8,l:"Australia",v:"Turquía",f:"14 Jun 00:00",fase:"Grupo D"},{id:9,l:"Alemania",v:"Curazao",f:"14 Jun 13:00",fase:"Grupo E"},{id:10,l:"Costa de Marfil",v:"Ecuador",f:"14 Jun 19:00",fase:"Grupo E"},{id:11,l:"Países Bajos",v:"Japón",f:"14 Jun 16:00",fase:"Grupo F"},{id:12,l:"Suecia",v:"Túnez",f:"14 Jun 22:00",fase:"Grupo F"},
+  {id:13,l:"Bélgica",v:"Egipto",f:"15 Jun 15:00",fase:"Grupo G"},{id:14,l:"Irán",v:"Nueva Zelanda",f:"15 Jun 21:00",fase:"Grupo G"},{id:15,l:"España",v:"Cabo Verde",f:"15 Jun 12:00",fase:"Grupo H"},{id:16,l:"Arabia Saudita",v:"Uruguay",f:"15 Jun 18:00",fase:"Grupo H"},
+  {id:17,l:"Francia",v:"Senegal",f:"16 Jun 15:00",fase:"Grupo I"},{id:18,l:"Irak",v:"Noruega",f:"16 Jun 18:00",fase:"Grupo I"},{id:19,l:"Argentina",v:"Argelia",f:"16 Jun 21:00",fase:"Grupo J"},{id:20,l:"Austria",v:"Jordania",f:"17 Jun 00:00",fase:"Grupo J"},
+  {id:21,l:"Portugal",v:"RD Congo",f:"17 Jun 13:00",fase:"Grupo K"},{id:22,l:"Inglaterra",v:"Croacia",f:"17 Jun 16:00",fase:"Grupo L"},{id:23,l:"Ghana",v:"Panamá",f:"17 Jun 19:00",fase:"Grupo L"},{id:24,l:"Uzbekistán",v:"Colombia",f:"17 Jun 22:00",fase:"Grupo K"},
+  {id:25,l:"Rep. Checa",v:"Sudáfrica",f:"18 Jun 12:00",fase:"Grupo A"},{id:26,l:"Suiza",v:"Bosnia y Herz.",f:"18 Jun 15:00",fase:"Grupo B"},{id:27,l:"Canadá",v:"Catar",f:"18 Jun 18:00",fase:"Grupo B"},{id:28,l:"México",v:"Corea del Sur",f:"18 Jun 21:00",fase:"Grupo A"},
+  {id:29,l:"Brasil",v:"Haití",f:"19 Jun 18:00",fase:"Grupo C"},{id:30,l:"Escocia",v:"Marruecos",f:"19 Jun 20:30",fase:"Grupo C"},{id:31,l:"Turquía",v:"Paraguay",f:"19 Jun 15:00",fase:"Grupo D"},{id:32,l:"EE.UU.",v:"Australia",f:"19 Jun 23:00",fase:"Grupo D"},
+  {id:33,l:"Alemania",v:"Costa de Marfil",f:"20 Jun 16:00",fase:"Grupo E"},{id:34,l:"Ecuador",v:"Curazao",f:"20 Jun 20:00",fase:"Grupo E"},{id:35,l:"Países Bajos",v:"Suecia",f:"20 Jun 13:00",fase:"Grupo F"},{id:36,l:"Túnez",v:"Japón",f:"21 Jun 00:00",fase:"Grupo F"},
+  {id:37,l:"España",v:"Arabia Saudita",f:"21 Jun 12:00",fase:"Grupo H"},{id:38,l:"Bélgica",v:"Irán",f:"21 Jun 15:00",fase:"Grupo G"},{id:39,l:"Uruguay",v:"Cabo Verde",f:"21 Jun 18:00",fase:"Grupo H"},{id:40,l:"Nueva Zelanda",v:"Egipto",f:"21 Jun 21:00",fase:"Grupo G"},
+  {id:41,l:"Francia",v:"Irak",f:"22 Jun 17:00",fase:"Grupo I"},{id:42,l:"Noruega",v:"Senegal",f:"22 Jun 20:00",fase:"Grupo I"},{id:43,l:"Argentina",v:"Austria",f:"22 Jun 13:00",fase:"Grupo J"},{id:44,l:"Jordania",v:"Argelia",f:"22 Jun 23:00",fase:"Grupo J"},
+  {id:45,l:"Portugal",v:"Uzbekistán",f:"23 Jun 13:00",fase:"Grupo K"},{id:46,l:"Inglaterra",v:"Ghana",f:"23 Jun 16:00",fase:"Grupo L"},{id:47,l:"Panamá",v:"Croacia",f:"23 Jun 19:00",fase:"Grupo L"},{id:48,l:"Colombia",v:"RD Congo",f:"23 Jun 22:00",fase:"Grupo K"},
+  {id:49,l:"Escocia",v:"Brasil",f:"24 Jun 18:00",fase:"Grupo C"},{id:50,l:"Marruecos",v:"Haití",f:"24 Jun 18:00",fase:"Grupo C"},{id:51,l:"Suiza",v:"Canadá",f:"24 Jun 15:00",fase:"Grupo B"},{id:52,l:"Bosnia y Herz.",v:"Catar",f:"24 Jun 15:00",fase:"Grupo B"},{id:53,l:"Sudáfrica",v:"Corea del Sur",f:"24 Jun 21:00",fase:"Grupo A"},{id:54,l:"Rep. Checa",v:"México",f:"24 Jun 21:00",fase:"Grupo A"},
+  {id:55,l:"Curazao",v:"Costa de Marfil",f:"25 Jun 16:00",fase:"Grupo E"},{id:56,l:"Ecuador",v:"Alemania",f:"25 Jun 16:00",fase:"Grupo E"},{id:57,l:"Japón",v:"Suecia",f:"25 Jun 19:00",fase:"Grupo F"},{id:58,l:"Túnez",v:"Países Bajos",f:"25 Jun 19:00",fase:"Grupo F"},{id:59,l:"Turquía",v:"EE.UU.",f:"25 Jun 22:00",fase:"Grupo D"},{id:60,l:"Paraguay",v:"Australia",f:"25 Jun 22:00",fase:"Grupo D"},
+  {id:61,l:"Noruega",v:"Francia",f:"26 Jun 15:00",fase:"Grupo I"},{id:62,l:"Senegal",v:"Irak",f:"26 Jun 15:00",fase:"Grupo I"},{id:63,l:"Egipto",v:"Irán",f:"26 Jun 23:00",fase:"Grupo G"},{id:64,l:"Nueva Zelanda",v:"Bélgica",f:"26 Jun 23:00",fase:"Grupo G"},{id:65,l:"Cabo Verde",v:"Arabia Saudita",f:"26 Jun 20:00",fase:"Grupo H"},{id:66,l:"Uruguay",v:"España",f:"26 Jun 20:00",fase:"Grupo H"},
+  {id:67,l:"Panamá",v:"Inglaterra",f:"27 Jun 17:00",fase:"Grupo L"},{id:68,l:"Croacia",v:"Ghana",f:"27 Jun 17:00",fase:"Grupo L"},{id:69,l:"Argelia",v:"Austria",f:"27 Jun 22:00",fase:"Grupo J"},{id:70,l:"Jordania",v:"Argentina",f:"27 Jun 22:00",fase:"Grupo J"},{id:71,l:"Colombia",v:"Portugal",f:"27 Jun 19:30",fase:"Grupo K"},{id:72,l:"RD Congo",v:"Uzbekistán",f:"27 Jun 19:30",fase:"Grupo K"},
+  {id:73,l:"2A",v:"2B",f:"28 Jun 15:00",fase:"Dieciseisavos"},{id:74,l:"1E",v:"3ABCDF",f:"29 Jun 16:30",fase:"Dieciseisavos"},{id:75,l:"1F",v:"2C",f:"29 Jun 21:00",fase:"Dieciseisavos"},{id:76,l:"1C",v:"2F",f:"29 Jun 13:00",fase:"Dieciseisavos"},{id:77,l:"1I",v:"3CDFGH",f:"30 Jun 17:00",fase:"Dieciseisavos"},{id:78,l:"2E",v:"2I",f:"30 Jun 13:00",fase:"Dieciseisavos"},{id:79,l:"1A",v:"3CEFHI",f:"30 Jun 21:00",fase:"Dieciseisavos"},{id:80,l:"1L",v:"3EHIJK",f:"01 Jul 12:00",fase:"Dieciseisavos"},{id:81,l:"1D",v:"3BEFIJ",f:"01 Jul 20:00",fase:"Dieciseisavos"},{id:82,l:"1G",v:"3AEHIJ",f:"01 Jul 16:00",fase:"Dieciseisavos"},{id:83,l:"2K",v:"2L",f:"02 Jul 19:00",fase:"Dieciseisavos"},{id:84,l:"1H",v:"2J",f:"02 Jul 15:00",fase:"Dieciseisavos"},{id:85,l:"1B",v:"3EFGIJ",f:"02 Jul 23:00",fase:"Dieciseisavos"},{id:86,l:"1J",v:"2H",f:"03 Jul 18:00",fase:"Dieciseisavos"},{id:87,l:"1K",v:"3DEIJL",f:"03 Jul 21:30",fase:"Dieciseisavos"},{id:88,l:"2D",v:"2G",f:"03 Jul 14:00",fase:"Dieciseisavos"},
+  {id:89,l:"W73",v:"W75",f:"04 Jul 17:00",fase:"Octavos"},{id:90,l:"W74",v:"W77",f:"04 Jul 13:00",fase:"Octavos"},{id:91,l:"W76",v:"W78",f:"05 Jul 16:00",fase:"Octavos"},{id:92,l:"W79",v:"W80",f:"05 Jul 20:00",fase:"Octavos"},{id:93,l:"W83",v:"W84",f:"06 Jul 15:00",fase:"Octavos"},{id:94,l:"W81",v:"W82",f:"06 Jul 20:00",fase:"Octavos"},{id:95,l:"W86",v:"W88",f:"07 Jul 12:00",fase:"Octavos"},{id:96,l:"W85",v:"W87",f:"07 Jul 16:00",fase:"Octavos"},
+  {id:97,l:"W89",v:"W90",f:"09 Jul 16:00",fase:"Cuartos"},{id:98,l:"W93",v:"W94",f:"10 Jul 15:00",fase:"Cuartos"},{id:99,l:"W91",v:"W92",f:"11 Jul 17:00",fase:"Cuartos"},{id:100,l:"W95",v:"W96",f:"11 Jul 21:00",fase:"Cuartos"},
+  {id:101,l:"W97",v:"W98",f:"14 Jul 15:00",fase:"Semifinal"},{id:102,l:"W99",v:"W100",f:"15 Jul 15:00",fase:"Semifinal"},
+  {id:103,l:"L101",v:"L102",f:"18 Jul 17:00",fase:"3er y 4to Puesto"},
+  {id:104,l:"W101",v:"W102",f:"19 Jul 15:00",fase:"Gran Final"}
+];
+
+var FLAGS={
+  "México":"🇲🇽","Sudáfrica":"🇿🇦","Corea del Sur":"🇰🇷","Rep. Checa":"🇨🇿",
+  "Canadá":"🇨🇦","Bosnia y Herz.":"🇧🇦","Catar":"🇶🇦","Suiza":"🇨🇭",
+  "Brasil":"🇧🇷","Marruecos":"🇲🇦","Haití":"🇭🇹","Escocia":"🏴󠁧󠁢󠁳󠁣󠁴󠁿",
+  "EE.UU.":"🇺🇸","Paraguay":"🇵🇾","Australia":"🇦🇺","Turquía":"🇹🇷",
+  "Alemania":"🇩🇪","Curazao":"🇨🇼","Costa de Marfil":"🇨🇮","Ecuador":"🇪🇨",
+  "Países Bajos":"🇳🇱","Japón":"🇯🇵","Suecia":"🇸🇪","Túnez":"🇹🇳",
+  "Bélgica":"🇧🇪","Egipto":"🇪🇬","Irán":"🇮🇷","Nueva Zelanda":"🇳🇿",
+  "España":"🇪🇸","Cabo Verde":"🇨🇻","Arabia Saudita":"🇸🇦","Uruguay":"🇺🇾",
+  "Francia":"🇫🇷","Senegal":"🇸🇳","Irak":"🇮🇶","Noruega":"🇳🇴",
+  "Argentina":"🇦🇷","Argelia":"🇩🇿","Austria":"🇦🇹","Jordania":"🇯🇴",
+  "Portugal":"🇵🇹","RD Congo":"🇨🇩","Uzbekistán":"🇺🇿","Colombia":"🇨🇴",
+  "Inglaterra":"🏴󠁧󠁢󠁥󠁮󠁧󠁿","Croacia":"🇭🇷","Ghana":"🇬🇭","Panamá":"🇵🇦"
+};
+function flag(n){return FLAGS[n]||"⚽";}
+function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+
+// ---- POBLAR SELECTOR AL ARRANCAR ----
+(function(){
+  var sel=document.getElementById("selPartido");
+  TODOS.forEach(function(p){
+    var o=document.createElement("option");
+    o.value=p.id;
+    o.textContent="P"+p.id+" · "+p.fase+" · "+flag(p.l)+" "+p.l+" vs "+flag(p.v)+" "+p.v+" · "+p.f;
+    sel.appendChild(o);
+  });
+})();
+
+// ---- GENERAR ----
+document.getElementById("btnGen").addEventListener("click",generarImagen);
+
+async function generarImagen(){
+  var pid=parseInt(document.getElementById("selPartido").value);
+  var partido=TODOS.find(function(p){return p.id===pid;});
+  if(!partido)return;
+
+  var msg=document.getElementById("genMsg");
+  msg.innerHTML="<div class='ld'>Cargando pronósticos…</div>";
+  document.getElementById("btnDl").disabled=true;
+
+  try{
+    var r=await fetch(SB+"/rest/v1/participantes?validado=eq.true&select=nombre,pronos&order=nombre",{
+      headers:{"apikey":SK,"Authorization":"Bearer "+SK}
+    });
+    var parts=await r.json();
+    if(!parts||!parts.length){msg.innerHTML="<div class='err'>No hay participantes validados aún.</div>";return;}
+
+    var nomL=partido.l, nomV=partido.v;
+    if(pid>=73){
+      try{
+        var rr=await fetch(SB+"/rest/v1/resultados?partido_id=eq."+pid+"&select=local,visitante",{headers:{"apikey":SK,"Authorization":"Bearer "+SK}});
+        var rrd=await rr.json();
+        if(rrd&&rrd[0]&&rrd[0].local)nomL=rrd[0].local;
+        if(rrd&&rrd[0]&&rrd[0].visitante)nomV=rrd[0].visitante;
+      }catch(e){}
+    }
+
+    var rows=parts.map(function(p){
+      var pr=(p.pronos||{})[pid];
+      return{nombre:p.nombre,gl:pr&&pr.gl!=null?pr.gl:null,gv:pr&&pr.gv!=null?pr.gv:null};
+    });
+
+    renderCard(partido,nomL,nomV,rows);
+    msg.innerHTML="";
+    document.getElementById("btnDl").disabled=false;
+
+  }catch(e){
+    msg.innerHTML="<div class='err'>Error: "+e.message+"</div>";
+  }
+}
+
+function signo(gl,gv,nomL,nomV){
+  if(gl==null||gv==null)return{txt:"—",cls:""};
+  if(gl>gv)return{txt:"🏠 "+nomL,cls:"sig-L"};
+  if(gl<gv)return{txt:"✈️ "+nomV,cls:"sig-V"};
+  return{txt:"Empate",cls:"sig-X"};
+}
+
+function renderCard(partido,nomL,nomV,rows){
+  var fL=flag(nomL),fV=flag(nomV);
+  var ahora=new Date().toLocaleDateString("es-CO",{day:"2-digit",month:"short",year:"numeric"});
+  var html="";
+  html+="<div class='card-top'><div class='card-brand'><h2>⚽ Polla Compis 2026</h2><span class='badge'>PRONÓSTICOS</span></div></div>";
+  html+="<div class='partido-hero'>";
+  html+="<div class='fase-chip'>"+partido.fase+" · "+partido.f+"</div>";
+  html+="<div class='equipos'>";
+  html+="<div class='equipo-l'><span class='eq-flag'>"+fL+"</span><div class='eq-name'>"+esc(nomL)+"</div></div>";
+  html+="<div class='vs-sep'><span class='vs-txt'>VS</span></div>";
+  html+="<div class='equipo-r'><span class='eq-flag'>"+fV+"</span><div class='eq-name'>"+esc(nomV)+"</div></div>";
+  html+="</div></div>";
+  html+="<div class='prono-section'>";
+  html+="<div class='prono-title'>Pronósticos · "+rows.length+" jugadores</div>";
+  html+="<div class='prono-grid'>";
+  rows.forEach(function(r){
+    var hasScore=(r.gl!=null&&r.gv!=null);
+    var s=signo(r.gl,r.gv,nomL,nomV);
+    html+="<div class='prono-row'>";
+    html+="<div class='pr-nombre'>"+esc(r.nombre)+"</div>";
+    html+="<div class='pr-score'>"+(hasScore?"<span class='pr-score-val'>"+r.gl+" – "+r.gv+"</span>":"<span class='pr-score-nd'>—</span>")+"</div>";
+    html+="<div class='pr-signo'>"+(hasScore?"<span class='pr-signo-val "+s.cls+"'>"+s.txt+"</span>":"")+"</div>";
+    html+="</div>";
+  });
+  html+="</div></div>";
+  html+="<div class='card-foot'><span class='foot-txt'>"+ahora+"</span><span class='foot-logo'>POLLA COMPIS 2026</span></div>";
+  var card=document.getElementById("card");
+  card.innerHTML=html;
+  document.getElementById("cardWrap").classList.add("show");
+  card.scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+// ---- DESCARGAR PNG ----
+document.getElementById("btnDl").addEventListener("click",function(){
+  var btn=this;
+  btn.textContent="Generando…";btn.disabled=true;
+  if(typeof html2canvas==="undefined"){
+    var s=document.createElement("script");
+    s.src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
+    s.onload=capturar;
+    s.onerror=function(){btn.textContent="⬇ Descargar PNG";btn.disabled=false;alert("Error cargando librería.");};
+    document.head.appendChild(s);
+  } else { capturar(); }
+  function capturar(){
+    html2canvas(document.getElementById("card"),{scale:3,backgroundColor:"#0A1628",useCORS:true,logging:false})
+    .then(function(canvas){
+      var a=document.createElement("a");
+      a.href=canvas.toDataURL("image/png");
+      a.download="PollaCompis_P"+document.getElementById("selPartido").value+".png";
+      a.click();
+      btn.textContent="✓ Descargado";btn.style.background="#22C55E";btn.disabled=false;
+      setTimeout(function(){btn.textContent="⬇ Descargar PNG";btn.style.background="#FFD700";},2500);
+    }).catch(function(e){btn.textContent="⬇ Descargar PNG";btn.disabled=false;});
+  }
+});
+</script>
+</body>
+</html>
