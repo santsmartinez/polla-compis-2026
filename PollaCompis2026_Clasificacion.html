@@ -439,14 +439,14 @@ async function load(){
   try{
     var [rawParts, rawRes, rawCfg] = await Promise.all([
       sbfetch("participantes?validado=eq.true&select=id,nombre,pronos,honor&order=nombre"),
-      sbfetch("resultados?select=partido_id,gl,gv,local,visitante,penL,penV"),
+      sbfetch("resultados?select=partido_id,gl,gv,local,visitante,pen_win"),
       sbfetch("config?clave=eq.honor_real&select=valor")
     ]);
 
     // Construir res{}
     res={};
     rawRes.forEach(function(r){
-      res[r.partido_id]={gl:r.gl,gv:r.gv,rl:r.local||"",rv:r.visitante||"",penWin:r.penL?"L":r.penV?"V":null};
+      res[r.partido_id]={gl:r.gl,gv:r.gv,rl:r.local||"",rv:r.visitante||"",penWin:r.pen_win||null};
     });
 
     // Honor real
