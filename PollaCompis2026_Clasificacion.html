@@ -354,12 +354,15 @@ function calcP(pr,real,fase){
     var pl=(pr.pl||"").trim().toLowerCase();
     var pv=(pr.pv||"").trim().toLowerCase();
     var tenemosEq=(rl!==""&&rv!=="");var tenemosP=(pl!==""&&pv!=="");
-    var cruceEx=false,ambos=false;
+    var cruceEx=false;
     if(tenemosEq&&tenemosP){
       cruceEx=(rl===pl&&rv===pv);
-      ambos=((rl===pl||rl===pv)&&(rv===pl||rv===pv));
     }
-    if(reg.c>0&&ambos)t+=reg.c;
+    // Clasificado: 1 punto por cada equipo acertado (máx 2)
+    if(reg.c>0&&tenemosEq&&tenemosP){
+      if(rl===pl||rl===pv)t+=reg.c;
+      if(rv===pl||rv===pv)t+=reg.c;
+    }
     if(cruceEx){
       var sR2=real.gl>real.gv?"L":real.gl<real.gv?"V":"X";
       var sP2=pr.gl>pr.gv?"L":pr.gl<pr.gv?"V":"X";
@@ -561,7 +564,7 @@ function renderDet(p){
       var pl=(pr.pl||"").trim().toLowerCase(),pv=(pr.pv||"").trim().toLowerCase();
       var gan=real.gl>real.gv?rl:real.gl<real.gv?rv:(real.penWin==="L"?rl:real.penWin==="V"?rv:"");
       var ganP=pr.gl>pr.gv?pl:pr.gl<pr.gv?pv:"";
-      if(gan&&ganP&&rl===pl&&rv===pv&&gan===ganP)ptsPorFase["semis"]=(ptsPorFase["semis"]||0)+regS.clasS;
+      if(gan&&ganP&&gan===ganP)ptsPorFase["semis"]=(ptsPorFase["semis"]||0)+regS.clasS;
     }
     if(pa.f==="semis"&&real&&pr){
       var regF=PTS.final;if(!regF.clasF)return;
@@ -569,7 +572,7 @@ function renderDet(p){
       var pl2=(pr.pl||"").trim().toLowerCase(),pv2=(pr.pv||"").trim().toLowerCase();
       var gan2=real.gl>real.gv?rl2:real.gl<real.gv?rv2:(real.penWin==="L"?rl2:real.penWin==="V"?rv2:"");
       var ganP2=pr.gl>pr.gv?pl2:pr.gl<pr.gv?pv2:"";
-      if(gan2&&ganP2&&rl2===pl2&&rv2===pv2&&gan2===ganP2)ptsPorFase["final"]=(ptsPorFase["final"]||0)+regF.clasF;
+      if(gan2&&ganP2&&gan2===ganP2)ptsPorFase["final"]=(ptsPorFase["final"]||0)+regF.clasF;
     }
   });
   GK.forEach(function(g){var pp=ptsGrupoPos(g,pronos);if(pp>0)ptsPorFase["grupos"]=(ptsPorFase["grupos"]||0)+pp;});

@@ -166,28 +166,69 @@ async function generarImagen(){
   document.getElementById("btnDl").disabled=true;
 
   try{
-    var r=await fetch(SB+"/rest/v1/participantes?validado=eq.true&select=nombre,pronos&order=nombre",{
-      headers:{"apikey":SK,"Authorization":"Bearer "+SK}
-    });
-    var parts=await r.json();
+    // Cargar participantes y resultados en paralelo
+    var [rParts, rRes] = await Promise.all([
+      fetch(SB+"/rest/v1/participantes?validado=eq.true&select=nombre,pronos&order=nombre",{headers:{"apikey":SK,"Authorization":"Bearer "+SK}}),
+      fetch(SB+"/rest/v1/resultados?select=partido_id,local,visitante&partido_id=gte.73",{headers:{"apikey":SK,"Authorization":"Bearer "+SK}})
+    ]);
+    var parts=await rParts.json();
+    var resElim=await rRes.json();
     if(!parts||!parts.length){msg.innerHTML="<div class='err'>No hay participantes validados aún.</div>";return;}
 
-    var nomL=partido.l, nomV=partido.v;
-    if(pid>=73){
-      try{
-        var rr=await fetch(SB+"/rest/v1/resultados?partido_id=eq."+pid+"&select=local,visitante",{headers:{"apikey":SK,"Authorization":"Bearer "+SK}});
-        var rrd=await rr.json();
-        if(rrd&&rrd[0]&&rrd[0].local)nomL=rrd[0].local;
-        if(rrd&&rrd[0]&&rrd[0].visitante)nomV=rrd[0].visitante;
-      }catch(e){}
-    }
-
-    var rows=parts.map(function(p){
-      var pr=(p.pronos||{})[pid];
-      return{nombre:p.nombre,gl:pr&&pr.gl!=null?pr.gl:null,gv:pr&&pr.gv!=null?pr.gv:null};
+    // Construir mapa de nombres reales para eliminatorias
+    var nombresReales={};
+    (resElim||[]).forEach(function(r){
+      if(r.local||r.visitante)nombresReales[r.partido_id]={l:r.local||"",v:r.visitante||""};
     });
 
-    renderCard(partido,nomL,nomV,rows);
+    // Obtener nombres del partido — para elim usar nombres reales si existen
+    var nomL=partido.l, nomV=partido.v;
+    if(pid>=73&&nombresReales[pid]){
+      if(nombresReales[pid].l)nomL=nombresReales[pid].l;
+      if(nombresReales[pid].v)nomV=nombresReales[pid].v;
+    }
+
+    var esElim=(pid>=73);
+    var rows;
+
+    if(!esElim){
+      // GRUPOS: mostrar todos con su pronóstico
+      rows=parts.map(function(p){
+        var pr=(p.pronos||{})[pid];
+        return{nombre:p.nombre,gl:pr&&pr.gl!=null?pr.gl:null,gv:pr&&pr.gv!=null?pr.gv:null,muestra:true};
+      });
+    } else {
+      // ELIMINATORIAS: solo mostrar los que tienen alguno de los dos equipos correctos
+      // (pueden sumar puntos de clasificado, signo o exacto)
+      var nomLn=nomL.trim().toLowerCase();
+      var nomVn=nomV.trim().toLowerCase();
+      rows=[];
+      parts.forEach(function(p){
+        var pr=(p.pronos||{})[pid];
+        if(!pr||pr.gl==null||pr.gv==null)return; // sin pronóstico para este partido
+        var pl=(pr.pl||"").trim().toLowerCase();
+        var pv=(pr.pv||"").trim().toLowerCase();
+        // Si los nombres reales no están cargados aún, mostrar todos con pronóstico
+        if(!nomLn||!nomVn){
+          rows.push({nombre:p.nombre,gl:pr.gl,gv:pr.gv,pl:pr.pl,pv:pr.pv,muestra:true});
+          return;
+        }
+        // Tiene al menos uno de los dos equipos correctos → puede sumar puntos clasificado
+        var tieneL=(pl===nomLn||pl===nomVn); // alguno de sus pronosticados es el local real
+        var tieneV=(pv===nomLn||pv===nomVn); // alguno de sus pronosticados es el visitante real
+        if(tieneL||tieneV){
+          rows.push({nombre:p.nombre,gl:pr.gl,gv:pr.gv,pl:pr.pl,pv:pr.pv,
+            tieneL:tieneL,tieneV:tieneV,ambos:(tieneL&&tieneV)});
+        }
+      });
+    }
+
+    if(!rows.length&&esElim){
+      msg.innerHTML="<div class='err'>Ningún participante tiene alguno de los dos equipos en este partido. Verifica que los nombres en Resultados del Admin coincidan exactamente con los pronósticos.</div>";
+      return;
+    }
+
+    renderCard(partido,nomL,nomV,rows,esElim);
     msg.innerHTML="";
     document.getElementById("btnDl").disabled=false;
 
@@ -203,32 +244,39 @@ function signo(gl,gv,nomL,nomV){
   return{txt:"Empate",cls:"sig-X"};
 }
 
-function renderCard(partido,nomL,nomV,rows){
+function renderCard(partido,nomL,nomV,rows,esElim){
   var fL=flag(nomL),fV=flag(nomV);
   var ahora=new Date().toLocaleDateString("es-CO",{day:"2-digit",month:"short",year:"numeric"});
+  var tituloSec=esElim
+    ? "Con opciones de sumar · "+rows.length+" jugador"+(rows.length!==1?"es":"")
+    : "Pronósticos · "+rows.length+" jugador"+(rows.length!==1?"es":"");
   var html="";
-  html+="<div class='card-top'><div class='card-brand'><h2>⚽ Polla Compis 2026</h2><span class='badge'>PRONÓSTICOS</span></div></div>";
-  html+="<div class='partido-hero'>";
-  html+="<div class='fase-chip'>"+partido.fase+" · "+partido.f+"</div>";
-  html+="<div class='equipos'>";
-  html+="<div class='equipo-l'><span class='eq-flag'>"+fL+"</span><div class='eq-name'>"+esc(nomL)+"</div></div>";
-  html+="<div class='vs-sep'><span class='vs-txt'>VS</span></div>";
-  html+="<div class='equipo-r'><span class='eq-flag'>"+fV+"</span><div class='eq-name'>"+esc(nomV)+"</div></div>";
+  html+="<div class=\'card-top\'><div class=\'card-brand\'><h2>⚽ Polla Compis 2026</h2><span class=\'badge\'>PRONÓSTICOS</span></div></div>";
+  html+="<div class=\'partido-hero\'>";
+  html+="<div class=\'fase-chip\'>"+partido.fase+" · "+partido.f+"</div>";
+  html+="<div class=\'equipos\'>";
+  html+="<div class=\'equipo-l\'><span class=\'eq-flag\'>"+fL+"</span><div class=\'eq-name\'>"+esc(nomL)+"</div></div>";
+  html+="<div class=\'vs-sep\'><span class=\'vs-txt\'>VS</span></div>";
+  html+="<div class=\'equipo-r\'><span class=\'eq-flag\'>"+fV+"</span><div class=\'eq-name\'>"+esc(nomV)+"</div></div>";
   html+="</div></div>";
-  html+="<div class='prono-section'>";
-  html+="<div class='prono-title'>Pronósticos · "+rows.length+" jugadores</div>";
-  html+="<div class='prono-grid'>";
+  html+="<div class=\'prono-section\'>";
+  html+="<div class=\'prono-title\'>"+tituloSec+"</div>";
+  html+="<div class=\'prono-grid\'>";
   rows.forEach(function(r){
-    var hasScore=(r.gl!=null&&r.gv!=null);
     var s=signo(r.gl,r.gv,nomL,nomV);
-    html+="<div class='prono-row'>";
-    html+="<div class='pr-nombre'>"+esc(r.nombre)+"</div>";
-    html+="<div class='pr-score'>"+(hasScore?"<span class='pr-score-val'>"+r.gl+" – "+r.gv+"</span>":"<span class='pr-score-nd'>—</span>")+"</div>";
-    html+="<div class='pr-signo'>"+(hasScore?"<span class='pr-signo-val "+s.cls+"'>"+s.txt+"</span>":"")+"</div>";
+    var badge="";
+    if(esElim){
+      if(r.ambos)badge="<span style=\'font-size:9px;background:rgba(34,197,94,.2);color:#86EFAC;border:1px solid rgba(34,197,94,.3);border-radius:4px;padding:1px 5px;margin-left:6px\'>2 ✓</span>";
+      else badge="<span style=\'font-size:9px;background:rgba(255,215,0,.15);color:#FDE68A;border:1px solid rgba(255,215,0,.25);border-radius:4px;padding:1px 5px;margin-left:6px\'>1 ✓</span>";
+    }
+    html+="<div class=\'prono-row\'>";
+    html+="<div class=\'pr-nombre\'>"+esc(r.nombre)+badge+"</div>";
+    html+="<div class=\'pr-score\'><span class=\'pr-score-val\'>"+r.gl+" – "+r.gv+"</span></div>";
+    html+="<div class=\'pr-signo\'><span class=\'pr-signo-val "+s.cls+"\'>"+s.txt+"</span></div>";
     html+="</div>";
   });
   html+="</div></div>";
-  html+="<div class='card-foot'><span class='foot-txt'>"+ahora+"</span><span class='foot-logo'>POLLA COMPIS 2026</span></div>";
+  html+="<div class=\'card-foot\'><span class=\'foot-txt\'>"+ahora+"</span><span class=\'foot-logo\'>POLLA COMPIS 2026</span></div>";
   var card=document.getElementById("card");
   card.innerHTML=html;
   document.getElementById("cardWrap").classList.add("show");

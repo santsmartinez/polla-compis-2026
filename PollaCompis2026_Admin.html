@@ -538,25 +538,19 @@ function calcP(pr,real,fase){
     var tenemosProno=(pl!==""&&pv!=="");
 
     var cruceExacto=false;
-    var ambosClasfn=false;
 
     if(tenemosEquipos&&tenemosProno){
-      // Cruce exacto: local=local Y visitante=visitante
       cruceExacto=(rl===pl&&rv===pv);
-      // Ambos clasificaron (en cualquier posición)
-      ambosClasfn=((rl===pl||rl===pv)&&(rv===pl||rv===pv));
     }
 
-    // --- PUNTOS POR CLASIFICADO ---
-    // Normal (dieciseisavos a cuartos): si ambos clasificaron
-    if(reg.c>0&&ambosClasfn)t+=reg.c;
-
-    // Semis nuevas: 16pts si cada equipo que pronosticaste pasa a semis
-    // (esto se calcula per-equipo en calcSemiFinal, no aquí)
+    // --- PUNTOS POR CLASIFICADO (1 punto por cada equipo acertado, máx 2) ---
+    if(reg.c>0&&tenemosEquipos&&tenemosProno){
+      if(rl===pl||rl===pv)t+=reg.c; // equipo real local está en el pronóstico
+      if(rv===pl||rv===pv)t+=reg.c; // equipo real visitante está en el pronóstico
+    }
 
     // --- PUNTOS POR CRUCE EXACTO, SIGNO Y EXACTO ---
     if(cruceExacto){
-      // Solo si el cruce es exacto: suman cruce + signo + exacto
       var sR2=real.gl>real.gv?"L":real.gl<real.gv?"V":"X";
       var sP2=pr.gl>pr.gv?"L":pr.gl<pr.gv?"V":"X";
       if(reg.x)t+=reg.x;
@@ -564,13 +558,11 @@ function calcP(pr,real,fase){
       if(real.gl===pr.gl&&real.gv===pr.gv)t+=reg.e;
     } else if(!tenemosEquipos){
       // Sin nombres reales ingresados: calcular signo y exacto igualmente
-      // (ocurre cuando el admin no ha ingresado los equipos reales aún)
       var sR3=real.gl>real.gv?"L":real.gl<real.gv?"V":"X";
       var sP3=pr.gl>pr.gv?"L":pr.gl<pr.gv?"V":"X";
       if(sR3===sP3)t+=reg.s;
       if(real.gl===pr.gl&&real.gv===pr.gv)t+=reg.e;
     }
-    // Si clasificaron invertidos: solo clasificado (ya sumado arriba), nada más
   }
   return t;
 }
@@ -1738,7 +1730,7 @@ function buildClasDetHtml(p){
       var pl=(pr.pl||"").trim().toLowerCase(),pv=(pr.pv||"").trim().toLowerCase();
       var gan=real.gl>real.gv?rl:real.gl<real.gv?rv:(real.penWin==="L"?rl:real.penWin==="V"?rv:"");
       var ganP=pr.gl>pr.gv?pl:pr.gl<pr.gv?pv:"";
-      if(gan&&ganP&&rl===pl&&rv===pv&&gan===ganP)ptsPorFase["semis"]=(ptsPorFase["semis"]||0)+regS.clasS;
+      if(gan&&ganP&&gan===ganP)ptsPorFase["semis"]=(ptsPorFase["semis"]||0)+regS.clasS;
     }
     if(pa.f==="semis"&&real&&pr){
       var regF=PTS.final;if(!regF.clasF)return;
@@ -1746,7 +1738,7 @@ function buildClasDetHtml(p){
       var pl2=(pr.pl||"").trim().toLowerCase(),pv2=(pr.pv||"").trim().toLowerCase();
       var gan2=real.gl>real.gv?rl2:real.gl<real.gv?rv2:(real.penWin==="L"?rl2:real.penWin==="V"?rv2:"");
       var ganP2=pr.gl>pr.gv?pl2:pr.gl<pr.gv?pv2:"";
-      if(gan2&&ganP2&&rl2===pl2&&rv2===pv2&&gan2===ganP2)ptsPorFase["final"]=(ptsPorFase["final"]||0)+regF.clasF;
+      if(gan2&&ganP2&&gan2===ganP2)ptsPorFase["final"]=(ptsPorFase["final"]||0)+regF.clasF;
     }
   });
   GK.forEach(function(g){var pp=ptsGrupoPos(g,pronos);if(pp>0)ptsPorFase["grupos"]=(ptsPorFase["grupos"]||0)+pp;});
@@ -1836,22 +1828,13 @@ function autoHonorDesdeRes(){
     else{camp=(r104.penWin==="L"?rl:rv);sub=(r104.penWin==="L"?rv:rl);}
     hR["campeon"]=camp;hR["subcampeon"]=sub;
   }
-  if(r103&&r103.gl!=null&&r103.gv!=null){
-    // Intentar usar nombres reales; si no están, buscar en res[103] resuelto
-    var rl3=r103.rl||"";var rv3=r103.rv||"";
-    // Si no hay nombres reales, intentar resolver desde los resultados encadenados
-    if(!rl3){var rSemi1=res[101];if(rSemi1){rl3=(r103.gl>r103.gv||r103.penWin==="L")?"":(rSemi1.rl||"");}}
-    if(rl3&&rv3){
-      var ter;
-      if(r103.gl>r103.gv)ter=rl3;
-      else if(r103.gv>r103.gl)ter=rv3;
-      else ter=(r103.penWin==="L"?rl3:rv3);
-      if(ter)hR["tercero_h"]=ter;
-    } else if(rl3||rv3){
-      // Al menos uno disponible
-      var ter2=(r103.gl>r103.gv?rl3:rv3)||rl3||rv3;
-      if(ter2)hR["tercero_h"]=ter2;
-    }
+  if(r103&&r103.gl!=null&&r103.gv!=null&&r103.rl&&r103.rv){
+    var rl3=r103.rl,rv3=r103.rv;
+    var ter;
+    if(r103.gl>r103.gv)ter=rl3;
+    else if(r103.gv>r103.gl)ter=rv3;
+    else ter=(r103.penWin==="L"?rl3:rv3);
+    hR["tercero_h"]=ter;
   }
 }
 
@@ -1896,7 +1879,7 @@ async function saveHon(){
 // TABLA DE PUNTUACIÓN
 // ============================================================
 function rendPts(){
-  var rows=[["Grupos","3","5","2 pos","—","8"],["Dieciseisavos","4*","6*","4","5","19"],["Octavos","5*","7*","8","10","30"],["Cuartos","6*","8*","12","15","41"],["Semis","10*","12*","16 ★","20","58"],["3er Puesto","10*","12*","—","20","42"],["Final","14*","16*","20 ★","25","75"]];
+  var rows=[["Grupos","3","5","2 pos (×4)","—","8"],["Dieciseisavos","4*","6*","4 (×2)","5","23"],["Octavos","5*","7*","8 (×2)","10","38"],["Cuartos","6*","8*","12 (×2)","15","53"],["Semis","10*","12*","16★ (×2)","20","74"],["3er Puesto","10*","12*","—","20","42"],["Final","14*","16*","20★ (×2)","25","95"]];
   var html="<div style='overflow-x:auto'><table style='width:100%;border-collapse:collapse;font-size:13px'><thead><tr style='background:#0A1628;color:#fff'><th style='padding:8px;text-align:left'>Fase</th><th style='padding:8px;text-align:center'>1X2</th><th style='padding:8px;text-align:center'>Exacto</th><th style='padding:8px;text-align:center'>Clasificado</th><th style='padding:8px;text-align:center'>Cruce</th><th style='padding:8px;text-align:center'>Máx</th></tr></thead><tbody>";
   rows.forEach(function(r,i){
     html+="<tr style='background:"+(i%2===0?"#fff":"#F8F9FA")+"'>";
@@ -1906,9 +1889,9 @@ function rendPts(){
   html+="</tbody></table></div>";
   html+="<div style='font-size:12px;color:#555;margin-top:.875rem;line-height:1.8;background:#F0F4FF;padding:10px 14px;border-radius:8px;border-left:3px solid #C8102E'>";
   html+="<b>★ Nuevo v2:</b> 16pts por equipo que acertaste pasa a Semis (evalúa en Cuartos) · 20pts por equipo que acertaste llega a Final (evalúa en Semis)<br>";
-  html+="<b>* Cruce exacto:</b> Signo y exacto solo suman si local=local y visit.=visit. Requiere ingresar nombres reales en Resultados.<br>";
+  html+="<b>* Cruce exacto:</b> Signo y exacto solo suman si local=local y visit.=visit. Requiere ingresar nombres reales en Resultados.<br><b>Clasificado (×2):</b> Si acertaste ambos equipos del cruce (en cualquier posición) sumas Clasificado 2 veces. Si solo uno, 1 vez.<br>";
   html+="<b>Honor:</b> 🏆40 · 🥈25 · 🥉15 · ⚽15/10/7 · 🏅15/10/7 · 🧤15 · <b>Total honor:</b> 159pts<br>";
-  html+="<b>Premios:</b> 65% / 25% / 10% · <b>Máximo teórico:</b> 1.676 pts</div>";
+  html+="<b>Premios:</b> 65% / 25% / 10% · <b>Máximo teórico:</b> 2.208 pts</div>";
   document.getElementById("ptsbody").innerHTML=html;
 }
 
