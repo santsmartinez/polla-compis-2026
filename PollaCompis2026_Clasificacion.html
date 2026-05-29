@@ -651,7 +651,10 @@ function renderDet(p){
   });
   html+='</div>';
 
-  html+='<button class="close-btn" onclick="toggleDet(\''+p.id+'\')">\u25b2 Cerrar</button>';
+  html+='<div style="display:flex;gap:8px;margin-top:8px">';
+  html+='<button onclick="descargarPDF(\''+p.id+'\')" style="flex:1;background:#0A1628;color:#fff;border:none;padding:8px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer" id="btnpdf_'+p.id+'">&#11015; Descargar PDF</button>';
+  html+='<button class="close-btn" style="flex:1;margin-top:0" onclick="toggleDet(\''+p.id+'\')">\u25b2 Cerrar</button>';
+  html+='</div>';
   html+='</div>';
   return html;
 }
@@ -693,6 +696,191 @@ function updateCountdownUI(){
 // ============================================================
 load();
 startCountdown();
+
+// ============================================================
+// PDF DESDE CLASIFICACIÓN
+// ============================================================
+function descargarPDF(pid){
+  var btn=document.getElementById("btnpdf_"+pid);
+  if(btn){btn.textContent="Generando…";btn.disabled=true;}
+  if(typeof window.jspdf==="undefined"){
+    var s=document.createElement("script");
+    s.src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+    s.onload=function(){construirPDFClas(pid);};
+    document.head.appendChild(s);
+  } else { construirPDFClas(pid); }
+}
+
+function limpiarN(n){
+  if(!n)return"";
+  var s=n.replace(/[\u{1F300}-\u{1FFFF}]|[\u{1F100}-\u{1F1FF}]|[\u2600-\u27FF]/gu,"");
+  s=s.normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+  s=s.replace(/\u00f1/g,"n").replace(/\u00d1/g,"N");
+  s=s.replace(/[\u0080-\u00ff]/g,function(c){
+    var map={"ü":"u","Ü":"U","ö":"o","Ö":"O","ä":"a","Ä":"A","ø":"o","å":"a","æ":"ae","Æ":"AE"};
+    return map[c]||c.normalize("NFD").replace(/[\u0300-\u036f]/g,"")||"?";
+  });
+  return s.replace(/\s+/g," ").trim();
+}
+
+function construirPDFClas(pid){
+  var btn=document.getElementById("btnpdf_"+pid);
+  var p=parts.find(function(x){return x.id===pid;});
+  if(!p){if(btn){btn.textContent="⬇ Descargar PDF";btn.disabled=false;}return;}
+  var pronos=p.pronos||{};
+  var GK_PDF=Object.keys(GEQ_G);
+  try{
+    var {jsPDF}=window.jspdf;
+    var doc=new jsPDF({orientation:"portrait",unit:"mm",format:"a4"});
+    var W=210,mg=14,y=0;
+    var now=new Date();
+    var fechaStr=now.toLocaleDateString("es-CO",{day:"2-digit",month:"long",year:"numeric"})+" · "+now.toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit"});
+    var refCode="PC2026-CLS-"+now.getTime().toString(36).toUpperCase();
+    var nomPart=limpiarN(p.nombre||"Participante");
+
+    function newPage(){doc.addPage();y=0;}
+    function checkY(n){if(y+n>275)newPage();}
+    function banda(color,h){doc.setFillColor(color[0],color[1],color[2]);doc.rect(0,y,W,h,"F");}
+    function txt(texto,x,fy,size,bold,color){
+      doc.setFontSize(size);doc.setFont("helvetica",bold?"bold":"normal");
+      doc.setTextColor(color?color[0]:30,color?color[1]:30,color?color[2]:30);
+      doc.text(texto,x,fy);
+    }
+
+    // ENCABEZADO
+    banda([10,22,40],22);
+    txt("POLLA COMPIS · MUNDIAL 2026",mg,10,13,true,[255,255,255]);
+    txt("USA · CANADA · MEXICO  |  11 Jun - 19 Jul 2026",mg,16,8,false,[200,216,240]);
+    y=22;
+    banda([244,246,250],14);
+    txt("Participante:",mg,y+5,8,false,[100,100,100]);
+    txt(nomPart,mg+22,y+5,10,true,[10,22,40]);
+    txt("Ref: "+refCode,W-mg,y+5,7,false,[150,150,150]);
+    doc.setFontSize(7);doc.setTextColor(150,150,150);
+    doc.text(limpiarN(fechaStr),W-mg,y+10,{align:"right"});
+    y+=14;
+    doc.setDrawColor(220,220,220);doc.setLineWidth(0.3);
+    doc.line(mg,y+2,W-mg,y+2);y+=6;
+
+    // GRUPOS
+    checkY(10);banda([200,16,46],7);
+    txt("FASE DE GRUPOS",mg,y+5,9,true,[255,255,255]);y+=9;
+    GK_PDF.forEach(function(g){
+      checkY(40);
+      banda([10,22,40],7);
+      txt("GRUPO "+g+" · "+(GEQ_G[g]||[]).join("  ·  "),mg,y+5,8,true,[255,255,255]);y+=7;
+      var pats=TODOS.filter(function(pa){return pa.f==="grupos"&&pa.g===g;});
+      pats.forEach(function(pa,idx){
+        checkY(8);
+        var pr=pronos[pa.id];
+        var score=(pr&&pr.gl!=null&&pr.gv!=null)?(pr.gl+"-"+pr.gv):"-";
+        var bg=idx%2===0?[255,255,255]:[248,249,250];
+        doc.setFillColor(bg[0],bg[1],bg[2]);doc.rect(mg,y,W-mg*2,6,"F");
+        doc.setFontSize(8);doc.setFont("helvetica","normal");doc.setTextColor(30,30,30);
+        doc.text(limpiarN(pa.l),mg+2,y+4);
+        doc.setFont("helvetica","bold");doc.setTextColor(200,16,46);
+        doc.text(score,W/2,y+4,{align:"center"});
+        doc.setFont("helvetica","normal");doc.setTextColor(30,30,30);
+        doc.text(limpiarN(pa.v),W-mg-2,y+4,{align:"right"});
+        var real=res[pa.id];
+        if(real&&real.gl!=null){
+          doc.setFontSize(6);doc.setTextColor(150,150,150);
+          doc.text("real:"+real.gl+"-"+real.gv,W/2+14,y+4);
+        }
+        y+=6;
+      });
+      y+=2;
+    });
+
+    // ELIMINATORIAS
+    var fasesElim=[
+      {lbl:"DIECISEISAVOS DE FINAL",f:"dieciseisavos"},
+      {lbl:"OCTAVOS DE FINAL",f:"octavos"},
+      {lbl:"CUARTOS DE FINAL",f:"cuartos"},
+      {lbl:"SEMIFINALES",f:"semis"},
+      {lbl:"3ER Y 4TO PUESTO",f:"tercero"},
+      {lbl:"GRAN FINAL",f:"final"}
+    ];
+    fasesElim.forEach(function(fase){
+      var pats=TODOS.filter(function(pa){return pa.f===fase.f;});
+      if(!pats.length)return;
+      checkY(12);banda([200,16,46],7);
+      txt(fase.lbl,mg,y+5,9,true,[255,255,255]);y+=9;
+      pats.forEach(function(pa,idx){
+        checkY(10);
+        var pr=pronos[pa.id];
+        var nomL=limpiarN(pr&&pr.pl?pr.pl:pa.l);
+        var nomV=limpiarN(pr&&pr.pv?pr.pv:pa.v);
+        var score=(pr&&pr.gl!=null&&pr.gv!=null)?(pr.gl+"-"+pr.gv):"-";
+        var bg=idx%2===0?[255,255,255]:[248,249,250];
+        doc.setFillColor(bg[0],bg[1],bg[2]);doc.rect(mg,y,W-mg*2,6,"F");
+        doc.setFontSize(8);doc.setFont("helvetica","normal");doc.setTextColor(30,30,30);
+        var nLt=nomL.length>22?nomL.substring(0,20)+"…":nomL;
+        var nVt=nomV.length>22?nomV.substring(0,20)+"…":nomV;
+        doc.text(nLt,mg+2,y+4);
+        doc.setFont("helvetica","bold");doc.setTextColor(200,16,46);
+        doc.text(score,W/2,y+4,{align:"center"});
+        doc.setFont("helvetica","normal");doc.setTextColor(30,30,30);
+        doc.text(nVt,W-mg-2,y+4,{align:"right"});
+        y+=6;
+        if(pr&&pr.gl!=null&&pr.gv!=null&&parseInt(pr.gl)===parseInt(pr.gv)&&pr.penWin){
+          checkY(5);
+          doc.setFillColor(255,248,225);doc.rect(mg,y,W-mg*2,5,"F");
+          doc.setFontSize(7);doc.setTextColor(230,81,0);
+          doc.text("Penales — clasifica: "+limpiarN(pr.penWin==="L"?nomL:nomV),mg+2,y+3.5);
+          y+=5;
+        }
+      });
+      y+=3;
+    });
+
+    // HONOR
+    checkY(12);banda([10,22,40],7);
+    txt("CUADRO DE HONOR",mg,y+5,9,true,[255,255,255]);y+=9;
+    var hon=p.honor||{};
+    var hLbls={campeon:"Campeon",subcampeon:"Subcampeon",tercero_h:"Tercer puesto",
+               bota_oro:"Bota de Oro",bota_plata:"Bota de Plata",bota_bronce:"Bota de Bronce",
+               balon_oro:"Balon de Oro",balon_plata:"Balon de Plata",balon_bronce:"Balon de Bronce",guante_oro:"Guante de Oro"};
+    var hPts={campeon:40,subcampeon:25,tercero_h:15,bota_oro:15,bota_plata:10,bota_bronce:7,balon_oro:15,balon_plata:10,balon_bronce:7,guante_oro:15};
+    Object.keys(hLbls).forEach(function(k,idx){
+      checkY(7);
+      var bg=idx%2===0?[255,255,255]:[248,249,250];
+      doc.setFillColor(bg[0],bg[1],bg[2]);doc.rect(mg,y,W-mg*2,6,"F");
+      doc.setFontSize(8);doc.setFont("helvetica","normal");doc.setTextColor(80,80,80);
+      doc.text(hLbls[k],mg+2,y+4);
+      doc.setFont("helvetica","bold");doc.setTextColor(10,22,40);
+      doc.text(limpiarN(hon[k]||"—"),W-mg-20,y+4);
+      var rHon=hR[k]||"";
+      if(rHon){
+        var match=matchHonor(hon[k]||"",rHon);
+        doc.setFontSize(6);doc.setTextColor(match?27:180,match?94:80,match?32:80);
+        doc.text("real: "+limpiarN(rHon),W/2,y+4);
+      }
+      doc.setFontSize(7);doc.setFont("helvetica","normal");doc.setTextColor(150,150,150);
+      doc.text(hPts[k]+"pts",W-mg-2,y+4,{align:"right"});
+      y+=6;
+    });
+
+    // PIE
+    var totalPags=doc.getNumberOfPages();
+    for(var pg=1;pg<=totalPags;pg++){
+      doc.setPage(pg);
+      doc.setFillColor(10,22,40);doc.rect(0,287,W,10,"F");
+      doc.setFontSize(7);doc.setFont("helvetica","normal");doc.setTextColor(200,216,240);
+      doc.text("Polla Compis 2026  ·  "+nomPart+"  ·  Ref: "+refCode,mg,293);
+      doc.text("Pag. "+pg+" / "+totalPags,W-mg,293,{align:"right"});
+    }
+
+    var filename="PollaCompis2026_"+nomPart.replace(/[^a-zA-Z0-9]/g,"_")+".pdf";
+    doc.save(filename);
+    if(btn){btn.textContent="✓ PDF descargado";btn.style.background="#1B5E20";btn.disabled=false;
+      setTimeout(function(){btn.textContent="⬇ Descargar PDF";btn.style.background="#0A1628";},3000);}
+  }catch(err){
+    console.error(err);
+    if(btn){btn.textContent="⬇ Descargar PDF";btn.disabled=false;}
+  }
+}
+
 </script>
 </body>
 </html>
