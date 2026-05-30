@@ -7,8 +7,6 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#0A1628;color:#fff;min-height:100vh}
-
-/* HEADER */
 .hdr{background:linear-gradient(160deg,#0A1628 0%,#132038 100%);padding:1.25rem 1rem .875rem;border-bottom:1px solid rgba(255,255,255,.07)}
 .hdr-inner{max-width:680px;margin:0 auto}
 .hdr-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:.75rem}
@@ -21,26 +19,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.85)}}
 .live-txt{font-size:11px;color:#8899B8}
 .countdown{font-size:11px;color:#C8D8F0;font-weight:600;background:rgba(200,16,46,.15);border:1px solid rgba(200,16,46,.3);padding:3px 9px;border-radius:8px}
-
-/* STATS BAR */
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:680px;margin:.75rem auto 0;padding:0 1rem}
 .stat{background:rgba(255,255,255,.05);border-radius:10px;padding:.625rem;text-align:center;border:1px solid rgba(255,255,255,.07)}
 .stat .n{font-size:22px;font-weight:700;color:#fff}
 .stat .l{font-size:9px;color:#8899B8;margin-top:2px;text-transform:uppercase;letter-spacing:.06em}
-
-/* BODY */
 .body{max-width:680px;margin:0 auto;padding:.75rem 1rem 3rem}
-
-/* LOADING */
 .ld{text-align:center;padding:3rem 1rem}
 .ld .sp{width:36px;height:36px;border:3px solid rgba(255,255,255,.1);border-top-color:#C8102E;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 1rem}
 @keyframes spin{to{transform:rotate(360deg)}}
 .ld p{font-size:13px;color:#8899B8}
-
-/* ERROR */
 .err-box{background:rgba(200,16,46,.1);border:1px solid rgba(200,16,46,.3);border-radius:10px;padding:1rem;text-align:center;font-size:13px;color:#FF8A80}
-
-/* TABLA CLASIFICACIÓN */
 .tbl{background:rgba(255,255,255,.04);border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.07);margin-bottom:.75rem}
 .tbl-hdr{display:grid;grid-template-columns:32px 1fr 50px 60px;gap:6px;padding:8px 12px;background:rgba(255,255,255,.05);border-bottom:1px solid rgba(255,255,255,.07);font-size:10px;color:#8899B8;text-transform:uppercase;letter-spacing:.07em;font-weight:600}
 .tbl-hdr .tc{text-align:center}
@@ -60,8 +48,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 .row.gold .pts-big{color:#FFD700}
 .row.silver .pts-big{color:#C0C0C0}
 .row.bronze .pts-big{color:#CD7F32}
-
-/* DETALLE PARTICIPANTE */
 .det{background:rgba(255,255,255,.04);border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.07);margin-bottom:.75rem;display:none}
 .det.open{display:block}
 .det-hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.07);cursor:pointer}
@@ -70,24 +56,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 .det-body{padding:1rem 14px}
 .fase-hdr{background:rgba(10,22,40,.8);color:#C8D8F0;padding:6px 10px;border-radius:6px;margin:10px 0 5px;display:flex;justify-content:space-between;align-items:center;font-size:11px}
 .fase-hdr strong{font-size:12px;font-weight:600}
-.match-row{display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:12px}
-.match-row:last-child{border-bottom:none}
-.match-l{flex:1;text-align:right;font-weight:500;color:#E0E8F0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.match-s{width:52px;text-align:center;font-weight:700;color:#C8102E;font-size:13px;flex-shrink:0}
-.match-s.nd{color:#4A5568}
-.match-v{flex:1;font-weight:500;color:#E0E8F0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.match-badge{flex-shrink:0;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700}
-.mb-ok{background:#1B5E20;color:#A5D6A7}
-.mb-sig{background:#E65100;color:#FFD54F}
-.mb-nd{background:rgba(255,255,255,.07);color:#8899B8}
-.honor-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:4px}
-.honor-item{background:rgba(255,255,255,.04);border-radius:6px;padding:6px 8px;border:1px solid rgba(255,255,255,.07)}
-.honor-item .hl{font-size:10px;color:#8899B8}
-.honor-item .hv{font-size:12px;font-weight:600;color:#fff;margin-top:2px}
-.honor-item .hv.ok{color:#22C55E}
-.honor-item .hv.no{color:#666}
-.close-btn{background:rgba(255,255,255,.1);border:none;color:#fff;padding:6px 14px;border-radius:6px;font-size:12px;cursor:pointer;margin-top:.75rem;display:block;width:100%;font-weight:500}
-.close-btn:hover{background:rgba(255,255,255,.15)}
 .res-card{background:linear-gradient(135deg,#C8102E 0%,#7B0020 100%);border-radius:10px;padding:14px 16px;margin-bottom:12px}
 .res-card .total{font-size:28px;font-weight:800;color:#fff;letter-spacing:-.5px}
 .res-card .sub{font-size:11px;color:rgba(255,255,255,.7);margin-top:1px}
@@ -105,7 +73,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 .hb-ex{background:#1B5E20;color:#A5D6A7}
 .hb-sg{background:#E65100;color:#FFD54F}
 .pos-row{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.15);border-radius:6px;padding:5px 10px;font-size:11px;color:#86EFAC;margin:3px 0}
-/* CATEGORÍAS ELIMINATORIAS */
 .cat-bloque{margin:4px 0 8px;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,.08)}
 .cat-titulo{display:flex;justify-content:space-between;align-items:center;padding:5px 10px;background:rgba(255,255,255,.07);font-size:11px;font-weight:700;color:#C8D8F0}
 .cat-subtotal{font-size:11px;font-weight:800;color:#22C55E}
@@ -121,11 +88,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 .hon-item .hv.ok{color:#22C55E}
 .hon-item .hv.nd{color:#4A5568}
 .hon-item .hv.pend{color:#8899B8}
-
-/* NOTA ACTUALIZACION */
+.close-btn{background:rgba(255,255,255,.1);border:none;color:#fff;padding:6px 14px;border-radius:6px;font-size:12px;cursor:pointer;margin-top:.75rem;display:block;width:100%;font-weight:500}
 .refresh-note{text-align:center;font-size:10px;color:#4A5568;padding:.5rem 0;margin-bottom:.5rem}
-
-/* MOBILE */
 @media(max-width:400px){
   .tbl-hdr,.row{grid-template-columns:28px 1fr 44px 52px}
   .pts-big{font-size:17px}
@@ -133,7 +97,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 </style>
 </head>
 <body>
-
 <div class="hdr">
   <div class="hdr-inner">
     <div class="hdr-top">
@@ -145,10 +108,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
         <span class="badge">🏆 TABLA</span>
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">
-        <div class="live-row">
-          <div class="dot"></div>
-          <span class="live-txt" id="liveTxt">Actualizando…</span>
-        </div>
+        <div class="live-row"><div class="dot"></div><span class="live-txt" id="liveTxt">Actualizando…</span></div>
         <div class="countdown" id="countdown">⟳ en 60s</div>
       </div>
     </div>
@@ -159,27 +119,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
     </div>
   </div>
 </div>
-
 <div class="body">
-  <div id="main">
-    <div class="ld"><div class="sp"></div><p>Cargando clasificación…</p></div>
-  </div>
+  <div id="main"><div class="ld"><div class="sp"></div><p>Cargando clasificación…</p></div></div>
 </div>
 
 <script>
-// ============================================================
-// COMPARACIÓN FLEXIBLE DE HONOR (aliases + normalización + containment)
-// ============================================================
-function normH(s){
-  return (s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/\./g,"").replace(/\s+/g," ").trim();
-}
+function normH(s){return(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/\./g,"").replace(/\s+/g," ").trim();}
 function matchHonor(escrito,realRaw){
   if(!realRaw||!escrito)return false;
   var e=normH(escrito);
   var aliases=realRaw.split(",").map(function(a){return normH(a);}).filter(function(a){return a.length>0;});
   for(var i=0;i<aliases.length;i++){
-    var a=aliases[i];
-    if(!a)continue;
+    var a=aliases[i];if(!a)continue;
     if(e===a)return true;
     if(a.length>=4&&e.indexOf(a)>=0)return true;
     if(e.length>=4&&a.indexOf(e)>=0)return true;
@@ -187,31 +138,22 @@ function matchHonor(escrito,realRaw){
   return false;
 }
 
-// ============================================================
-// CONEXIÓN SUPABASE
-// ============================================================
 var SB="https://ilqtntrquulwsrvxeuki.supabase.co";
 var SK="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlscXRudHJxdXVsd3NydnhldWtpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0MzkwMDYsImV4cCI6MjA5NTAxNTAwNn0.eKMyKBGfAmwfgRcPcdr8ABrmeecmOcKbSXiFCXAuIvQ";
 
 function sbfetch(path){
   return fetch(SB+"/rest/v1/"+path,{headers:{"apikey":SK,"Authorization":"Bearer "+SK}})
-    .then(function(r){
-      if(!r.ok)throw new Error("HTTP "+r.status+" al cargar: "+path);
-      return r.json();
-    });
+    .then(function(r){if(!r.ok)throw new Error("HTTP "+r.status+" al cargar: "+path);return r.json();});
 }
 
-// ============================================================
-// DATOS DEL TORNEO — idénticos al Admin
-// ============================================================
 var PTS={
-  grupos:      {s:3, e:5, c:0,  x:0,  clasS:0, clasF:0},
-  dieciseisavos:{s:4,e:6, c:4,  x:5,  clasS:0, clasF:0},
-  octavos:     {s:5, e:7, c:8,  x:10, clasS:0, clasF:0},
-  cuartos:     {s:6, e:8, c:12, x:15, clasS:0, clasF:0},
-  semis:       {s:10,e:12,c:16, x:20, clasS:16,clasF:0},
-  tercero:     {s:10,e:12,c:0,  x:20, clasS:0, clasF:0},
-  final:       {s:14,e:16,c:20, x:25, clasS:0, clasF:20}
+  grupos:{s:3,e:5,c:0,x:0,clasS:0,clasF:0},
+  dieciseisavos:{s:4,e:6,c:4,x:5,clasS:0,clasF:0},
+  octavos:{s:5,e:7,c:8,x:10,clasS:0,clasF:0},
+  cuartos:{s:6,e:8,c:12,x:15,clasS:0,clasF:0},
+  semis:{s:10,e:12,c:16,x:20,clasS:16,clasF:0},
+  tercero:{s:10,e:12,c:0,x:20,clasS:0,clasF:0},
+  final:{s:14,e:16,c:20,x:25,clasS:0,clasF:20}
 };
 
 var HONOR_DEF=[
@@ -222,24 +164,17 @@ var HONOR_DEF=[
 ];
 
 var GEQ_G={
-  A:["México","Sudáfrica","Corea del Sur","Rep. Checa"],
-  B:["Canadá","Bosnia y Herz.","Catar","Suiza"],
-  C:["Brasil","Marruecos","Haití","Escocia"],
-  D:["EE.UU.","Paraguay","Australia","Turquía"],
-  E:["Alemania","Curazao","Costa de Marfil","Ecuador"],
-  F:["Países Bajos","Japón","Suecia","Túnez"],
-  G:["Bélgica","Egipto","Irán","Nueva Zelanda"],
-  H:["España","Cabo Verde","Arabia Saudita","Uruguay"],
-  I:["Francia","Senegal","Irak","Noruega"],
-  J:["Argentina","Argelia","Austria","Jordania"],
-  K:["Portugal","RD Congo","Uzbekistán","Colombia"],
-  L:["Inglaterra","Croacia","Ghana","Panamá"]
+  A:["México","Sudáfrica","Corea del Sur","Rep. Checa"],B:["Canadá","Bosnia y Herz.","Catar","Suiza"],
+  C:["Brasil","Marruecos","Haití","Escocia"],D:["EE.UU.","Paraguay","Australia","Turquía"],
+  E:["Alemania","Curazao","Costa de Marfil","Ecuador"],F:["Países Bajos","Japón","Suecia","Túnez"],
+  G:["Bélgica","Egipto","Irán","Nueva Zelanda"],H:["España","Cabo Verde","Arabia Saudita","Uruguay"],
+  I:["Francia","Senegal","Irak","Noruega"],J:["Argentina","Argelia","Austria","Jordania"],
+  K:["Portugal","RD Congo","Uzbekistán","Colombia"],L:["Inglaterra","Croacia","Ghana","Panamá"]
 };
 var GPIDS_G={
-  A:[1,2,25,28,53,54],B:[3,5,26,27,51,52],C:[6,7,29,30,49,50],
-  D:[4,8,31,32,59,60],E:[9,10,33,34,55,56],F:[11,12,35,36,57,58],
-  G:[13,14,38,40,63,64],H:[15,16,37,39,65,66],I:[17,18,41,42,61,62],
-  J:[19,20,43,44,69,70],K:[21,24,45,48,71,72],L:[22,23,46,47,67,68]
+  A:[1,2,25,28,53,54],B:[3,5,26,27,51,52],C:[6,7,29,30,49,50],D:[4,8,31,32,59,60],
+  E:[9,10,33,34,55,56],F:[11,12,35,36,57,58],G:[13,14,38,40,63,64],H:[15,16,37,39,65,66],
+  I:[17,18,41,42,61,62],J:[19,20,43,44,69,70],K:[21,24,45,48,71,72],L:[22,23,46,47,67,68]
 };
 
 var TODOS=[
@@ -265,27 +200,20 @@ var TODOS=[
 
 var FASE_LBL={grupos:"Fase de Grupos",dieciseisavos:"Dieciseisavos",octavos:"Octavos",cuartos:"Cuartos",semis:"Semifinales",tercero:"3er Puesto",final:"Final"};
 var FASES_ORD=["grupos","dieciseisavos","octavos","cuartos","semis","tercero","final"];
+var parts=[],res={},hR={};
+var countdown=60,countTimer=null;
 
 // ============================================================
-// ESTADO GLOBAL
-// ============================================================
-var parts=[], res={}, hR={};
-var countdown=60, countTimer=null, refreshTimer=null;
-
-// ============================================================
-// MOTOR DE CLASIFICACIÓN DE GRUPO (para calcular posición)
+// MOTOR GRUPOS
 // ============================================================
 function clasGrupoReal(g){
-  var eq=GEQ_G[g];
-  var s={};eq.forEach(function(e){s[e]={pts:0,dg:0,gf:0};});
+  var eq=GEQ_G[g];var s={};eq.forEach(function(e){s[e]={pts:0,dg:0,gf:0};});
   GPIDS_G[g].forEach(function(pid){
     var r=res[pid];if(!r||r.gl==null||r.gv==null)return;
     var pa=TODOS.find(function(p){return p.id===pid;});if(!pa)return;
-    s[pa.l].gf+=r.gl;s[pa.l].dg+=(r.gl-r.gv);
-    s[pa.v].gf+=r.gv;s[pa.v].dg+=(r.gv-r.gl);
+    s[pa.l].gf+=r.gl;s[pa.l].dg+=(r.gl-r.gv);s[pa.v].gf+=r.gv;s[pa.v].dg+=(r.gv-r.gl);
     if(r.gl>r.gv)s[pa.l].pts+=3;else if(r.gl<r.gv)s[pa.v].pts+=3;else{s[pa.l].pts+=1;s[pa.v].pts+=1;}
   });
-  // Pts > DG global > GF global > H2H(Pts>DG>GF) > alfa (FIFA 2026)
   return eq.slice().sort(function(a,b){
     if(s[b].pts!==s[a].pts)return s[b].pts-s[a].pts;
     if(s[b].dg!==s[a].dg)return s[b].dg-s[a].dg;
@@ -295,8 +223,7 @@ function clasGrupoReal(g){
       var r=res[pid];if(!r||r.gl==null||r.gv==null)return;
       var pa=TODOS.find(function(p){return p.id===pid;});if(!pa)return;
       if([a,b].indexOf(pa.l)<0||[a,b].indexOf(pa.v)<0)return;
-      h2h[pa.l].gf+=r.gl;h2h[pa.l].dg+=(r.gl-r.gv);
-      h2h[pa.v].gf+=r.gv;h2h[pa.v].dg+=(r.gv-r.gl);
+      h2h[pa.l].gf+=r.gl;h2h[pa.l].dg+=(r.gl-r.gv);h2h[pa.v].gf+=r.gv;h2h[pa.v].dg+=(r.gv-r.gl);
       if(r.gl>r.gv)h2h[pa.l].pts+=3;else if(r.gl<r.gv)h2h[pa.v].pts+=3;else{h2h[pa.l].pts+=1;h2h[pa.v].pts+=1;}
     });
     if(h2h[b].pts!==h2h[a].pts)return h2h[b].pts-h2h[a].pts;
@@ -307,16 +234,13 @@ function clasGrupoReal(g){
 }
 
 function clasGrupoProno(g,pronos){
-  var eq=GEQ_G[g];
-  var s={};eq.forEach(function(e){s[e]={pts:0,dg:0,gf:0};});
+  var eq=GEQ_G[g];var s={};eq.forEach(function(e){s[e]={pts:0,dg:0,gf:0};});
   GPIDS_G[g].forEach(function(pid){
     var pr=pronos[pid];if(!pr||pr.gl==null||pr.gv==null)return;
     var pa=TODOS.find(function(p){return p.id===pid;});if(!pa)return;
-    s[pa.l].gf+=pr.gl;s[pa.l].dg+=(pr.gl-pr.gv);
-    s[pa.v].gf+=pr.gv;s[pa.v].dg+=(pr.gv-pr.gl);
+    s[pa.l].gf+=pr.gl;s[pa.l].dg+=(pr.gl-pr.gv);s[pa.v].gf+=pr.gv;s[pa.v].dg+=(pr.gv-pr.gl);
     if(pr.gl>pr.gv)s[pa.l].pts+=3;else if(pr.gl<pr.gv)s[pa.v].pts+=3;else{s[pa.l].pts+=1;s[pa.v].pts+=1;}
   });
-  // Pts > DG global > GF global > H2H(Pts>DG>GF) > alfa (FIFA 2026)
   return eq.slice().sort(function(a,b){
     if(s[b].pts!==s[a].pts)return s[b].pts-s[a].pts;
     if(s[b].dg!==s[a].dg)return s[b].dg-s[a].dg;
@@ -326,8 +250,7 @@ function clasGrupoProno(g,pronos){
       var pr=pronos[pid];if(!pr||pr.gl==null||pr.gv==null)return;
       var pa=TODOS.find(function(p){return p.id===pid;});if(!pa)return;
       if([a,b].indexOf(pa.l)<0||[a,b].indexOf(pa.v)<0)return;
-      h2h[pa.l].gf+=pr.gl;h2h[pa.l].dg+=(pr.gl-pr.gv);
-      h2h[pa.v].gf+=pr.gv;h2h[pa.v].dg+=(pr.gv-pr.gl);
+      h2h[pa.l].gf+=pr.gl;h2h[pa.l].dg+=(pr.gl-pr.gv);h2h[pa.v].gf+=pr.gv;h2h[pa.v].dg+=(pr.gv-pr.gl);
       if(pr.gl>pr.gv)h2h[pa.l].pts+=3;else if(pr.gl<pr.gv)h2h[pa.v].pts+=3;else{h2h[pa.l].pts+=1;h2h[pa.v].pts+=1;}
     });
     if(h2h[b].pts!==h2h[a].pts)return h2h[b].pts-h2h[a].pts;
@@ -347,7 +270,7 @@ function ptsGrupoPos(g,pronos){
 }
 
 // ============================================================
-// CALCULAR PUNTOS POR PARTIDO
+// CALCULAR PUNTOS
 // ============================================================
 function calcP(pr,real,fase){
   if(!real||real.gl==null||!pr||pr.gl==null)return null;
@@ -355,42 +278,27 @@ function calcP(pr,real,fase){
   if(fase==="grupos"){
     var sR=real.gl>real.gv?"L":real.gl<real.gv?"V":"X";
     var sP=pr.gl>pr.gv?"L":pr.gl<pr.gv?"V":"X";
-    if(sR===sP)t+=reg.s;
-    if(real.gl===pr.gl&&real.gv===pr.gv)t+=reg.e;
-  } else {
-    var rl=(real.rl||"").trim().toLowerCase();
-    var rv=(real.rv||"").trim().toLowerCase();
-    var pl=(pr.pl||"").trim().toLowerCase();
-    var pv=(pr.pv||"").trim().toLowerCase();
-    var tenemosEq=(rl!==""&&rv!=="");var tenemosP=(pl!==""&&pv!=="");
-    var cruceEx=false;
-    if(tenemosEq&&tenemosP){
-      cruceEx=(rl===pl&&rv===pv);
-    }
-    // NOTA: clasificado se calcula en calcClasificadoFase() — no aquí
+    if(sR===sP)t+=reg.s;if(real.gl===pr.gl&&real.gv===pr.gv)t+=reg.e;
+  }else{
+    var rl=(real.rl||"").trim().toLowerCase(),rv=(real.rv||"").trim().toLowerCase();
+    var pl=(pr.pl||"").trim().toLowerCase(),pv=(pr.pv||"").trim().toLowerCase();
+    var tenemosEq=(rl!==""&&rv!==""),tenemosP=(pl!==""&&pv!=="");
+    var cruceEx=tenemosEq&&tenemosP&&(rl===pl&&rv===pv);
     if(cruceEx){
       var sR2=real.gl>real.gv?"L":real.gl<real.gv?"V":"X";
       var sP2=pr.gl>pr.gv?"L":pr.gl<pr.gv?"V":"X";
-      if(reg.x)t+=reg.x;
-      if(sR2===sP2)t+=reg.s;
-      if(real.gl===pr.gl&&real.gv===pr.gv)t+=reg.e;
-    } else if(!tenemosEq){
+      if(reg.x)t+=reg.x;if(sR2===sP2)t+=reg.s;if(real.gl===pr.gl&&real.gv===pr.gv)t+=reg.e;
+    }else if(!tenemosEq){
       var sR3=real.gl>real.gv?"L":real.gl<real.gv?"V":"X";
       var sP3=pr.gl>pr.gv?"L":pr.gl<pr.gv?"V":"X";
-      if(sR3===sP3)t+=reg.s;
-      if(real.gl===pr.gl&&real.gv===pr.gv)t+=reg.e;
+      if(sR3===sP3)t+=reg.s;if(real.gl===pr.gl&&real.gv===pr.gv)t+=reg.e;
     }
   }
   return t;
 }
 
-// ============================================================
-// CALCULAR PUNTAJE TOTAL DE UN PARTICIPANTE
-// ============================================================
-// Clasificado por fase — global (cualquier cruce, cualquier posición)
-function calcClasificadoFase(pronos, fase, resMap, TODOS_arr){
-  var reg=PTS[fase]||{};
-  if(!reg.c)return 0;
+function calcClasificadoFase(pronos,fase,resMap,TODOS_arr){
+  var reg=PTS[fase]||{};if(!reg.c)return 0;
   var equiposReales=[];
   TODOS_arr.filter(function(pa){return pa.f===fase;}).forEach(function(pa){
     var r=resMap[pa.id];
@@ -406,165 +314,113 @@ function calcClasificadoFase(pronos, fase, resMap, TODOS_arr){
   });
   if(!equiposProno.length)return 0;
   var pts=0;
-  equiposReales.forEach(function(eq){
-    if(eq&&equiposProno.indexOf(eq)!==-1)pts+=reg.c;
-  });
+  equiposReales.forEach(function(eq){if(eq&&equiposProno.indexOf(eq)!==-1)pts+=reg.c;});
   return pts;
 }
 
-function calcTotal(p){
-  var tot=0,exactos=0;
-  var pronos=p.pronos||{};
-  var GK=Object.keys(GEQ_G);
+// Helper compartido: calcula clasS + clasF globales para un set de pronósticos
+function calcClasExtraGlobal(pronos){
+  var tot=0;
+  // clasS: equipo de cuartos que pasa a semis
+  (function(){
+    var regS=PTS.semis;if(!regS.clasS)return;
+    var gR=[];
+    TODOS.filter(function(pa){return pa.f==="cuartos";}).forEach(function(pa){
+      var r=res[pa.id];if(!r||r.gl==null)return;
+      var rl=(r.rl||"").trim().toLowerCase(),rv=(r.rv||"").trim().toLowerCase();
+      var gan=r.gl>r.gv?rl:r.gl<r.gv?rv:(r.penWin==="L"?rl:r.penWin==="V"?rv:"");
+      if(gan)gR.push(gan);
+    });
+    var eP=[];
+    TODOS.filter(function(pa){return pa.f==="cuartos";}).forEach(function(pa){
+      var pr=pronos[pa.id];if(!pr)return;
+      var pl=(pr.pl||"").trim().toLowerCase(),pv=(pr.pv||"").trim().toLowerCase();
+      if(pl)eP.push(pl);if(pv)eP.push(pv);
+    });
+    gR.forEach(function(eq){if(eq&&eP.indexOf(eq)!==-1)tot+=regS.clasS;});
+  })();
+  // clasF: equipo de semis que llega a la final
+  (function(){
+    var regF=PTS.final;if(!regF.clasF)return;
+    var gR=[];
+    TODOS.filter(function(pa){return pa.f==="semis";}).forEach(function(pa){
+      var r=res[pa.id];if(!r||r.gl==null)return;
+      var rl=(r.rl||"").trim().toLowerCase(),rv=(r.rv||"").trim().toLowerCase();
+      var gan=r.gl>r.gv?rl:r.gl<r.gv?rv:(r.penWin==="L"?rl:r.penWin==="V"?rv:"");
+      if(gan)gR.push(gan);
+    });
+    var eP=[];
+    TODOS.filter(function(pa){return pa.f==="semis";}).forEach(function(pa){
+      var pr=pronos[pa.id];if(!pr)return;
+      var pl=(pr.pl||"").trim().toLowerCase(),pv=(pr.pv||"").trim().toLowerCase();
+      if(pl)eP.push(pl);if(pv)eP.push(pv);
+    });
+    gR.forEach(function(eq){if(eq&&eP.indexOf(eq)!==-1)tot+=regF.clasF;});
+  })();
+  return tot;
+}
 
+function calcTotal(p){
+  var tot=0,exactos=0;var pronos=p.pronos||{};
+  var GK=Object.keys(GEQ_G);
   TODOS.forEach(function(pa){
     var pr=pronos[pa.id],real=res[pa.id];
     var pts=calcP(pr,real,pa.f);
     if(pts!==null){tot+=pts;if(pr&&real&&pr.gl===real.gl&&pr.gv===real.gv)exactos++;}
-
-    // clasS y clasF se calculan globalmente abajo — no partido a partido
   });
-
-  // ★ CLASIFICADO POR FASE (global — cualquier cruce, cualquier posición)
-  ["dieciseisavos","octavos","cuartos","semis","final"].forEach(function(fase){
-    tot+=calcClasificadoFase(pronos,fase,res,TODOS);
-  });
-
-  // ★ CLASIFICADO A SEMIS (16pts por cada equipo que pronosticaste en cuartos y llega a semis)
-  (function(){
-    var regS=PTS.semis; if(!regS.clasS)return;
-    var ganadoresReales=[];
-    TODOS.filter(function(pa){return pa.f==="cuartos";}).forEach(function(pa){
-      var r=res[pa.id]; if(!r||r.gl==null)return;
-      var rl=(r.rl||"").trim().toLowerCase(), rv=(r.rv||"").trim().toLowerCase();
-      var gan=r.gl>r.gv?rl:r.gl<r.gv?rv:(r.penWin==="L"?rl:r.penWin==="V"?rv:"");
-      if(gan)ganadoresReales.push(gan);
-    });
-    var equiposProno=[];
-    TODOS.filter(function(pa){return pa.f==="cuartos";}).forEach(function(pa){
-      var pr=pronos[pa.id]; if(!pr)return;
-      var pl=(pr.pl||"").trim().toLowerCase(), pv=(pr.pv||"").trim().toLowerCase();
-      if(pl)equiposProno.push(pl); if(pv)equiposProno.push(pv);
-    });
-    ganadoresReales.forEach(function(eq){
-      if(eq&&equiposProno.indexOf(eq)!==-1)tot+=regS.clasS;
-    });
-  })();
-
-  // ★ CLASIFICADO A FINAL (20pts por cada equipo que pronosticaste en semis y llega a la final)
-  (function(){
-    var regF=PTS.final; if(!regF.clasF)return;
-    var ganadoresReales=[];
-    TODOS.filter(function(pa){return pa.f==="semis";}).forEach(function(pa){
-      var r=res[pa.id]; if(!r||r.gl==null)return;
-      var rl=(r.rl||"").trim().toLowerCase(), rv=(r.rv||"").trim().toLowerCase();
-      var gan=r.gl>r.gv?rl:r.gl<r.gv?rv:(r.penWin==="L"?rl:r.penWin==="V"?rv:"");
-      if(gan)ganadoresReales.push(gan);
-    });
-    var equiposProno=[];
-    TODOS.filter(function(pa){return pa.f==="semis";}).forEach(function(pa){
-      var pr=pronos[pa.id]; if(!pr)return;
-      var pl=(pr.pl||"").trim().toLowerCase(), pv=(pr.pv||"").trim().toLowerCase();
-      if(pl)equiposProno.push(pl); if(pv)equiposProno.push(pv);
-    });
-    ganadoresReales.forEach(function(eq){
-      if(eq&&equiposProno.indexOf(eq)!==-1)tot+=regF.clasF;
-    });
-  })();
-
-  // Honor
+  ["dieciseisavos","octavos","cuartos","semis","final"].forEach(function(fase){tot+=calcClasificadoFase(pronos,fase,res,TODOS);});
+  tot+=calcClasExtraGlobal(pronos);
   var hon=p.honor||{};
-  HONOR_DEF.forEach(function(h){
-    if(hR[h.k]&&hon[h.k]&&matchHonor(hon[h.k],hR[h.k]))tot+=h.pts;
-  });
-
-  // Posición en grupos (2pts/equipo si grupo completo)
+  HONOR_DEF.forEach(function(h){if(hR[h.k]&&hon[h.k]&&matchHonor(hon[h.k],hR[h.k]))tot+=h.pts;});
   GK.forEach(function(g){tot+=ptsGrupoPos(g,pronos);});
-
-  return {pts:tot,exactos:exactos};
+  return{pts:tot,exactos:exactos};
 }
 
-// ============================================================
-// CONTAR PARTIDOS CON RESULTADO REAL
-// ============================================================
 function countResults(){
-  return Object.keys(res).filter(function(k){
-    var r=res[k];return r&&r.gl!=null&&r.gv!=null;
-  }).length;
+  return Object.keys(res).filter(function(k){var r=res[k];return r&&r.gl!=null&&r.gv!=null;}).length;
 }
 
 // ============================================================
-// CARGAR DATOS DESDE SUPABASE
+// CARGAR DATOS
 // ============================================================
 async function load(){
   try{
-    var [rawParts, rawRes, rawCfg] = await Promise.all([
+    var [rawParts,rawRes,rawCfg]=await Promise.all([
       sbfetch("participantes?validado=eq.true&select=id,nombre,pronos,honor&order=nombre"),
       sbfetch("resultados?select=partido_id,gl,gv,local,visitante,pen_win"),
       sbfetch("config?clave=eq.honor_real&select=valor")
     ]);
-
-    // Construir res{}
     res={};
-    rawRes.forEach(function(r){
-      res[r.partido_id]={gl:r.gl,gv:r.gv,rl:r.local||"",rv:r.visitante||"",penWin:r.pen_win||null};
-    });
-
-    // Honor real
+    rawRes.forEach(function(r){res[r.partido_id]={gl:r.gl,gv:r.gv,rl:r.local||"",rv:r.visitante||"",penWin:r.pen_win||null};});
     hR={};
     if(rawCfg&&rawCfg[0]){try{hR=JSON.parse(rawCfg[0].valor)||{};}catch(e){}}
-
-    // Calcular clasificación
     parts=rawParts.map(function(p){
-      var c=calcTotal(p);
-      return Object.assign({},p,{pts:c.pts,exactos:c.exactos});
+      var c=calcTotal(p);return Object.assign({},p,{pts:c.pts,exactos:c.exactos});
     }).sort(function(a,b){return b.pts-a.pts||b.exactos-a.exactos;});
-
-    render();
-    updateLiveText(true);
-
+    render();updateLiveText(true);
   }catch(e){
     var msg=e&&e.message?e.message:"Error desconocido";
-    var esCors=msg.toLowerCase().indexOf("fetch")<0&&msg.toLowerCase().indexOf("http")<0;
     var detalle="";
-    if(msg.indexOf("503")>=0||msg.indexOf("502")>=0){
-      detalle="<br><span style='font-size:11px;opacity:.8'>El proyecto de Supabase está pausado. Entra a <b>supabase.com</b>, abre el proyecto y espera que reactive (~1 min).</span>";
-    } else if(msg.indexOf("401")>=0||msg.indexOf("403")>=0){
-      detalle="<br><span style='font-size:11px;opacity:.8'>Error de permisos en Supabase. El admin debe ejecutar el SQL de permisos (GRANT/RLS).</span>";
-    } else if(msg.indexOf("Failed to fetch")>=0||esCors){
-      detalle="<br><span style='font-size:11px;opacity:.8'>No se pudo conectar. Verifica que el proyecto de Supabase esté activo y que tengas internet.</span>";
-    }
+    if(msg.indexOf("503")>=0||msg.indexOf("502")>=0){detalle="<br><span style='font-size:11px;opacity:.8'>Supabase pausado. Entra a supabase.com y reactiva el proyecto (~1 min).</span>";}
+    else if(msg.indexOf("Failed to fetch")>=0){detalle="<br><span style='font-size:11px;opacity:.8'>Sin conexión. Verifica que Supabase esté activo.</span>";}
     document.getElementById("main").innerHTML='<div class="err-box">⚠️ <b>'+msg+'</b>'+detalle+'<br><br><button onclick="load()" style="margin-top:.25rem;background:#C8102E;color:#fff;border:none;padding:6px 16px;border-radius:6px;cursor:pointer;font-size:12px">↺ Reintentar</button></div>';
     updateLiveText(false);
   }
 }
 
 // ============================================================
-// RENDER TABLA PRINCIPAL
+// RENDER TABLA
 // ============================================================
 function render(){
-  var n=parts.length;
-  var lider=n>0?parts[0].pts:0;
-  var nRes=countResults();
-
+  var n=parts.length;var lider=n>0?parts[0].pts:0;var nRes=countResults();
   document.getElementById("sN").textContent=n;
   document.getElementById("sL").textContent=lider;
   document.getElementById("sP").textContent=nRes+"/104";
-
   var html='<div class="refresh-note" id="rnote">Última actualización: '+new Date().toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit",second:"2-digit"})+'</div>';
-
-  if(!n){
-    html+='<div style="text-align:center;padding:2rem;color:#8899B8;font-size:13px">No hay participantes validados aún.</div>';
-    document.getElementById("main").innerHTML=html;
-    return;
-  }
-
-  var medals=["🥇","🥈","🥉"];
-  var rowClasses=["gold","silver","bronze"];
-
+  if(!n){html+='<div style="text-align:center;padding:2rem;color:#8899B8;font-size:13px">No hay participantes validados aún.</div>';document.getElementById("main").innerHTML=html;return;}
+  var medals=["🥇","🥈","🥉"];var rowClasses=["gold","silver","bronze"];
   html+='<div class="tbl">';
   html+='<div class="tbl-hdr"><div>#</div><div>Participante</div><div class="tc">Exactos</div><div style="text-align:right">Puntos</div></div>';
-
   parts.forEach(function(p,i){
     var cls=rowClasses[i]||"";
     html+='<div class="row '+cls+'" onclick="toggleDet(\''+p.id+'\')">';
@@ -573,46 +429,35 @@ function render(){
     html+='<div class="exactos">'+p.exactos+'</div>';
     html+='<div class="pts-cell"><div class="pts-big">'+p.pts+'</div><div class="pts-lbl">pts</div></div>';
     html+='</div>';
-    // Panel de detalle (oculto por defecto)
     html+='<div class="det" id="det_'+p.id+'">';
     html+=renderDet(p);
     html+='</div>';
   });
-
   html+='</div>';
   document.getElementById("main").innerHTML=html;
 }
 
-// ============================================================
-// TOGGLE DETALLE DE UN PARTICIPANTE
-// ============================================================
 function toggleDet(id){
-  var el=document.getElementById("det_"+id);
-  if(!el)return;
+  var el=document.getElementById("det_"+id);if(!el)return;
   var open=el.classList.contains("open");
-  // Cerrar todos
   document.querySelectorAll(".det.open").forEach(function(d){d.classList.remove("open");});
   if(!open)el.classList.add("open");
 }
 
 // ============================================================
-// RENDER DETALLE: solo aciertos, con tarjeta resumen
+// RENDER DETALLE
 // ============================================================
 function renderDet(p){
   var pronos=p.pronos||{},honor=p.honor||{};
   var GK=Object.keys(GEQ_G);
   var FASE_LABELS={grupos:"Grupos",dieciseisavos:"16avos",octavos:"Octavos",cuartos:"Cuartos",semis:"Semis",tercero:"3er P.",final:"Final"};
-
-  // Calcular totales por fase
   var ptsPorFase={};FASES_ORD.forEach(function(f){ptsPorFase[f]=0;});
   var ptsHonor=0,totalPts=p.pts;
-
   TODOS.forEach(function(pa){
     var pr=pronos[pa.id],real=res[pa.id];
-    var pts=calcP(pr,real,pa.f);
-    if(pts&&pts>0)ptsPorFase[pa.f]=(ptsPorFase[pa.f]||0)+pts;
+    var pts=calcP(pr,real,pa.f);if(pts&&pts>0)ptsPorFase[pa.f]=(ptsPorFase[pa.f]||0)+pts;
   });
-  // clasS global
+  // clasS
   (function(){var regS=PTS.semis;if(!regS.clasS)return;
     var gR=[];TODOS.filter(function(pa){return pa.f==="cuartos";}).forEach(function(pa){
       var r=res[pa.id];if(!r||r.gl==null)return;
@@ -625,7 +470,7 @@ function renderDet(p){
       if(pl)eP.push(pl);if(pv)eP.push(pv);});
     gR.forEach(function(eq){if(eq&&eP.indexOf(eq)!==-1)ptsPorFase["semis"]=(ptsPorFase["semis"]||0)+regS.clasS;});
   })();
-  // clasF global
+  // clasF
   (function(){var regF=PTS.final;if(!regF.clasF)return;
     var gR=[];TODOS.filter(function(pa){return pa.f==="semis";}).forEach(function(pa){
       var r=res[pa.id];if(!r||r.gl==null)return;
@@ -638,274 +483,145 @@ function renderDet(p){
       if(pl)eP.push(pl);if(pv)eP.push(pv);});
     gR.forEach(function(eq){if(eq&&eP.indexOf(eq)!==-1)ptsPorFase["final"]=(ptsPorFase["final"]||0)+regF.clasF;});
   })();
-  // clasificado por fase global
-  ["dieciseisavos","octavos","cuartos","semis","final"].forEach(function(fase){
-    ptsPorFase[fase]=(ptsPorFase[fase]||0)+calcClasificadoFase(pronos,fase,res,TODOS);
-  });
+  ["dieciseisavos","octavos","cuartos","semis","final"].forEach(function(fase){ptsPorFase[fase]=(ptsPorFase[fase]||0)+calcClasificadoFase(pronos,fase,res,TODOS);});
   GK.forEach(function(g){var pp=ptsGrupoPos(g,pronos);if(pp>0)ptsPorFase["grupos"]=(ptsPorFase["grupos"]||0)+pp;});
   HONOR_DEF.forEach(function(h){if(hR[h.k]&&honor[h.k]&&matchHonor(honor[h.k],hR[h.k]))ptsHonor+=h.pts;});
 
-  // Cabecera (clickeable para cerrar)
   var html='<div class="det-hdr" onclick="toggleDet(\''+p.id+'\')"><h3>'+esc(p.nombre)+'</h3>';
-  html+='<div style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;color:#8899B8">'+p.exactos+' exactos</span><span class="det-pts">'+p.pts+' pts</span><span style="font-size:18px">\u25b2</span></div></div>';
+  html+='<div style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;color:#8899B8">'+p.exactos+' exactos</span><span class="det-pts">'+p.pts+' pts</span><span style="font-size:18px">▲</span></div></div>';
   html+='<div class="det-body">';
-
-  // Tarjeta resumen
-  html+='<div class="res-card">';
-  html+='<div class="total">'+totalPts+'<span style="font-size:14px;font-weight:400;opacity:.8;margin-left:5px">pts</span></div>';
-  html+='<div class="sub">'+p.exactos+' resultado'+(p.exactos!==1?'s':'')+' exacto'+(p.exactos!==1?'s':'')+'</div>';
+  html+='<div class="res-card"><div class="total">'+totalPts+'<span style="font-size:14px;font-weight:400;opacity:.8;margin-left:5px">pts</span></div>';
+  html+='<div class="sub">'+p.exactos+' resultado'+(p.exactos!==1?"s":"")+" exacto"+(p.exactos!==1?"s":"")+'</div>';
   html+='<div class="chips">';
-  FASES_ORD.forEach(function(f){
-    var pp=ptsPorFase[f]||0;
-    if(pp>0)html+='<div class="chip"><b>'+pp+'</b> '+FASE_LABELS[f]+'</div>';
-  });
+  FASES_ORD.forEach(function(f){var pp=ptsPorFase[f]||0;if(pp>0)html+='<div class="chip"><b>'+pp+'</b> '+FASE_LABELS[f]+'</div>';});
   if(ptsHonor>0)html+='<div class="chip"><b>'+ptsHonor+'</b> Honor</div>';
   html+='</div></div>';
 
-  // Detalle por fase — solo aciertos
   FASES_ORD.forEach(function(fase){
-    var pats=TODOS.filter(function(pa){return pa.f===fase;});
-    if(!pats.length)return;
-    var reg=PTS[fase]||PTS.grupos;
-    var fpts=ptsPorFase[fase]||0;
-    if(!fpts)return;
-
+    var pats=TODOS.filter(function(pa){return pa.f===fase;});if(!pats.length)return;
+    var reg=PTS[fase]||PTS.grupos;var fpts=ptsPorFase[fase]||0;if(!fpts)return;
     var esElim=(fase!=="grupos");
-
-    // ── GRUPOS ──────────────────────────────────────────────────────────────
     if(!esElim){
-      var rows="";
-      var gm={};pats.forEach(function(pa){if(!gm[pa.g])gm[pa.g]=[];gm[pa.g].push(pa);});
+      var rows="";var gm={};pats.forEach(function(pa){if(!gm[pa.g])gm[pa.g]=[];gm[pa.g].push(pa);});
       Object.keys(gm).forEach(function(g){
         var gRows="";
         gm[g].forEach(function(pa){
-          var pr=pronos[pa.id],real=res[pa.id];
-          var pts=calcP(pr,real,fase);
-          if(!pts||pts<=0)return;
-          var prS=(pr&&pr.gl!=null)?pr.gl+"\u2013"+pr.gv:"\u2013";
-          var reS=(real&&real.gl!=null)?real.gl+"\u2013"+real.gv:null;
+          var pr=pronos[pa.id],real=res[pa.id];var pts=calcP(pr,real,fase);if(!pts||pts<=0)return;
+          var prS=(pr&&pr.gl!=null)?pr.gl+"–"+pr.gv:"–";var reS=(real&&real.gl!=null)?real.gl+"–"+real.gv:null;
           var esExacto=(pr&&real&&pr.gl===real.gl&&pr.gv===real.gv);
-          var lNom=real&&real.rl?real.rl:pa.l;
-          var vNom=real&&real.rv?real.rv:pa.v;
+          var lNom=real&&real.rl?real.rl:pa.l;var vNom=real&&real.rv?real.rv:pa.v;
           var motivo=esExacto?" exacto":" signo";
-          gRows+='<div class="hit-row">';
-          gRows+='<div class="hit-l">'+esc(lNom)+'</div>';
+          gRows+='<div class="hit-row"><div class="hit-l">'+esc(lNom)+'</div>';
           gRows+='<div class="hit-s"><div class="hit-prono">'+prS+'</div>'+(reS?'<div class="hit-real">real: '+reS+'</div>':'')+'</div>';
           gRows+='<div class="hit-v">'+esc(vNom)+'</div>';
-          gRows+='<span class="hit-badge '+(esExacto?"hb-ex":"hb-sg")+'">+'+pts+'pts'+motivo+'</span>';
-          gRows+='</div>';
+          gRows+='<span class="hit-badge '+(esExacto?"hb-ex":"hb-sg")+'">+'+pts+'pts'+motivo+'</span></div>';
         });
-        // Posición exacta en grupo
         var ppg=ptsGrupoPos(g,pronos);
         if(ppg>0){
           var rr=clasGrupoReal(g),pp2=clasGrupoProno(g,pronos);
-          var acs=[];for(var ii=0;ii<4;ii++){if(rr[ii]===pp2[ii])acs.push((ii+1)+"\u00b0 "+rr[ii]);}
-          gRows+='<div class="pos-row">\u2605 +'+ppg+'pts posición Grupo '+g+(acs.length?" \u2014 "+acs.join(", "):"")+' </div>';
+          var acs=[];for(var ii=0;ii<4;ii++){if(rr[ii]===pp2[ii])acs.push((ii+1)+"° "+rr[ii]);}
+          gRows+='<div class="pos-row">★ +'+ppg+'pts posición Grupo '+g+(acs.length?" — "+acs.join(", "):"")+' </div>';
         }
         if(gRows)rows+=gRows;
       });
-      if(rows){
-        html+='<div class="fase-hdr"><strong>'+FASE_LBL[fase]+'</strong><span>'+fpts+' pts</span></div>';
-        html+=rows;
-      }
+      if(rows){html+='<div class="fase-hdr"><strong>'+FASE_LBL[fase]+'</strong><span>'+fpts+' pts</span></div>';html+=rows;}
       return;
     }
-
-    // ── ELIMINATORIAS: desglose por categorías ───────────────────────────────
-    // Calcular equipos reales en esta fase (para clasificado global)
-    var equiposReales=[];
-    pats.forEach(function(pa){var r=res[pa.id];if(r){if(r.rl)equiposReales.push(r.rl.trim().toLowerCase());if(r.rv)equiposReales.push(r.rv.trim().toLowerCase());}});
-    var equiposProno=[];
-    pats.forEach(function(pa){var pr=pronos[pa.id];if(pr){if(pr.pl)equiposProno.push(pr.pl.trim().toLowerCase());if(pr.pv)equiposProno.push(pr.pv.trim().toLowerCase());}});
-
-    // Clasificado global: equipos pronosticados que aparecen en la fase
-    var clasRows="";
-    var clasTotal=0;
+    // Eliminatorias
+    var equiposReales=[];pats.forEach(function(pa){var r=res[pa.id];if(r){if(r.rl)equiposReales.push(r.rl.trim().toLowerCase());if(r.rv)equiposReales.push(r.rv.trim().toLowerCase());}});
+    var equiposProno=[];pats.forEach(function(pa){var pr=pronos[pa.id];if(pr){if(pr.pl)equiposProno.push(pr.pl.trim().toLowerCase());if(pr.pv)equiposProno.push(pr.pv.trim().toLowerCase());}});
+    var clasRows="";var clasTotal=0;
     equiposReales.forEach(function(eq){
-      if(eq&&equiposProno.indexOf(eq)!==-1){
-        clasTotal+=reg.c;
-        clasRows+='<div class="cat-item"><span class="cat-eq">'+esc(eq.charAt(0).toUpperCase()+eq.slice(1))+'</span><span class="cat-pts hb-sg">+'+reg.c+' pts</span></div>';
-      }
+      if(eq&&equiposProno.indexOf(eq)!==-1){clasTotal+=reg.c;clasRows+='<div class="cat-item"><span class="cat-eq">'+esc(eq.charAt(0).toUpperCase()+eq.slice(1))+'</span><span class="cat-pts hb-sg">+'+reg.c+' pts</span></div>';}
     });
-
-    // clasS / clasF (solo en semis y final respectivamente)
-    var clasExtraRows="";
-    var clasExtraTotal=0;
+    var clasExtraRows="";var clasExtraTotal=0;
     if(fase==="semis"&&reg.clasS){
       var ganadoresC=[];TODOS.filter(function(pa){return pa.f==="cuartos";}).forEach(function(pa){
         var r=res[pa.id];if(!r||r.gl==null)return;
         var rl=(r.rl||"").trim().toLowerCase(),rv=(r.rv||"").trim().toLowerCase();
-        var g2=r.gl>r.gv?rl:r.gl<r.gv?rv:(r.penWin==="L"?rl:r.penWin==="V"?rv:"");
-        if(g2)ganadoresC.push(g2);});
+        var g2=r.gl>r.gv?rl:r.gl<r.gv?rv:(r.penWin==="L"?rl:r.penWin==="V"?rv:"");if(g2)ganadoresC.push(g2);});
       var pronoC=[];TODOS.filter(function(pa){return pa.f==="cuartos";}).forEach(function(pa){
         var pr=pronos[pa.id];if(!pr)return;
         var pl=(pr.pl||"").trim().toLowerCase(),pv=(pr.pv||"").trim().toLowerCase();
         if(pl)pronoC.push(pl);if(pv)pronoC.push(pv);});
       ganadoresC.forEach(function(eq){
-        if(eq&&pronoC.indexOf(eq)!==-1){
-          clasExtraTotal+=reg.clasS;
-          clasExtraRows+='<div class="cat-item"><span class="cat-eq">'+esc(eq.charAt(0).toUpperCase()+eq.slice(1))+'</span><span class="cat-pts hb-sg">+'+reg.clasS+' pts</span></div>';
-        }});
+        if(eq&&pronoC.indexOf(eq)!==-1){clasExtraTotal+=reg.clasS;clasExtraRows+='<div class="cat-item"><span class="cat-eq">'+esc(eq.charAt(0).toUpperCase()+eq.slice(1))+'</span><span class="cat-pts hb-sg">+'+reg.clasS+' pts</span></div>';}
+      });
     }
     if(fase==="final"&&reg.clasF){
       var ganadoresS=[];TODOS.filter(function(pa){return pa.f==="semis";}).forEach(function(pa){
         var r=res[pa.id];if(!r||r.gl==null)return;
         var rl=(r.rl||"").trim().toLowerCase(),rv=(r.rv||"").trim().toLowerCase();
-        var g2=r.gl>r.gv?rl:r.gl<r.gv?rv:(r.penWin==="L"?rl:r.penWin==="V"?rv:"");
-        if(g2)ganadoresS.push(g2);});
+        var g2=r.gl>r.gv?rl:r.gl<r.gv?rv:(r.penWin==="L"?rl:r.penWin==="V"?rv:"");if(g2)ganadoresS.push(g2);});
       var pronoS=[];TODOS.filter(function(pa){return pa.f==="semis";}).forEach(function(pa){
         var pr=pronos[pa.id];if(!pr)return;
         var pl=(pr.pl||"").trim().toLowerCase(),pv=(pr.pv||"").trim().toLowerCase();
         if(pl)pronoS.push(pl);if(pv)pronoS.push(pv);});
       ganadoresS.forEach(function(eq){
-        if(eq&&pronoS.indexOf(eq)!==-1){
-          clasExtraTotal+=reg.clasF;
-          clasExtraRows+='<div class="cat-item"><span class="cat-eq">'+esc(eq.charAt(0).toUpperCase()+eq.slice(1))+'</span><span class="cat-pts hb-sg">+'+reg.clasF+' pts</span></div>';
-        }});
+        if(eq&&pronoS.indexOf(eq)!==-1){clasExtraTotal+=reg.clasF;clasExtraRows+='<div class="cat-item"><span class="cat-eq">'+esc(eq.charAt(0).toUpperCase()+eq.slice(1))+'</span><span class="cat-pts hb-sg">+'+reg.clasF+' pts</span></div>';}
+      });
     }
-
-    // Cruce exacto, 1X2, Exacto — partido a partido
-    var cruceRows="",signoRows="",exactoRows="";
-    var cruceTotal=0,signoTotal=0,exactoTotal=0;
+    var cruceRows="",signoRows="",exactoRows="";var cruceTotal=0,signoTotal=0,exactoTotal=0;
     pats.forEach(function(pa){
       var pr=pronos[pa.id],real=res[pa.id];
       if(!real||real.gl==null||!pr||pr.gl==null)return;
       var rl=(real.rl||"").trim().toLowerCase(),rv=(real.rv||"").trim().toLowerCase();
       var pl=(pr.pl||"").trim().toLowerCase(),pv=(pr.pv||"").trim().toLowerCase();
-      var tenemosEq=(rl!==""&&rv!=="");var tenemosP=(pl!==""&&pv!=="");
+      var tenemosEq=(rl!==""&&rv!==""),tenemosP=(pl!==""&&pv!=="");
       var cruceEx=tenemosEq&&tenemosP&&(rl===pl&&rv===pv);
       var lNom=real.rl||pa.l,vNom=real.rv||pa.v;
-      var marcR=real.gl+"\u2013"+real.gv;
-      var marcP=pr.gl+"\u2013"+pr.gv;
-      var sR=real.gl>real.gv?"L":real.gl<real.gv?"V":"X";
-      var sP=pr.gl>pr.gv?"L":pr.gl<pr.gv?"V":"X";
+      var marcR=real.gl+"–"+real.gv,marcP=pr.gl+"–"+pr.gv;
+      var sR=real.gl>real.gv?"L":real.gl<real.gv?"V":"X",sP=pr.gl>pr.gv?"L":pr.gl<pr.gv?"V":"X";
       var esExacto=(pr.gl===real.gl&&pr.gv===real.gv);
       if(cruceEx){
-        // Cruce exacto
-        cruceTotal+=reg.x;
-        cruceRows+='<div class="cat-item"><span class="cat-eq">'+esc(lNom)+' vs '+esc(vNom)+'</span><span class="cat-pts hb-cx">+'+reg.x+' pts</span></div>';
-        // 1X2
+        cruceTotal+=reg.x;cruceRows+='<div class="cat-item"><span class="cat-eq">'+esc(lNom)+' vs '+esc(vNom)+'</span><span class="cat-pts hb-cx">+'+reg.x+' pts</span></div>';
         if(sR===sP){signoTotal+=reg.s;signoRows+='<div class="cat-item"><span class="cat-eq">'+esc(lNom)+' vs '+esc(vNom)+'<span class="cat-marcador"> '+marcP+' / real: '+marcR+'</span></span><span class="cat-pts hb-sg">+'+reg.s+' pts</span></div>';}
-        // Exacto
         if(esExacto){exactoTotal+=reg.e;exactoRows+='<div class="cat-item"><span class="cat-eq">'+esc(lNom)+' vs '+esc(vNom)+'<span class="cat-marcador"> '+marcP+'</span></span><span class="cat-pts hb-ex">+'+reg.e+' pts</span></div>';}
-      } else if(!tenemosEq){
-        // Sin nombres reales aún: evaluar signo/exacto normalmente
+      }else if(!tenemosEq){
         if(sR===sP){signoTotal+=reg.s;signoRows+='<div class="cat-item"><span class="cat-eq">'+esc(pa.l)+' vs '+esc(pa.v)+'<span class="cat-marcador"> '+marcP+' / real: '+marcR+'</span></span><span class="cat-pts hb-sg">+'+reg.s+' pts</span></div>';}
         if(esExacto){exactoTotal+=reg.e;exactoRows+='<div class="cat-item"><span class="cat-eq">'+esc(pa.l)+' vs '+esc(pa.v)+'<span class="cat-marcador"> '+marcP+'</span></span><span class="cat-pts hb-ex">+'+reg.e+' pts</span></div>';}
       }
     });
-
-    // Construir sección de fase
     var faseContenido="";
-
-    // Bloque Clasificado
-    if(clasTotal>0){
-      faseContenido+='<div class="cat-bloque">';
-      faseContenido+='<div class="cat-titulo"><span>🎯 Clasificado</span><span class="cat-subtotal">+'+clasTotal+' pts</span></div>';
-      faseContenido+=clasRows;
-      faseContenido+='</div>';
-    }
-    // Bloque Clasificado extra (→ Semis / → Final)
-    if(clasExtraTotal>0){
-      var lblExtra=(fase==="semis")?"⭐ Clasificado → Semis":"⭐ Clasificado → Final";
-      faseContenido+='<div class="cat-bloque">';
-      faseContenido+='<div class="cat-titulo"><span>'+lblExtra+'</span><span class="cat-subtotal">+'+clasExtraTotal+' pts</span></div>';
-      faseContenido+=clasExtraRows;
-      faseContenido+='</div>';
-    }
-    // Bloque Cruce Exacto
-    if(cruceTotal>0){
-      faseContenido+='<div class="cat-bloque">';
-      faseContenido+='<div class="cat-titulo"><span>🔁 Cruce Exacto</span><span class="cat-subtotal">+'+cruceTotal+' pts</span></div>';
-      faseContenido+=cruceRows;
-      faseContenido+='</div>';
-    }
-    // Bloque 1X2
-    if(signoTotal>0){
-      faseContenido+='<div class="cat-bloque">';
-      faseContenido+='<div class="cat-titulo"><span>📊 1X2</span><span class="cat-subtotal">+'+signoTotal+' pts</span></div>';
-      faseContenido+=signoRows;
-      faseContenido+='</div>';
-    }
-    // Bloque Exacto
-    if(exactoTotal>0){
-      faseContenido+='<div class="cat-bloque">';
-      faseContenido+='<div class="cat-titulo"><span>🎯 Marcador Exacto</span><span class="cat-subtotal">+'+exactoTotal+' pts</span></div>';
-      faseContenido+=exactoRows;
-      faseContenido+='</div>';
-    }
-
-    if(faseContenido){
-      html+='<div class="fase-hdr"><strong>'+FASE_LBL[fase]+'</strong><span>'+fpts+' pts</span></div>';
-      html+=faseContenido;
-    }
+    if(clasTotal>0){faseContenido+='<div class="cat-bloque"><div class="cat-titulo"><span>🎯 Clasificado</span><span class="cat-subtotal">+'+clasTotal+' pts</span></div>'+clasRows+'</div>';}
+    if(clasExtraTotal>0){var lblExtra=(fase==="semis")?"⭐ Clasificado → Semis":"⭐ Clasificado → Final";faseContenido+='<div class="cat-bloque"><div class="cat-titulo"><span>'+lblExtra+'</span><span class="cat-subtotal">+'+clasExtraTotal+' pts</span></div>'+clasExtraRows+'</div>';}
+    if(cruceTotal>0){faseContenido+='<div class="cat-bloque"><div class="cat-titulo"><span>🔁 Cruce Exacto</span><span class="cat-subtotal">+'+cruceTotal+' pts</span></div>'+cruceRows+'</div>';}
+    if(signoTotal>0){faseContenido+='<div class="cat-bloque"><div class="cat-titulo"><span>📊 1X2</span><span class="cat-subtotal">+'+signoTotal+' pts</span></div>'+signoRows+'</div>';}
+    if(exactoTotal>0){faseContenido+='<div class="cat-bloque"><div class="cat-titulo"><span>🎯 Marcador Exacto</span><span class="cat-subtotal">+'+exactoTotal+' pts</span></div>'+exactoRows+'</div>';}
+    if(faseContenido){html+='<div class="fase-hdr"><strong>'+FASE_LBL[fase]+'</strong><span>'+fpts+' pts</span></div>';html+=faseContenido;}
   });
 
-  // Cuadro de Honor: aciertos primero, luego pendientes/fallados
-  html+='<div class="fase-hdr" style="margin-top:10px"><strong>\ud83c\udfc5 Cuadro de Honor</strong><span>'+ptsHonor+' pts</span></div>';
+  html+='<div class="fase-hdr" style="margin-top:10px"><strong>🏅 Cuadro de Honor</strong><span>'+ptsHonor+' pts</span></div>';
   html+='<div class="hon-grid">';
   HONOR_DEF.forEach(function(h){
-    var v=honor[h.k]||"";
-    var rVal=hR[h.k]||"";
+    var v=honor[h.k]||"",rVal=hR[h.k]||"";
     var match=rVal&&v&&matchHonor(v,rVal);
     var cls=match?"ok":(!rVal?"pend":"nd");
-    var prefix=match?"\u2713 ":"";
-    var display=v||"\u2014";
-    html+='<div class="hon-item">';
-    html+='<div class="hl">'+esc(h.l)+' +'+h.pts+'pts</div>';
-    html+='<div class="hv '+cls+'">'+prefix+esc(display)+'</div>';
-    html+='</div>';
+    var prefix=match?"✓ ":"";var display=v||"—";
+    html+='<div class="hon-item"><div class="hl">'+esc(h.l)+' +'+h.pts+'pts</div><div class="hv '+cls+'">'+prefix+esc(display)+'</div></div>';
   });
   html+='</div>';
-
   html+='<div style="display:flex;gap:8px;margin-top:8px">';
-  html+='<button onclick="descargarPDF(\''+p.id+'\')" style="flex:1;background:#0A1628;color:#fff;border:none;padding:8px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer" id="btnpdf_'+p.id+'">&#11015; Descargar PDF</button>';
-  html+='<button class="close-btn" style="flex:1;margin-top:0" onclick="toggleDet(\''+p.id+'\')">\u25b2 Cerrar</button>';
-  html+='</div>';
-  html+='</div>';
+  html+='<button onclick="descargarPDF(\''+p.id+'\')" style="flex:1;background:#0A1628;color:#fff;border:none;padding:8px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer" id="btnpdf_'+p.id+'">⬇ Descargar PDF</button>';
+  html+='<button class="close-btn" style="flex:1;margin-top:0" onclick="toggleDet(\''+p.id+'\')">▲ Cerrar</button>';
+  html+='</div></div>';
   return html;
 }
 
-// ============================================================
-// UTILIDADES
-// ============================================================
-function esc(s){
-  if(!s)return"";
-  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-}
+function esc(s){if(!s)return"";return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function updateLiveText(ok){var el=document.getElementById("liveTxt");if(el)el.textContent=ok?"Actualizado":"Error al cargar";}
 
-function updateLiveText(ok){
-  var el=document.getElementById("liveTxt");
-  if(el)el.textContent=ok?"Actualizado":"Error al cargar";
-}
-
-// ============================================================
-// COUNTDOWN Y AUTO-REFRESH
-// ============================================================
 function startCountdown(){
   if(countTimer)clearInterval(countTimer);
-  countdown=60;
-  updateCountdownUI();
-  countTimer=setInterval(function(){
-    countdown--;
-    if(countdown<=0){countdown=60;load();}
-    updateCountdownUI();
-  },1000);
+  countdown=60;updateCountdownUI();
+  countTimer=setInterval(function(){countdown--;if(countdown<=0){countdown=60;load();}updateCountdownUI();},1000);
 }
+function updateCountdownUI(){var el=document.getElementById("countdown");if(el)el.textContent="⟳ en "+countdown+"s";}
 
-function updateCountdownUI(){
-  var el=document.getElementById("countdown");
-  if(el)el.textContent="⟳ en "+countdown+"s";
-}
+load();startCountdown();
 
 // ============================================================
-// ARRANQUE
-// ============================================================
-load();
-startCountdown();
-
-// ============================================================
-// PDF DESDE CLASIFICACIÓN
+// PDF — FIX: construirPDFClas ahora incluye clasS + clasF globales
 // ============================================================
 function descargarPDF(pid){
   var btn=document.getElementById("btnpdf_"+pid);
@@ -915,7 +631,7 @@ function descargarPDF(pid){
     s.src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
     s.onload=function(){construirPDFClas(pid);};
     document.head.appendChild(s);
-  } else { construirPDFClas(pid); }
+  }else{construirPDFClas(pid);}
 }
 
 function limpiarN(n){
@@ -944,150 +660,122 @@ function construirPDFClas(pid){
     var fechaStr=now.toLocaleDateString("es-CO",{day:"2-digit",month:"long",year:"numeric"})+" · "+now.toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit"});
     var refCode="PC2026-CLS-"+now.getTime().toString(36).toUpperCase();
     var nomPart=limpiarN(p.nombre||"Participante");
-
     function newPage(){doc.addPage();y=0;}
     function checkY(n){if(y+n>275)newPage();}
     function banda(color,h){doc.setFillColor(color[0],color[1],color[2]);doc.rect(0,y,W,h,"F");}
     function txt(texto,x,fy,size,bold,color){
       doc.setFontSize(size);doc.setFont("helvetica",bold?"bold":"normal");
-      doc.setTextColor(color?color[0]:30,color?color[1]:30,color?color[2]:30);
-      doc.text(texto,x,fy);
+      doc.setTextColor(color?color[0]:30,color?color[1]:30,color?color[2]:30);doc.text(texto,x,fy);
     }
 
-    // ENCABEZADO
     banda([10,22,40],22);
     txt("POLLA COMPIS · MUNDIAL 2026",mg,10,13,true,[255,255,255]);
     txt("USA · CANADA · MEXICO  |  11 Jun - 19 Jul 2026",mg,16,8,false,[200,216,240]);
-    y=22;
-    banda([244,246,250],14);
-    txt("Participante:",mg,y+5,8,false,[100,100,100]);
-    txt(nomPart,mg+22,y+5,10,true,[10,22,40]);
+    y=22;banda([244,246,250],14);
+    txt("Participante:",mg,y+5,8,false,[100,100,100]);txt(nomPart,mg+22,y+5,10,true,[10,22,40]);
     txt("Ref: "+refCode,W-mg,y+5,7,false,[150,150,150]);
-    doc.setFontSize(7);doc.setTextColor(150,150,150);
-    doc.text(limpiarN(fechaStr),W-mg,y+10,{align:"right"});
-    y+=14;
-    doc.setDrawColor(220,220,220);doc.setLineWidth(0.3);
-    doc.line(mg,y+2,W-mg,y+2);y+=6;
+    doc.setFontSize(7);doc.setTextColor(150,150,150);doc.text(limpiarN(fechaStr),W-mg,y+10,{align:"right"});
+    y+=14;doc.setDrawColor(220,220,220);doc.setLineWidth(0.3);doc.line(mg,y+2,W-mg,y+2);y+=6;
+
+    // CLASIFICACIÓN GENERAL — FIX: usa calcTotal que incluye clasS/clasF
+    checkY(10);banda([200,16,46],7);
+    txt("CLASIFICACION GENERAL",mg,y+5,9,true,[255,255,255]);y+=7;y+=1;
+    var GK2=Object.keys(GEQ_G);
+    // ★ FIX: calcular clas usando calcTotal (que ya incluye clasS + clasF globales)
+    var clas=parts.map(function(px){
+      var c=calcTotal(px);
+      return{nombre:px.nombre,pts:c.pts,exactos:c.exactos,validado:px.validado};
+    }).sort(function(a,b){return b.pts-a.pts||b.exactos-a.exactos;});
+
+    clas.forEach(function(px,i){
+      checkY(7);
+      doc.setFillColor(i%2===0?255:248,i%2===0?255:249,i%2===0?255:250);doc.rect(mg,y,W-mg*2,6.5,"F");
+      doc.setFontSize(8);doc.setFont("helvetica","normal");doc.setTextColor(60,60,60);doc.text(String(i+1)+".",mg+1,y+4.5);
+      doc.setFont("helvetica",i<3?"bold":"normal");doc.setTextColor(10,22,40);doc.text(limpiarN(px.nombre),mg+8,y+4.5);
+      doc.setFont("helvetica","bold");doc.setTextColor(i===0?200:10,i===0?16:22,i===0?46:40);
+      doc.text(String(px.pts)+" pts",W-mg-2,y+4.5,{align:"right"});
+      doc.setFont("helvetica","normal");doc.setFontSize(6.5);doc.setTextColor(120,120,120);
+      doc.text(px.exactos+" ex"+(px.validado?"  val":"  pend"),W-mg-22,y+4.5);y+=6.5;
+    });y+=4;
 
     // GRUPOS
-    checkY(10);banda([200,16,46],7);
-    txt("FASE DE GRUPOS",mg,y+5,9,true,[255,255,255]);y+=9;
+    checkY(10);banda([30,42,70],7);txt("FASE DE GRUPOS",mg,y+5,9,true,[255,255,255]);y+=7;y+=1;
+    var gruposParts={A:[1,2,25,28,53,54],B:[3,5,26,27,51,52],C:[6,7,29,30,49,50],D:[4,8,31,32,59,60],E:[9,10,33,34,55,56],F:[11,12,35,36,57,58],G:[13,14,38,40,63,64],H:[15,16,37,39,65,66],I:[17,18,41,42,61,62],J:[19,20,43,44,69,70],K:[21,24,45,48,71,72],L:[22,23,46,47,67,68]};
+    var gruposNames_p=TODOS.filter(function(pa){return pa.f==="grupos";});
     GK_PDF.forEach(function(g){
-      checkY(40);
-      banda([10,22,40],7);
-      txt("GRUPO "+g+" · "+(GEQ_G[g]||[]).join("  ·  "),mg,y+5,8,true,[255,255,255]);y+=7;
-      var pats=TODOS.filter(function(pa){return pa.f==="grupos"&&pa.g===g;});
-      pats.forEach(function(pa,idx){
-        checkY(8);
+      checkY(12);
+      doc.setFillColor(10,22,40);doc.rect(mg,y,W-mg*2,6,"F");
+      doc.setFontSize(8);doc.setFont("helvetica","bold");doc.setTextColor(255,255,255);
+      doc.text("GRUPO "+g+" · "+(GEQ_G[g]||[]).join("  ·  "),mg+2,y+4);y+=6;
+      gruposNames_p.filter(function(pa){return pa.g===g;}).forEach(function(pa,idx){
+        checkY(6);
         var pr=pronos[pa.id];
-        var score=(pr&&pr.gl!=null&&pr.gv!=null)?(pr.gl+"-"+pr.gv):"-";
+        var score=(pr&&pr.gl!=null&&pr.gv!=null)?(pr.gl+"-"+pr.gv):"  -  ";
+        var real=res[pa.id];var realScore=real?(real.gl+"-"+real.gv):"";
         var bg=idx%2===0?[255,255,255]:[248,249,250];
-        doc.setFillColor(bg[0],bg[1],bg[2]);doc.rect(mg,y,W-mg*2,6,"F");
-        doc.setFontSize(8);doc.setFont("helvetica","normal");doc.setTextColor(30,30,30);
-        doc.text(limpiarN(pa.l),mg+2,y+4);
-        doc.setFont("helvetica","bold");doc.setTextColor(200,16,46);
-        doc.text(score,W/2,y+4,{align:"center"});
-        doc.setFont("helvetica","normal");doc.setTextColor(30,30,30);
-        doc.text(limpiarN(pa.v),W-mg-2,y+4,{align:"right"});
-        var real=res[pa.id];
-        if(real&&real.gl!=null){
-          doc.setFontSize(6);doc.setTextColor(150,150,150);
-          doc.text("real:"+real.gl+"-"+real.gv,W/2+14,y+4);
-        }
-        y+=6;
-      });
-      y+=2;
+        doc.setFillColor(bg[0],bg[1],bg[2]);doc.rect(mg,y,W-mg*2,5.5,"F");
+        doc.setFontSize(7.5);doc.setFont("helvetica","normal");doc.setTextColor(30,30,30);
+        doc.text(limpiarN(pa.l),mg+2,y+3.8);
+        doc.setFont("helvetica","bold");doc.setTextColor(200,16,46);doc.text(score,W/2,y+3.8,{align:"center"});
+        doc.setFont("helvetica","normal");doc.setTextColor(30,30,30);doc.text(limpiarN(pa.v),W-mg-2,y+3.8,{align:"right"});
+        if(realScore){doc.setFontSize(6);doc.setTextColor(100,100,100);doc.text("real:"+realScore,mg+2,y+3.8+2.2);}
+        y+=5.5;
+      });y+=2;
     });
 
     // ELIMINATORIAS
-    var fasesElim=[
-      {lbl:"DIECISEISAVOS DE FINAL",f:"dieciseisavos"},
-      {lbl:"OCTAVOS DE FINAL",f:"octavos"},
-      {lbl:"CUARTOS DE FINAL",f:"cuartos"},
-      {lbl:"SEMIFINALES",f:"semis"},
-      {lbl:"3ER Y 4TO PUESTO",f:"tercero"},
-      {lbl:"GRAN FINAL",f:"final"}
+    var FR_PDF=[
+      {lbl:"Dieciseisavos",f:"dieciseisavos"},{lbl:"Octavos",f:"octavos"},
+      {lbl:"Cuartos",f:"cuartos"},{lbl:"Semifinales",f:"semis"},
+      {lbl:"3er y 4to Puesto",f:"tercero"},{lbl:"Final",f:"final"}
     ];
-    fasesElim.forEach(function(fase){
-      var pats=TODOS.filter(function(pa){return pa.f===fase.f;});
-      if(!pats.length)return;
-      checkY(12);banda([200,16,46],7);
-      txt(fase.lbl,mg,y+5,9,true,[255,255,255]);y+=9;
-      pats.forEach(function(pa,idx){
-        checkY(10);
-        var pr=pronos[pa.id];
-        var nomL=limpiarN(pr&&pr.pl?pr.pl:pa.l);
-        var nomV=limpiarN(pr&&pr.pv?pr.pv:pa.v);
-        var score=(pr&&pr.gl!=null&&pr.gv!=null)?(pr.gl+"-"+pr.gv):"-";
-        var bg=idx%2===0?[255,255,255]:[248,249,250];
-        doc.setFillColor(bg[0],bg[1],bg[2]);doc.rect(mg,y,W-mg*2,6,"F");
-        doc.setFontSize(8);doc.setFont("helvetica","normal");doc.setTextColor(30,30,30);
-        var nLt=nomL.length>22?nomL.substring(0,20)+"…":nomL;
-        var nVt=nomV.length>22?nomV.substring(0,20)+"…":nomV;
-        doc.text(nLt,mg+2,y+4);
-        doc.setFont("helvetica","bold");doc.setTextColor(200,16,46);
-        doc.text(score,W/2,y+4,{align:"center"});
-        doc.setFont("helvetica","normal");doc.setTextColor(30,30,30);
-        doc.text(nVt,W-mg-2,y+4,{align:"right"});
-        y+=6;
-        if(pr&&pr.gl!=null&&pr.gv!=null&&parseInt(pr.gl)===parseInt(pr.gv)&&pr.penWin){
-          checkY(5);
-          doc.setFillColor(255,248,225);doc.rect(mg,y,W-mg*2,5,"F");
-          doc.setFontSize(7);doc.setTextColor(230,81,0);
-          doc.text("Penales — clasifica: "+limpiarN(pr.penWin==="L"?nomL:nomV),mg+2,y+3.5);
-          y+=5;
-        }
+    FR_PDF.forEach(function(fr){
+      var partidos=TODOS.filter(function(pa){return pa.f===fr.f;});
+      var conRes=partidos.filter(function(pa){var r=res[pa.id];return r&&r.gl!=null;});
+      if(!conRes.length)return;
+      checkY(10);banda([30,42,70],7);
+      doc.setFontSize(9);doc.setFont("helvetica","bold");doc.setTextColor(255,255,255);
+      doc.text(fr.lbl.toUpperCase()+" ("+conRes.length+"/"+partidos.length+")",mg,y+5);y+=7;y+=1;
+      conRes.forEach(function(pa,idx){
+        checkY(7);var r=res[pa.id];
+        doc.setFillColor(idx%2===0?255:248,idx%2===0?255:249,idx%2===0?255:250);doc.rect(mg,y,W-mg*2,6,"F");
+        var nL=limpiarN(r.rl||pa.l),nV=limpiarN(r.rv||pa.v);
+        doc.setFontSize(7.5);doc.setFont("helvetica","normal");doc.setTextColor(30,30,30);
+        doc.text(nL,mg+2,y+4);doc.setFont("helvetica","bold");doc.setTextColor(200,16,46);
+        doc.text(r.gl+"-"+r.gv,W/2,y+4,{align:"center"});doc.setFont("helvetica","normal");doc.setTextColor(30,30,30);
+        doc.text(nV,W-mg-2,y+4,{align:"right"});
+        if(r.penWin){doc.setFontSize(6);doc.setTextColor(230,81,0);doc.text("pen: "+limpiarN(r.penWin==="L"?nL:nV),W/2,y+4+2.3,{align:"center"});y+=9;}
+        else{y+=6;}
+      });y+=3;
+    });
+
+    // HONOR REAL
+    var hayHonor=HONOR_DEF.some(function(h){return hR[h.k];});
+    if(hayHonor){
+      checkY(10);banda([200,16,46],7);
+      doc.setFontSize(9);doc.setFont("helvetica","bold");doc.setTextColor(255,255,255);
+      doc.text("CUADRO DE HONOR REAL",mg,y+5);y+=7;y+=1;
+      HONOR_DEF.forEach(function(h,i){
+        var val=hR[h.k];if(!val)return;checkY(6.5);
+        doc.setFillColor(i%2===0?255:248,i%2===0?255:249,i%2===0?255:250);doc.rect(mg,y,W-mg*2,6,"F");
+        doc.setFontSize(8);doc.setFont("helvetica","normal");doc.setTextColor(80,80,80);
+        doc.text(h.l.replace(/[^\u0000-\u007F]/g,"").trim()+" ("+h.pts+"pts)",mg+2,y+4);
+        doc.setFont("helvetica","bold");doc.setTextColor(10,22,40);doc.text(limpiarN(val),W-mg-2,y+4,{align:"right"});y+=6;
       });
-      y+=3;
-    });
-
-    // HONOR
-    checkY(12);banda([10,22,40],7);
-    txt("CUADRO DE HONOR",mg,y+5,9,true,[255,255,255]);y+=9;
-    var hon=p.honor||{};
-    var hLbls={campeon:"Campeon",subcampeon:"Subcampeon",tercero_h:"Tercer puesto",
-               bota_oro:"Bota de Oro",bota_plata:"Bota de Plata",bota_bronce:"Bota de Bronce",
-               balon_oro:"Balon de Oro",balon_plata:"Balon de Plata",balon_bronce:"Balon de Bronce",guante_oro:"Guante de Oro"};
-    var hPts={campeon:40,subcampeon:25,tercero_h:15,bota_oro:15,bota_plata:10,bota_bronce:7,balon_oro:15,balon_plata:10,balon_bronce:7,guante_oro:15};
-    Object.keys(hLbls).forEach(function(k,idx){
-      checkY(7);
-      var bg=idx%2===0?[255,255,255]:[248,249,250];
-      doc.setFillColor(bg[0],bg[1],bg[2]);doc.rect(mg,y,W-mg*2,6,"F");
-      doc.setFontSize(8);doc.setFont("helvetica","normal");doc.setTextColor(80,80,80);
-      doc.text(hLbls[k],mg+2,y+4);
-      doc.setFont("helvetica","bold");doc.setTextColor(10,22,40);
-      doc.text(limpiarN(hon[k]||"—"),W-mg-20,y+4);
-      var rHon=hR[k]||"";
-      if(rHon){
-        var match=matchHonor(hon[k]||"",rHon);
-        doc.setFontSize(6);doc.setTextColor(match?27:180,match?94:80,match?32:80);
-        doc.text("real: "+limpiarN(rHon),W/2,y+4);
-      }
-      doc.setFontSize(7);doc.setFont("helvetica","normal");doc.setTextColor(150,150,150);
-      doc.text(hPts[k]+"pts",W-mg-2,y+4,{align:"right"});
-      y+=6;
-    });
-
-    // PIE
-    var totalPags=doc.getNumberOfPages();
-    for(var pg=1;pg<=totalPags;pg++){
-      doc.setPage(pg);
-      doc.setFillColor(10,22,40);doc.rect(0,287,W,10,"F");
-      doc.setFontSize(7);doc.setFont("helvetica","normal");doc.setTextColor(200,216,240);
-      doc.text("Polla Compis 2026  ·  "+nomPart+"  ·  Ref: "+refCode,mg,293);
-      doc.text("Pag. "+pg+" / "+totalPags,W-mg,293,{align:"right"});
     }
 
-    var filename="PollaCompis2026_"+nomPart.replace(/[^a-zA-Z0-9]/g,"_")+".pdf";
-    doc.save(filename);
-    if(btn){btn.textContent="✓ PDF descargado";btn.style.background="#1B5E20";btn.disabled=false;
+    var np=doc.getNumberOfPages();
+    for(var pg=1;pg<=np;pg++){
+      doc.setPage(pg);doc.setFillColor(10,22,40);doc.rect(0,287,W,10,"F");
+      doc.setFontSize(7);doc.setFont("helvetica","normal");doc.setTextColor(200,216,240);
+      doc.text("Polla Compis 2026  ·  "+nomPart+"  ·  Ref: "+refCode,mg,293);
+      doc.text("Pag "+pg+"/"+np,W-mg,293,{align:"right"});
+    }
+    doc.save("PollaCompis2026_"+nomPart.replace(/[^a-zA-Z0-9]/g,"_")+".pdf");
+    if(btn){btn.textContent="✓ PDF descargado";btn.style.background="#22C55E";btn.disabled=false;
       setTimeout(function(){btn.textContent="⬇ Descargar PDF";btn.style.background="#0A1628";},3000);}
-  }catch(err){
-    console.error(err);
-    if(btn){btn.textContent="⬇ Descargar PDF";btn.disabled=false;}
-  }
+  }catch(err){console.error(err);if(btn){btn.textContent="⬇ Descargar PDF";btn.disabled=false;}}
 }
-
 </script>
 </body>
 </html>
