@@ -543,11 +543,8 @@ function calcP(pr,real,fase){
       cruceExacto=(rl===pl&&rv===pv);
     }
 
-    // --- PUNTOS POR CLASIFICADO (1 punto por cada equipo acertado, máx 2) ---
-    if(reg.c>0&&tenemosEquipos&&tenemosProno){
-      if(rl===pl||rl===pv)t+=reg.c; // equipo real local está en el pronóstico
-      if(rv===pl||rv===pv)t+=reg.c; // equipo real visitante está en el pronóstico
-    }
+    // NOTA: clasificado ya NO se calcula aquí — se calcula a nivel de fase en calcClasificadoFase()
+    // para que funcione aunque el equipo esté en un cruce diferente al pronosticado.
 
     // --- PUNTOS POR CRUCE EXACTO, SIGNO Y EXACTO ---
     if(cruceExacto){
@@ -589,31 +586,42 @@ function verD(id){
     var pts=calcP(pr,real,pa.f);
     if(pts!==null&&pts>0){ptsPorFase[pa.f]=(ptsPorFase[pa.f]||0)+pts;totalPts+=pts;}
     if(pr&&real&&pr.gl===real.gl&&pr.gv===real.gv)totalExactos++;
-    if(pa.f==="cuartos"&&real&&pr){
-      var regS=PTS.semis;
-      if(regS.clasS>0){
-        var rl=(real.rl||"").trim().toLowerCase(),rv=(real.rv||"").trim().toLowerCase();
-        var pl=(pr.pl||"").trim().toLowerCase(),pv=(pr.pv||"").trim().toLowerCase();
-        if(rl&&rv&&pl&&pv){
-          var gan=real.gl>real.gv?rl:real.gl<real.gv?rv:(real.penWin==="L"?rl:real.penWin==="V"?rv:"");
-          var ganP=pr.gl>pr.gv?pl:pr.gl<pr.gv?pv:(pr.penWin==="L"?pl:pr.penWin==="V"?pv:"");
-          if(gan&&ganP&&gan===ganP){ptsPorFase["semis"]=(ptsPorFase["semis"]||0)+regS.clasS;totalPts+=regS.clasS;}
-        }
-      }
-    }
-    if(pa.f==="semis"&&real&&pr){
-      var regF=PTS.final;
-      if(regF.clasF>0){
-        var rl2=(real.rl||"").trim().toLowerCase(),rv2=(real.rv||"").trim().toLowerCase();
-        var pl2=(pr.pl||"").trim().toLowerCase(),pv2=(pr.pv||"").trim().toLowerCase();
-        if(rl2&&rv2&&pl2&&pv2){
-          var gan2=real.gl>real.gv?rl2:real.gl<real.gv?rv2:(real.penWin==="L"?rl2:real.penWin==="V"?rv2:"");
-          var ganP2=pr.gl>pr.gv?pl2:pr.gl<pr.gv?pv2:(pr.penWin==="L"?pl2:pr.penWin==="V"?pv2:"");
-          if(gan2&&ganP2&&gan2===ganP2){ptsPorFase["final"]=(ptsPorFase["final"]||0)+regF.clasF;totalPts+=regF.clasF;}
-        }
-      }
-    }
   });
+  // clasS y clasF globales
+  (function(){var regS=PTS.semis;if(!regS.clasS)return;
+    var gR=[];TODOS.filter(function(pa){return pa.f==="cuartos";}).forEach(function(pa){
+      var r=res[pa.id];if(!r||r.gl==null)return;
+      var rl=(r.rl||"").trim().toLowerCase(),rv=(r.rv||"").trim().toLowerCase();
+      var g=r.gl>r.gv?rl:r.gl<r.gv?rv:(r.penWin==="L"?rl:r.penWin==="V"?rv:"");
+      if(g)gR.push(g);});
+    var eP=[];TODOS.filter(function(pa){return pa.f==="cuartos";}).forEach(function(pa){
+      var pr=pronos[pa.id];if(!pr)return;
+      var pl=(pr.pl||"").trim().toLowerCase(),pv=(pr.pv||"").trim().toLowerCase();
+      if(pl)eP.push(pl);if(pv)eP.push(pv);});
+    gR.forEach(function(eq){if(eq&&eP.indexOf(eq)!==-1){totalPts+=regS.clasS;ptsPorFase["semis"]=(ptsPorFase["semis"]||0)+regS.clasS;}});
+  })();
+  (function(){var regF=PTS.final;if(!regF.clasF)return;
+    var gR=[];TODOS.filter(function(pa){return pa.f==="semis";}).forEach(function(pa){
+      var r=res[pa.id];if(!r||r.gl==null)return;
+      var rl=(r.rl||"").trim().toLowerCase(),rv=(r.rv||"").trim().toLowerCase();
+      var g=r.gl>r.gv?rl:r.gl<r.gv?rv:(r.penWin==="L"?rl:r.penWin==="V"?rv:"");
+      if(g)gR.push(g);});
+    var eP=[];TODOS.filter(function(pa){return pa.f==="semis";}).forEach(function(pa){
+      var pr=pronos[pa.id];if(!pr)return;
+      var pl=(pr.pl||"").trim().toLowerCase(),pv=(pr.pv||"").trim().toLowerCase();
+      if(pl)eP.push(pl);if(pv)eP.push(pv);});
+    gR.forEach(function(eq){if(eq&&eP.indexOf(eq)!==-1){totalPts+=regF.clasF;ptsPorFase["final"]=(ptsPorFase["final"]||0)+regF.clasF;}});
+  })();
+  // clasificado por fase global
+  (function(){
+    var cFaseTmp={};
+    ["dieciseisavos","octavos","cuartos","semis","final"].forEach(function(fase){
+      var pts=calcClasificadoFase(pronos,fase);
+      cFaseTmp[fase]=(cFaseTmp[fase]||0)+pts;
+      totalPts+=pts;
+      ptsPorFase[fase]=(ptsPorFase[fase]||0)+pts;
+    });
+  })();
   HONOR.forEach(function(h){
     if(hR[h.k]&&honor[h.k]&&matchHonor(honor[h.k],hR[h.k])){ptsHonor+=h.pts;totalPts+=h.pts;}
   });
@@ -1562,6 +1570,41 @@ function scheduleAutoSave(){
 // ============================================================
 // CLASIFICACIÓN — v2 con +16pts Semis y +20pts Final
 // ============================================================
+// ============================================================
+// CLASIFICADO POR FASE — lógica global v4
+// Un equipo suma clasificado si aparece en CUALQUIER cruce
+// de esa fase, sin importar posición ni bracket exacto.
+// ============================================================
+function calcClasificadoFase(pronos, fase){
+  var reg=PTS[fase]||{};
+  if(!reg.c)return 0;
+
+  // Equipos reales que jugaron en esta fase
+  var equiposReales=[];
+  TODOS.filter(function(pa){return pa.f===fase;}).forEach(function(pa){
+    var r=res[pa.id];
+    if(r&&r.rl)equiposReales.push(r.rl.trim().toLowerCase());
+    if(r&&r.rv)equiposReales.push(r.rv.trim().toLowerCase());
+  });
+  if(!equiposReales.length)return 0;
+
+  // Equipos pronosticados en esta fase
+  var equiposProno=[];
+  TODOS.filter(function(pa){return pa.f===fase;}).forEach(function(pa){
+    var pr=pronos[pa.id];
+    if(pr&&pr.pl)equiposProno.push(pr.pl.trim().toLowerCase());
+    if(pr&&pr.pv)equiposProno.push(pr.pv.trim().toLowerCase());
+  });
+  if(!equiposProno.length)return 0;
+
+  // Por cada equipo real, verificar si el participante lo tenía en esta fase
+  var pts=0;
+  equiposReales.forEach(function(eq){
+    if(eq&&equiposProno.indexOf(eq)!==-1)pts+=reg.c;
+  });
+  return pts;
+}
+
 function calcC(){
   var GK=["A","B","C","D","E","F","G","H","I","J","K","L"];
   var clas=parts.map(function(p){
@@ -1576,46 +1619,58 @@ function calcC(){
         if(pr&&real&&pr.gl===real.gl&&pr.gv===real.gv)exactos++;
       }
 
-      // ★ NUEVO: puntos clasificado Semis (16pts por equipo que pasa a semis)
-      // Se evalúa en el partido de Cuartos correspondiente
-      // Regla: si pronosticaste el equipo ganador en CUALQUIER posición del cruce (no requiere cruce exacto)
-      if(pa.f==="cuartos"&&real&&pr){
-        var reg=PTS.semis;
-        if(reg.clasS>0){
-          var rl=(real.rl||"").trim().toLowerCase();
-          var rv=(real.rv||"").trim().toLowerCase();
-          var pl=(pr.pl||"").trim().toLowerCase();
-          var pv=(pr.pv||"").trim().toLowerCase();
-          // Solo si tenemos datos de ambos lados
-          if(rl&&rv&&pl&&pv){
-            // Ganador real del partido
-            var ganador=real.gl>real.gv?rl:real.gl<real.gv?rv:(real.penWin==="L"?rl:real.penWin==="V"?rv:"");
-            // Ganador pronosticado
-            var ganProno=pr.gl>pr.gv?pl:pr.gl<pr.gv?pv:(pr.penWin==="L"?pl:pr.penWin==="V"?pv:"");
-            // Suma 16pts si acertaste quién gana (en cualquier posición del cruce)
-            if(ganador&&ganProno&&ganador===ganProno)tot+=reg.clasS;
-          }
-        }
-      }
-
-      // ★ NUEVO: puntos clasificado Final (20pts por equipo que llega a la final)
-      // Se evalúa en el partido de Semis correspondiente
-      // Regla: si pronosticaste el equipo ganador en CUALQUIER posición del cruce (no requiere cruce exacto)
-      if(pa.f==="semis"&&real&&pr){
-        var reg2=PTS.final;
-        if(reg2.clasF>0){
-          var rl2=(real.rl||"").trim().toLowerCase();
-          var rv2=(real.rv||"").trim().toLowerCase();
-          var pl2=(pr.pl||"").trim().toLowerCase();
-          var pv2=(pr.pv||"").trim().toLowerCase();
-          if(rl2&&rv2&&pl2&&pv2){
-            var ganador2=real.gl>real.gv?rl2:real.gl<real.gv?rv2:(real.penWin==="L"?rl2:real.penWin==="V"?rv2:"");
-            var ganProno2=pr.gl>pr.gv?pl2:pr.gl<pr.gv?pv2:(pr.penWin==="L"?pl2:pr.penWin==="V"?pv2:"");
-            if(ganador2&&ganProno2&&ganador2===ganProno2)tot+=reg2.clasF;
-          }
-        }
-      }
+      // clasS y clasF se calculan globalmente abajo — no partido a partido
     });
+
+    // ★ CLASIFICADO POR FASE (global — cualquier cruce, cualquier posición)
+    ["dieciseisavos","octavos","cuartos","semis","final"].forEach(function(fase){
+      tot+=calcClasificadoFase(pronos,fase);
+    });
+
+    // ★ CLASIFICADO A SEMIS (16pts por cada equipo que pronosticaste en cuartos y llega a semis)
+    // Global: compara ganadores reales de cuartos vs todos los equipos pronosticados en cuartos
+    (function(){
+      var regS=PTS.semis; if(!regS.clasS)return;
+      // Ganadores reales de cuartos (los que pasan a semis)
+      var ganadoresReales=[];
+      TODOS.filter(function(pa){return pa.f==="cuartos";}).forEach(function(pa){
+        var r=res[pa.id]; if(!r||r.gl==null)return;
+        var rl=(r.rl||"").trim().toLowerCase(), rv=(r.rv||"").trim().toLowerCase();
+        var gan=r.gl>r.gv?rl:r.gl<r.gv?rv:(r.penWin==="L"?rl:r.penWin==="V"?rv:"");
+        if(gan)ganadoresReales.push(gan);
+      });
+      // Equipos pronosticados en cuartos (cualquier posición)
+      var equiposProno=[];
+      TODOS.filter(function(pa){return pa.f==="cuartos";}).forEach(function(pa){
+        var pr=pronos[pa.id]; if(!pr)return;
+        var pl=(pr.pl||"").trim().toLowerCase(), pv=(pr.pv||"").trim().toLowerCase();
+        if(pl)equiposProno.push(pl); if(pv)equiposProno.push(pv);
+      });
+      ganadoresReales.forEach(function(eq){
+        if(eq&&equiposProno.indexOf(eq)!==-1)tot+=regS.clasS;
+      });
+    })();
+
+    // ★ CLASIFICADO A FINAL (20pts por cada equipo que pronosticaste en semis y llega a la final)
+    (function(){
+      var regF=PTS.final; if(!regF.clasF)return;
+      var ganadoresReales=[];
+      TODOS.filter(function(pa){return pa.f==="semis";}).forEach(function(pa){
+        var r=res[pa.id]; if(!r||r.gl==null)return;
+        var rl=(r.rl||"").trim().toLowerCase(), rv=(r.rv||"").trim().toLowerCase();
+        var gan=r.gl>r.gv?rl:r.gl<r.gv?rv:(r.penWin==="L"?rl:r.penWin==="V"?rv:"");
+        if(gan)ganadoresReales.push(gan);
+      });
+      var equiposProno=[];
+      TODOS.filter(function(pa){return pa.f==="semis";}).forEach(function(pa){
+        var pr=pronos[pa.id]; if(!pr)return;
+        var pl=(pr.pl||"").trim().toLowerCase(), pv=(pr.pv||"").trim().toLowerCase();
+        if(pl)equiposProno.push(pl); if(pv)equiposProno.push(pv);
+      });
+      ganadoresReales.forEach(function(eq){
+        if(eq&&equiposProno.indexOf(eq)!==-1)tot+=regF.clasF;
+      });
+    })();
 
     // Honor
     var hon=p.honor||{};
@@ -1644,22 +1699,29 @@ function calcC(){
       var pr=pronos[pa.id],real=res[pa.id];
       var pts=calcP(pr,real,pa.f);
       if(pts&&pts>0)chips[pa.f]=(chips[pa.f]||0)+pts;
+      // clasS y clasF
       if(pa.f==="cuartos"&&real&&pr){
-        var regS=PTS.semis;if(!regS.clasS)return;
-        var rl=(real.rl||"").trim().toLowerCase(),rv=(real.rv||"").trim().toLowerCase();
-        var pl=(pr.pl||"").trim().toLowerCase(),pv=(pr.pv||"").trim().toLowerCase();
-        var gan=real.gl>real.gv?rl:real.gl<real.gv?rv:(real.penWin==="L"?rl:real.penWin==="V"?rv:"");
-        var ganP=pr.gl>pr.gv?pl:pr.gl<pr.gv?pv:"";
-        if(gan&&ganP&&rl===pl&&rv===pv&&gan===ganP)chips["semis"]=(chips["semis"]||0)+regS.clasS;
+        var regS=PTS.semis;if(regS.clasS>0){
+          var rl=(real.rl||"").trim().toLowerCase(),rv=(real.rv||"").trim().toLowerCase();
+          var pl=(pr.pl||"").trim().toLowerCase(),pv=(pr.pv||"").trim().toLowerCase();
+          var gan=real.gl>real.gv?rl:real.gl<real.gv?rv:(real.penWin==="L"?rl:real.penWin==="V"?rv:"");
+          var ganP=pr.gl>pr.gv?pl:pr.gl<pr.gv?pv:(pr.penWin==="L"?pl:pr.penWin==="V"?pv:"");
+          if(gan&&ganP&&gan===ganP)chips["semis"]=(chips["semis"]||0)+regS.clasS;
+        }
       }
       if(pa.f==="semis"&&real&&pr){
-        var regF=PTS.final;if(!regF.clasF)return;
-        var rl2=(real.rl||"").trim().toLowerCase(),rv2=(real.rv||"").trim().toLowerCase();
-        var pl2=(pr.pl||"").trim().toLowerCase(),pv2=(pr.pv||"").trim().toLowerCase();
-        var gan2=real.gl>real.gv?rl2:real.gl<real.gv?rv2:(real.penWin==="L"?rl2:real.penWin==="V"?rv2:"");
-        var ganP2=pr.gl>pr.gv?pl2:pr.gl<pr.gv?pv2:"";
-        if(gan2&&ganP2&&rl2===pl2&&rv2===pv2&&gan2===ganP2)chips["final"]=(chips["final"]||0)+regF.clasF;
+        var regF=PTS.final;if(regF.clasF>0){
+          var rl2=(real.rl||"").trim().toLowerCase(),rv2=(real.rv||"").trim().toLowerCase();
+          var pl2=(pr.pl||"").trim().toLowerCase(),pv2=(pr.pv||"").trim().toLowerCase();
+          var gan2=real.gl>real.gv?rl2:real.gl<real.gv?rv2:(real.penWin==="L"?rl2:real.penWin==="V"?rv2:"");
+          var ganP2=pr.gl>pr.gv?pl2:pr.gl<pr.gv?pv2:(pr.penWin==="L"?pl2:pr.penWin==="V"?pv2:"");
+          if(gan2&&ganP2&&gan2===ganP2)chips["final"]=(chips["final"]||0)+regF.clasF;
+        }
       }
+    });
+    // Clasificado por fase global
+    ["dieciseisavos","octavos","cuartos","semis","final"].forEach(function(fase){
+      chips[fase]=(chips[fase]||0)+calcClasificadoFase(pronos,fase);
     });
     GK2.forEach(function(g){var pp=ptsGrupoPos(g,pronos);if(pp>0)chips["grupos"]=(chips["grupos"]||0)+pp;});
     var hon=p.honor||{};
@@ -1730,16 +1792,34 @@ function buildClasDetHtml(p){
       var pl=(pr.pl||"").trim().toLowerCase(),pv=(pr.pv||"").trim().toLowerCase();
       var gan=real.gl>real.gv?rl:real.gl<real.gv?rv:(real.penWin==="L"?rl:real.penWin==="V"?rv:"");
       var ganP=pr.gl>pr.gv?pl:pr.gl<pr.gv?pv:"";
-      if(gan&&ganP&&gan===ganP)ptsPorFase["semis"]=(ptsPorFase["semis"]||0)+regS.clasS;
-    }
-    if(pa.f==="semis"&&real&&pr){
-      var regF=PTS.final;if(!regF.clasF)return;
-      var rl2=(real.rl||"").trim().toLowerCase(),rv2=(real.rv||"").trim().toLowerCase();
-      var pl2=(pr.pl||"").trim().toLowerCase(),pv2=(pr.pv||"").trim().toLowerCase();
-      var gan2=real.gl>real.gv?rl2:real.gl<real.gv?rv2:(real.penWin==="L"?rl2:real.penWin==="V"?rv2:"");
-      var ganP2=pr.gl>pr.gv?pl2:pr.gl<pr.gv?pv2:"";
-      if(gan2&&ganP2&&gan2===ganP2)ptsPorFase["final"]=(ptsPorFase["final"]||0)+regF.clasF;
-    }
+  });
+  // clasS y clasF globales
+  (function(){var regS=PTS.semis;if(!regS.clasS)return;
+    var gR=[];TODOS.filter(function(pa){return pa.f==="cuartos";}).forEach(function(pa){
+      var r=res[pa.id];if(!r||r.gl==null)return;
+      var rl=(r.rl||"").trim().toLowerCase(),rv=(r.rv||"").trim().toLowerCase();
+      var g=r.gl>r.gv?rl:r.gl<r.gv?rv:(r.penWin==="L"?rl:r.penWin==="V"?rv:"");
+      if(g)gR.push(g);});
+    var eP=[];TODOS.filter(function(pa){return pa.f==="cuartos";}).forEach(function(pa){
+      var pr=pronos[pa.id];if(!pr)return;
+      var pl=(pr.pl||"").trim().toLowerCase(),pv=(pr.pv||"").trim().toLowerCase();
+      if(pl)eP.push(pl);if(pv)eP.push(pv);});
+    gR.forEach(function(eq){if(eq&&eP.indexOf(eq)!==-1)ptsPorFase["semis"]=(ptsPorFase["semis"]||0)+regS.clasS;});
+  })();
+  (function(){var regF=PTS.final;if(!regF.clasF)return;
+    var gR=[];TODOS.filter(function(pa){return pa.f==="semis";}).forEach(function(pa){
+      var r=res[pa.id];if(!r||r.gl==null)return;
+      var rl=(r.rl||"").trim().toLowerCase(),rv=(r.rv||"").trim().toLowerCase();
+      var g=r.gl>r.gv?rl:r.gl<r.gv?rv:(r.penWin==="L"?rl:r.penWin==="V"?rv:"");
+      if(g)gR.push(g);});
+    var eP=[];TODOS.filter(function(pa){return pa.f==="semis";}).forEach(function(pa){
+      var pr=pronos[pa.id];if(!pr)return;
+      var pl=(pr.pl||"").trim().toLowerCase(),pv=(pr.pv||"").trim().toLowerCase();
+      if(pl)eP.push(pl);if(pv)eP.push(pv);});
+    gR.forEach(function(eq){if(eq&&eP.indexOf(eq)!==-1)ptsPorFase["final"]=(ptsPorFase["final"]||0)+regF.clasF;});
+  })();
+  ["dieciseisavos","octavos","cuartos","semis","final"].forEach(function(fase){
+    ptsPorFase[fase]=(ptsPorFase[fase]||0)+calcClasificadoFase(pronos,fase);
   });
   GK.forEach(function(g){var pp=ptsGrupoPos(g,pronos);if(pp>0)ptsPorFase["grupos"]=(ptsPorFase["grupos"]||0)+pp;});
   HONOR.forEach(function(h){if(hR[h.k]&&honor[h.k]&&matchHonor(honor[h.k],hR[h.k]))ptsHonor+=h.pts;});
@@ -2380,9 +2460,37 @@ function construirPDFResultados(){
         var pr=pr2[pa.id],real=res[pa.id];
         var pts=calcP(pr,real,pa.f);
         if(pts!==null){tot+=pts;if(pr&&real&&pr.gl===real.gl&&pr.gv===real.gv)ex++;}
-        if(pa.f==="cuartos"&&real&&pr){var rg=PTS.semis;if(rg.clasS>0){var rl=(real.rl||"").trim().toLowerCase();var rv=(real.rv||"").trim().toLowerCase();var pl=(pr.pl||"").trim().toLowerCase();var pv=(pr.pv||"").trim().toLowerCase();if(rl&&rv&&pl&&pv){var g1=real.gl>real.gv?rl:real.gl<real.gv?rv:(real.penWin==="L"?rl:real.penWin==="V"?rv:"");var g2=pr.gl>pr.gv?pl:pr.gl<pr.gv?pv:(pr.penWin==="L"?pl:pr.penWin==="V"?pv:"");if(g1&&g2&&g1===g2)tot+=rg.clasS;}}}
-        if(pa.f==="semis"&&real&&pr){var rg2=PTS.final;if(rg2.clasF>0){var rl2=(real.rl||"").trim().toLowerCase();var rv2=(real.rv||"").trim().toLowerCase();var pl2=(pr.pl||"").trim().toLowerCase();var pv2=(pr.pv||"").trim().toLowerCase();if(rl2&&rv2&&pl2&&pv2){var g3=real.gl>real.gv?rl2:real.gl<real.gv?rv2:(real.penWin==="L"?rl2:real.penWin==="V"?rv2:"");var g4=pr.gl>pr.gv?pl2:pr.gl<pr.gv?pv2:(pr.penWin==="L"?pl2:pr.penWin==="V"?pv2:"");if(g3&&g4&&g3===g4)tot+=rg2.clasF;}}}
       });
+      // Clasificado por fase global (incluye clasS y clasF)
+      ["dieciseisavos","octavos","cuartos","semis","final"].forEach(function(fase){
+        tot+=calcClasificadoFase(pr2,fase);
+      });
+      // clasS global
+      (function(){var regS=PTS.semis;if(!regS.clasS)return;
+        var gR=[];TODOS.filter(function(pa){return pa.f==="cuartos";}).forEach(function(pa){
+          var r=res[pa.id];if(!r||r.gl==null)return;
+          var rl=(r.rl||"").trim().toLowerCase(),rv=(r.rv||"").trim().toLowerCase();
+          var g=r.gl>r.gv?rl:r.gl<r.gv?rv:(r.penWin==="L"?rl:r.penWin==="V"?rv:"");
+          if(g)gR.push(g);});
+        var eP=[];TODOS.filter(function(pa){return pa.f==="cuartos";}).forEach(function(pa){
+          var pr=pr2[pa.id];if(!pr)return;
+          var pl=(pr.pl||"").trim().toLowerCase(),pv=(pr.pv||"").trim().toLowerCase();
+          if(pl)eP.push(pl);if(pv)eP.push(pv);});
+        gR.forEach(function(eq){if(eq&&eP.indexOf(eq)!==-1)tot+=regS.clasS;});
+      })();
+      // clasF global
+      (function(){var regF=PTS.final;if(!regF.clasF)return;
+        var gR=[];TODOS.filter(function(pa){return pa.f==="semis";}).forEach(function(pa){
+          var r=res[pa.id];if(!r||r.gl==null)return;
+          var rl=(r.rl||"").trim().toLowerCase(),rv=(r.rv||"").trim().toLowerCase();
+          var g=r.gl>r.gv?rl:r.gl<r.gv?rv:(r.penWin==="L"?rl:r.penWin==="V"?rv:"");
+          if(g)gR.push(g);});
+        var eP=[];TODOS.filter(function(pa){return pa.f==="semis";}).forEach(function(pa){
+          var pr=pr2[pa.id];if(!pr)return;
+          var pl=(pr.pl||"").trim().toLowerCase(),pv=(pr.pv||"").trim().toLowerCase();
+          if(pl)eP.push(pl);if(pv)eP.push(pv);});
+        gR.forEach(function(eq){if(eq&&eP.indexOf(eq)!==-1)tot+=regF.clasF;});
+      })();
       var hon=p.honor||{};HONOR.forEach(function(h){if(hR[h.k]&&hon[h.k]&&matchHonor(hon[h.k],hR[h.k]))tot+=h.pts;});
       GK.forEach(function(g){tot+=ptsGrupoPos(g,pr2);});
       return{nombre:p.nombre,pts:tot,exactos:ex,validado:p.validado};
