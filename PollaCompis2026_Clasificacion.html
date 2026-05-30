@@ -105,6 +105,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 .hb-ex{background:#1B5E20;color:#A5D6A7}
 .hb-sg{background:#E65100;color:#FFD54F}
 .pos-row{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.15);border-radius:6px;padding:5px 10px;font-size:11px;color:#86EFAC;margin:3px 0}
+/* CATEGORÍAS ELIMINATORIAS */
+.cat-bloque{margin:4px 0 8px;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,.08)}
+.cat-titulo{display:flex;justify-content:space-between;align-items:center;padding:5px 10px;background:rgba(255,255,255,.07);font-size:11px;font-weight:700;color:#C8D8F0}
+.cat-subtotal{font-size:11px;font-weight:800;color:#22C55E}
+.cat-item{display:flex;justify-content:space-between;align-items:center;padding:5px 10px;border-top:1px solid rgba(255,255,255,.05);font-size:11px}
+.cat-eq{color:#E0E8F0;font-weight:500;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cat-marcador{color:#8899B8;font-size:10px;margin-left:4px}
+.cat-pts{flex-shrink:0;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:800;margin-left:8px}
+.hb-cx{background:#1a3a6e;color:#90CAF9}
 .hon-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:4px}
 .hon-item{background:rgba(255,255,255,.04);border-radius:6px;padding:6px 8px;border:1px solid rgba(255,255,255,.07)}
 .hon-item .hl{font-size:9px;color:#8899B8;text-transform:uppercase;letter-spacing:.04em}
@@ -657,46 +666,178 @@ function renderDet(p){
   FASES_ORD.forEach(function(fase){
     var pats=TODOS.filter(function(pa){return pa.f===fase;});
     if(!pats.length)return;
-    var rows="";
-    var gm={};pats.forEach(function(pa){if(!gm[pa.g])gm[pa.g]=[];gm[pa.g].push(pa);});
+    var reg=PTS[fase]||PTS.grupos;
     var fpts=ptsPorFase[fase]||0;
-    if(!fpts)return; // fase sin puntos: saltar sección completa
+    if(!fpts)return;
 
-    // Agrupar por grupo
-    Object.keys(gm).forEach(function(g){
-      var gRows="";
-      gm[g].forEach(function(pa){
-        var pr=pronos[pa.id],real=res[pa.id];
-        var pts=calcP(pr,real,fase);
-        if(!pts||pts<=0)return;
-        var prS=(pr&&pr.gl!=null)?pr.gl+"\u2013"+pr.gv:"\u2013";
-        var reS=(real&&real.gl!=null)?real.gl+"\u2013"+real.gv:null;
-        var esExacto=(pr&&real&&pr.gl===real.gl&&pr.gv===real.gv);
-        var lNom=real&&real.rl?real.rl:pa.l;
-        var vNom=real&&real.rv?real.rv:pa.v;
-        var motivo=fase==="grupos"?(esExacto?" exacto":" signo"):"";
-        gRows+='<div class="hit-row">';
-        gRows+='<div class="hit-l">'+esc(lNom)+'</div>';
-        gRows+='<div class="hit-s"><div class="hit-prono">'+prS+'</div>'+(reS?'<div class="hit-real">real: '+reS+'</div>':'')+'</div>';
-        gRows+='<div class="hit-v">'+esc(vNom)+'</div>';
-        gRows+='<span class="hit-badge '+(esExacto?"hb-ex":"hb-sg")+'">+'+pts+'pts'+(motivo?' '+motivo:'')+'</span>';
-        gRows+='</div>';
-      });
-      // Posición exacta en grupo
-      if(fase==="grupos"){
+    var esElim=(fase!=="grupos");
+
+    // ── GRUPOS ──────────────────────────────────────────────────────────────
+    if(!esElim){
+      var rows="";
+      var gm={};pats.forEach(function(pa){if(!gm[pa.g])gm[pa.g]=[];gm[pa.g].push(pa);});
+      Object.keys(gm).forEach(function(g){
+        var gRows="";
+        gm[g].forEach(function(pa){
+          var pr=pronos[pa.id],real=res[pa.id];
+          var pts=calcP(pr,real,fase);
+          if(!pts||pts<=0)return;
+          var prS=(pr&&pr.gl!=null)?pr.gl+"\u2013"+pr.gv:"\u2013";
+          var reS=(real&&real.gl!=null)?real.gl+"\u2013"+real.gv:null;
+          var esExacto=(pr&&real&&pr.gl===real.gl&&pr.gv===real.gv);
+          var lNom=real&&real.rl?real.rl:pa.l;
+          var vNom=real&&real.rv?real.rv:pa.v;
+          var motivo=esExacto?" exacto":" signo";
+          gRows+='<div class="hit-row">';
+          gRows+='<div class="hit-l">'+esc(lNom)+'</div>';
+          gRows+='<div class="hit-s"><div class="hit-prono">'+prS+'</div>'+(reS?'<div class="hit-real">real: '+reS+'</div>':'')+'</div>';
+          gRows+='<div class="hit-v">'+esc(vNom)+'</div>';
+          gRows+='<span class="hit-badge '+(esExacto?"hb-ex":"hb-sg")+'">+'+pts+'pts'+motivo+'</span>';
+          gRows+='</div>';
+        });
+        // Posición exacta en grupo
         var ppg=ptsGrupoPos(g,pronos);
         if(ppg>0){
           var rr=clasGrupoReal(g),pp2=clasGrupoProno(g,pronos);
           var acs=[];for(var ii=0;ii<4;ii++){if(rr[ii]===pp2[ii])acs.push((ii+1)+"\u00b0 "+rr[ii]);}
-          gRows+='<div class="pos-row">\u2605 +'+ppg+'pts posici\u00f3n Grupo '+g+(acs.length?" \u2014 "+acs.join(", "):"")+' </div>';
+          gRows+='<div class="pos-row">\u2605 +'+ppg+'pts posición Grupo '+g+(acs.length?" \u2014 "+acs.join(", "):"")+' </div>';
         }
+        if(gRows)rows+=gRows;
+      });
+      if(rows){
+        html+='<div class="fase-hdr"><strong>'+FASE_LBL[fase]+'</strong><span>'+fpts+' pts</span></div>';
+        html+=rows;
       }
-      if(gRows)rows+=gRows;
+      return;
+    }
+
+    // ── ELIMINATORIAS: desglose por categorías ───────────────────────────────
+    // Calcular equipos reales en esta fase (para clasificado global)
+    var equiposReales=[];
+    pats.forEach(function(pa){var r=res[pa.id];if(r){if(r.rl)equiposReales.push(r.rl.trim().toLowerCase());if(r.rv)equiposReales.push(r.rv.trim().toLowerCase());}});
+    var equiposProno=[];
+    pats.forEach(function(pa){var pr=pronos[pa.id];if(pr){if(pr.pl)equiposProno.push(pr.pl.trim().toLowerCase());if(pr.pv)equiposProno.push(pr.pv.trim().toLowerCase());}});
+
+    // Clasificado global: equipos pronosticados que aparecen en la fase
+    var clasRows="";
+    var clasTotal=0;
+    equiposReales.forEach(function(eq){
+      if(eq&&equiposProno.indexOf(eq)!==-1){
+        clasTotal+=reg.c;
+        clasRows+='<div class="cat-item"><span class="cat-eq">'+esc(eq.charAt(0).toUpperCase()+eq.slice(1))+'</span><span class="cat-pts hb-sg">+'+reg.c+' pts</span></div>';
+      }
     });
 
-    if(rows){
+    // clasS / clasF (solo en semis y final respectivamente)
+    var clasExtraRows="";
+    var clasExtraTotal=0;
+    if(fase==="semis"&&reg.clasS){
+      var ganadoresC=[];TODOS.filter(function(pa){return pa.f==="cuartos";}).forEach(function(pa){
+        var r=res[pa.id];if(!r||r.gl==null)return;
+        var rl=(r.rl||"").trim().toLowerCase(),rv=(r.rv||"").trim().toLowerCase();
+        var g2=r.gl>r.gv?rl:r.gl<r.gv?rv:(r.penWin==="L"?rl:r.penWin==="V"?rv:"");
+        if(g2)ganadoresC.push(g2);});
+      var pronoC=[];TODOS.filter(function(pa){return pa.f==="cuartos";}).forEach(function(pa){
+        var pr=pronos[pa.id];if(!pr)return;
+        var pl=(pr.pl||"").trim().toLowerCase(),pv=(pr.pv||"").trim().toLowerCase();
+        if(pl)pronoC.push(pl);if(pv)pronoC.push(pv);});
+      ganadoresC.forEach(function(eq){
+        if(eq&&pronoC.indexOf(eq)!==-1){
+          clasExtraTotal+=reg.clasS;
+          clasExtraRows+='<div class="cat-item"><span class="cat-eq">'+esc(eq.charAt(0).toUpperCase()+eq.slice(1))+'</span><span class="cat-pts hb-sg">+'+reg.clasS+' pts</span></div>';
+        }});
+    }
+    if(fase==="final"&&reg.clasF){
+      var ganadoresS=[];TODOS.filter(function(pa){return pa.f==="semis";}).forEach(function(pa){
+        var r=res[pa.id];if(!r||r.gl==null)return;
+        var rl=(r.rl||"").trim().toLowerCase(),rv=(r.rv||"").trim().toLowerCase();
+        var g2=r.gl>r.gv?rl:r.gl<r.gv?rv:(r.penWin==="L"?rl:r.penWin==="V"?rv:"");
+        if(g2)ganadoresS.push(g2);});
+      var pronoS=[];TODOS.filter(function(pa){return pa.f==="semis";}).forEach(function(pa){
+        var pr=pronos[pa.id];if(!pr)return;
+        var pl=(pr.pl||"").trim().toLowerCase(),pv=(pr.pv||"").trim().toLowerCase();
+        if(pl)pronoS.push(pl);if(pv)pronoS.push(pv);});
+      ganadoresS.forEach(function(eq){
+        if(eq&&pronoS.indexOf(eq)!==-1){
+          clasExtraTotal+=reg.clasF;
+          clasExtraRows+='<div class="cat-item"><span class="cat-eq">'+esc(eq.charAt(0).toUpperCase()+eq.slice(1))+'</span><span class="cat-pts hb-sg">+'+reg.clasF+' pts</span></div>';
+        }});
+    }
+
+    // Cruce exacto, 1X2, Exacto — partido a partido
+    var cruceRows="",signoRows="",exactoRows="";
+    var cruceTotal=0,signoTotal=0,exactoTotal=0;
+    pats.forEach(function(pa){
+      var pr=pronos[pa.id],real=res[pa.id];
+      if(!real||real.gl==null||!pr||pr.gl==null)return;
+      var rl=(real.rl||"").trim().toLowerCase(),rv=(real.rv||"").trim().toLowerCase();
+      var pl=(pr.pl||"").trim().toLowerCase(),pv=(pr.pv||"").trim().toLowerCase();
+      var tenemosEq=(rl!==""&&rv!=="");var tenemosP=(pl!==""&&pv!=="");
+      var cruceEx=tenemosEq&&tenemosP&&(rl===pl&&rv===pv);
+      var lNom=real.rl||pa.l,vNom=real.rv||pa.v;
+      var marcR=real.gl+"\u2013"+real.gv;
+      var marcP=pr.gl+"\u2013"+pr.gv;
+      var sR=real.gl>real.gv?"L":real.gl<real.gv?"V":"X";
+      var sP=pr.gl>pr.gv?"L":pr.gl<pr.gv?"V":"X";
+      var esExacto=(pr.gl===real.gl&&pr.gv===real.gv);
+      if(cruceEx){
+        // Cruce exacto
+        cruceTotal+=reg.x;
+        cruceRows+='<div class="cat-item"><span class="cat-eq">'+esc(lNom)+' vs '+esc(vNom)+'</span><span class="cat-pts hb-cx">+'+reg.x+' pts</span></div>';
+        // 1X2
+        if(sR===sP){signoTotal+=reg.s;signoRows+='<div class="cat-item"><span class="cat-eq">'+esc(lNom)+' vs '+esc(vNom)+'<span class="cat-marcador"> '+marcP+' / real: '+marcR+'</span></span><span class="cat-pts hb-sg">+'+reg.s+' pts</span></div>';}
+        // Exacto
+        if(esExacto){exactoTotal+=reg.e;exactoRows+='<div class="cat-item"><span class="cat-eq">'+esc(lNom)+' vs '+esc(vNom)+'<span class="cat-marcador"> '+marcP+'</span></span><span class="cat-pts hb-ex">+'+reg.e+' pts</span></div>';}
+      } else if(!tenemosEq){
+        // Sin nombres reales aún: evaluar signo/exacto normalmente
+        if(sR===sP){signoTotal+=reg.s;signoRows+='<div class="cat-item"><span class="cat-eq">'+esc(pa.l)+' vs '+esc(pa.v)+'<span class="cat-marcador"> '+marcP+' / real: '+marcR+'</span></span><span class="cat-pts hb-sg">+'+reg.s+' pts</span></div>';}
+        if(esExacto){exactoTotal+=reg.e;exactoRows+='<div class="cat-item"><span class="cat-eq">'+esc(pa.l)+' vs '+esc(pa.v)+'<span class="cat-marcador"> '+marcP+'</span></span><span class="cat-pts hb-ex">+'+reg.e+' pts</span></div>';}
+      }
+    });
+
+    // Construir sección de fase
+    var faseContenido="";
+
+    // Bloque Clasificado
+    if(clasTotal>0){
+      faseContenido+='<div class="cat-bloque">';
+      faseContenido+='<div class="cat-titulo"><span>🎯 Clasificado</span><span class="cat-subtotal">+'+clasTotal+' pts</span></div>';
+      faseContenido+=clasRows;
+      faseContenido+='</div>';
+    }
+    // Bloque Clasificado extra (→ Semis / → Final)
+    if(clasExtraTotal>0){
+      var lblExtra=(fase==="semis")?"⭐ Clasificado → Semis":"⭐ Clasificado → Final";
+      faseContenido+='<div class="cat-bloque">';
+      faseContenido+='<div class="cat-titulo"><span>'+lblExtra+'</span><span class="cat-subtotal">+'+clasExtraTotal+' pts</span></div>';
+      faseContenido+=clasExtraRows;
+      faseContenido+='</div>';
+    }
+    // Bloque Cruce Exacto
+    if(cruceTotal>0){
+      faseContenido+='<div class="cat-bloque">';
+      faseContenido+='<div class="cat-titulo"><span>🔁 Cruce Exacto</span><span class="cat-subtotal">+'+cruceTotal+' pts</span></div>';
+      faseContenido+=cruceRows;
+      faseContenido+='</div>';
+    }
+    // Bloque 1X2
+    if(signoTotal>0){
+      faseContenido+='<div class="cat-bloque">';
+      faseContenido+='<div class="cat-titulo"><span>📊 1X2</span><span class="cat-subtotal">+'+signoTotal+' pts</span></div>';
+      faseContenido+=signoRows;
+      faseContenido+='</div>';
+    }
+    // Bloque Exacto
+    if(exactoTotal>0){
+      faseContenido+='<div class="cat-bloque">';
+      faseContenido+='<div class="cat-titulo"><span>🎯 Marcador Exacto</span><span class="cat-subtotal">+'+exactoTotal+' pts</span></div>';
+      faseContenido+=exactoRows;
+      faseContenido+='</div>';
+    }
+
+    if(faseContenido){
       html+='<div class="fase-hdr"><strong>'+FASE_LBL[fase]+'</strong><span>'+fpts+' pts</span></div>';
-      html+=rows;
+      html+=faseContenido;
     }
   });
 

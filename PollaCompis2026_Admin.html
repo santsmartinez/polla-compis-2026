@@ -74,19 +74,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 </style>
 </head>
 <body>
-<div id="ls">
-  <div class="hdr"><h1>⚽ Polla Compis · Admin 2026</h1></div>
-  <div class="pinw">
-    <div style="font-size:40px;margin-bottom:1rem">🔐</div>
-    <h2>Panel de Administración</h2>
-    <p style="font-size:13px;color:#666;margin-bottom:1.5rem">Ingresa el PIN para continuar</p>
-    <input class="pinin" type="password" id="pin" placeholder="····" maxlength="6">
-    <button class="btn btnr" id="btnpin" style="padding:11px 32px;font-size:15px">Entrar</button>
-    <div class="msg" id="pm"></div>
-  </div>
-</div>
+<div id="ls" style="display:none"></div>
 
-<div id="mn" style="display:none">
+<div id="mn">
   <div class="hdr">
     <div><h1>⚽ Polla Compis · Admin</h1><div class="hsub" id="hs">Cargando…</div></div>
     <div style="display:flex;gap:6px;flex-wrap:wrap" id="hp"></div>
@@ -237,18 +227,8 @@ function sbfetch(path,opts){
   return fetch(SB+"/rest/v1/"+path,options);
 }
 
-// PIN
-document.getElementById("btnpin").addEventListener("click",chkPin);
-document.getElementById("pin").addEventListener("keydown",function(e){if(e.key==="Enter")chkPin();});
-function chkPin(){
-  if(document.getElementById("pin").value===PIN){
-    document.getElementById("ls").style.display="none";
-    document.getElementById("mn").style.display="block";
-    load();
-  }else{
-    var m=document.getElementById("pm");m.textContent="PIN incorrecto.";m.className="msg mser";
-  }
-}
+// Sin PIN — acceso directo
+load();
 
 // Tabs
 document.getElementById("tabrow").addEventListener("click",function(e){
