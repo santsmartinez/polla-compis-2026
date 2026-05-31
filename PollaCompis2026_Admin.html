@@ -337,74 +337,85 @@ async function delP(id,nom){
   await load();
 }
 
+
+function calcMiniStats(equipos,pids,resMap,TODOS_arr){
+  var ms={};equipos.forEach(function(e){ms[e]={pts:0,dg:0,gf:0};});
+  pids.forEach(function(pid){
+    var r=resMap[pid];if(!r||r.gl==null||r.gv==null)return;
+    var pa=TODOS_arr.find(function(p){return p.id===pid;});if(!pa)return;
+    if(equipos.indexOf(pa.l)<0||equipos.indexOf(pa.v)<0)return;
+    ms[pa.l].gf+=r.gl;ms[pa.l].dg+=(r.gl-r.gv);
+    ms[pa.v].gf+=r.gv;ms[pa.v].dg+=(r.gv-r.gl);
+    if(r.gl>r.gv)ms[pa.l].pts+=3;else if(r.gl<r.gv)ms[pa.v].pts+=3;
+    else{ms[pa.l].pts+=1;ms[pa.v].pts+=1;}
+  });return ms;
+}
+function rankSubgrupo(sub,allStats,pids,resMap,TODOS_arr,esStep2){
+  if(sub.length===1)return sub;
+  var ms=calcMiniStats(sub,pids,resMap,TODOS_arr);
+  function gbv(arr,fn){var m={};arr.forEach(function(e){var k=fn(e);if(!m[k])m[k]=[];m[k].push(e);});return m;}
+  var result=[];
+  var byPts=gbv(sub,function(e){return ms[e].pts;});
+  Object.keys(byPts).map(Number).sort(function(a,b){return b-a;}).forEach(function(pv){
+    var g=byPts[pv];if(g.length===1){result=result.concat(g);return;}
+    var byDg=gbv(g,function(e){return ms[e].dg;});
+    Object.keys(byDg).map(Number).sort(function(a,b){return b-a;}).forEach(function(dv){
+      var gd=byDg[dv];if(gd.length===1){result=result.concat(gd);return;}
+      var byGf=gbv(gd,function(e){return ms[e].gf;});
+      Object.keys(byGf).map(Number).sort(function(a,b){return b-a;}).forEach(function(gfv){
+        var gg=byGf[gfv];if(gg.length===1){result=result.concat(gg);return;}
+        if(!esStep2&&gg.length<sub.length){result=result.concat(rankSubgrupo(gg,allStats,pids,resMap,TODOS_arr,true));return;}
+        var byGdg=gbv(gg,function(e){return allStats[e].dg;});
+        Object.keys(byGdg).map(Number).sort(function(a,b){return b-a;}).forEach(function(gdv){
+          var ggd=byGdg[gdv];if(ggd.length===1){result=result.concat(ggd);return;}
+          var byGgf=gbv(ggd,function(e){return allStats[e].gf;});
+          Object.keys(byGgf).map(Number).sort(function(a,b){return b-a;}).forEach(function(ggfv){
+            result=result.concat(byGgf[ggfv].slice().sort());
+          });
+        });
+      });
+    });
+  });return result;
+}
+function fifaSortGrupo(equipos,allStats,pids,resMap,TODOS_arr){
+  function gbv(arr,fn){var m={};arr.forEach(function(e){var k=fn(e);if(!m[k])m[k]=[];m[k].push(e);});return m;}
+  var byPts=gbv(equipos,function(e){return allStats[e].pts;});
+  var result=[];
+  Object.keys(byPts).map(Number).sort(function(a,b){return b-a;}).forEach(function(pv){
+    var g=byPts[pv];
+    if(g.length===1)result=result.concat(g);
+    else result=result.concat(rankSubgrupo(g,allStats,pids,resMap,TODOS_arr,false));
+  });
+  return result;
+}
 function clasGrupoReal(g){
-  var eq=GEQ_G[g];
-  var stats={};
+  var eq=GEQ_G[g];var stats={};
   eq.forEach(function(e){stats[e]={pts:0,dg:0,gf:0};});
   GPIDS_G[g].forEach(function(pid){
-    var r=res[pid];
-    if(!r||r.gl==null||r.gv==null)return;
-    var pa=TODOS.find(function(p){return p.id===pid;});
-    if(!pa)return;
-    var l=pa.l,v=pa.v,gl=r.gl,gv=r.gv;
-    stats[l].gf+=gl;stats[l].dg+=(gl-gv);
-    stats[v].gf+=gv;stats[v].dg+=(gv-gl);
-    if(gl>gv){stats[l].pts+=3;}else if(gl<gv){stats[v].pts+=3;}else{stats[l].pts+=1;stats[v].pts+=1;}
+    var r=res[pid];if(!r||r.gl==null||r.gv==null)return;
+    var pa=TODOS.find(function(p){return p.id===pid;});if(!pa)return;
+    stats[pa.l].gf+=r.gl;stats[pa.l].dg+=(r.gl-r.gv);
+    stats[pa.v].gf+=r.gv;stats[pa.v].dg+=(r.gv-r.gl);
+    if(r.gl>r.gv)stats[pa.l].pts+=3;else if(r.gl<r.gv)stats[pa.v].pts+=3;
+    else{stats[pa.l].pts+=1;stats[pa.v].pts+=1;}
   });
-  var sorted=eq.slice().sort(function(a,b){
-    if(stats[b].pts!==stats[a].pts)return stats[b].pts-stats[a].pts;
-    if(stats[b].dg!==stats[a].dg)return stats[b].dg-stats[a].dg;
-    if(stats[b].gf!==stats[a].gf)return stats[b].gf-stats[a].gf;
-    var h2h={};[a,b].forEach(function(e){h2h[e]={pts:0,dg:0,gf:0};});
-    GPIDS_G[g].forEach(function(pid){
-      var r=res[pid];if(!r||r.gl==null||r.gv==null)return;
-      var pa=TODOS.find(function(p){return p.id===pid;});if(!pa)return;
-      if([a,b].indexOf(pa.l)<0||[a,b].indexOf(pa.v)<0)return;
-      h2h[pa.l].gf+=r.gl;h2h[pa.l].dg+=(r.gl-r.gv);
-      h2h[pa.v].gf+=r.gv;h2h[pa.v].dg+=(r.gv-r.gl);
-      if(r.gl>r.gv)h2h[pa.l].pts+=3;else if(r.gl<r.gv)h2h[pa.v].pts+=3;else{h2h[pa.l].pts+=1;h2h[pa.v].pts+=1;}
-    });
-    if(h2h[b].pts!==h2h[a].pts)return h2h[b].pts-h2h[a].pts;
-    if(h2h[b].dg!==h2h[a].dg)return h2h[b].dg-h2h[a].dg;
-    if(h2h[b].gf!==h2h[a].gf)return h2h[b].gf-h2h[a].gf;
-    return a.localeCompare(b);
-  });
-  return sorted;
+  var resW={};GPIDS_G[g].forEach(function(pid){if(res[pid])resW[pid]=res[pid];});
+  return fifaSortGrupo(eq,stats,GPIDS_G[g],resW,TODOS);
 }
 
 function clasGrupoProno(g,pronos){
-  var eq=GEQ_G[g];
-  var stats={};
+  var eq=GEQ_G[g];var stats={};
   eq.forEach(function(e){stats[e]={pts:0,dg:0,gf:0};});
   GPIDS_G[g].forEach(function(pid){
-    var pr=pronos[pid];
-    if(!pr||pr.gl==null||pr.gv==null)return;
-    var pa=TODOS.find(function(p){return p.id===pid;});
-    if(!pa)return;
-    var l=pa.l,v=pa.v,gl=pr.gl,gv=pr.gv;
-    stats[l].gf+=gl;stats[l].dg+=(gl-gv);
-    stats[v].gf+=gv;stats[v].dg+=(gv-gl);
-    if(gl>gv){stats[l].pts+=3;}else if(gl<gv){stats[v].pts+=3;}else{stats[l].pts+=1;stats[v].pts+=1;}
+    var pr=pronos[pid];if(!pr||pr.gl==null||pr.gv==null)return;
+    var pa=TODOS.find(function(p){return p.id===pid;});if(!pa)return;
+    stats[pa.l].gf+=pr.gl;stats[pa.l].dg+=(pr.gl-pr.gv);
+    stats[pa.v].gf+=pr.gv;stats[pa.v].dg+=(pr.gv-pr.gl);
+    if(pr.gl>pr.gv)stats[pa.l].pts+=3;else if(pr.gl<pr.gv)stats[pa.v].pts+=3;
+    else{stats[pa.l].pts+=1;stats[pa.v].pts+=1;}
   });
-  var sorted=eq.slice().sort(function(a,b){
-    if(stats[b].pts!==stats[a].pts)return stats[b].pts-stats[a].pts;
-    var h2h={};[a,b].forEach(function(e){h2h[e]={pts:0,dg:0,gf:0};});
-    GPIDS_G[g].forEach(function(pid){
-      var pr=pronos[pid];if(!pr||pr.gl==null||pr.gv==null)return;
-      var pa=TODOS.find(function(p){return p.id===pid;});if(!pa)return;
-      if([a,b].indexOf(pa.l)<0||[a,b].indexOf(pa.v)<0)return;
-      h2h[pa.l].gf+=pr.gl;h2h[pa.l].dg+=(pr.gl-pr.gv);
-      h2h[pa.v].gf+=pr.gv;h2h[pa.v].dg+=(pr.gv-pr.gl);
-      if(pr.gl>pr.gv)h2h[pa.l].pts+=3;else if(pr.gl<pr.gv)h2h[pa.v].pts+=3;else{h2h[pa.l].pts+=1;h2h[pa.v].pts+=1;}
-    });
-    if(h2h[b].pts!==h2h[a].pts)return h2h[b].pts-h2h[a].pts;
-    if(h2h[b].dg!==h2h[a].dg)return h2h[b].dg-h2h[a].dg;
-    if(h2h[b].gf!==h2h[a].gf)return h2h[b].gf-h2h[a].gf;
-    if(stats[b].dg!==stats[a].dg)return stats[b].dg-stats[a].dg;
-    if(stats[b].gf!==stats[a].gf)return stats[b].gf-stats[a].gf;
-    return a.localeCompare(b);
-  });
-  return sorted;
+  var pronosW={};GPIDS_G[g].forEach(function(pid){if(pronos[pid])pronosW[pid]=pronos[pid];});
+  return fifaSortGrupo(eq,stats,GPIDS_G[g],pronosW,TODOS);
 }
 
 function ptsGrupoPos(g,pronos){
@@ -537,7 +548,29 @@ function verD(id){
         var prN=(pr&&pr.pl)?pr.pl+" vs "+pr.pv:"";
         var esExacto=(pr&&real&&pr.gl===real.gl&&pr.gv===real.gv);
         var badge="<span class='"+(esExacto?"tok":"tsig")+"'>+"+pts+"pts</span>";
-        var motivo=fase==="grupos"?(esExacto?" <span style='font-size:10px;color:#888'>exacto</span>":" <span style='font-size:10px;color:#888'>signo</span>"):"";
+        var motivoTxt="";
+        if(fase==="grupos"){
+          motivoTxt=esExacto?" exacto":" signo";
+        }else{
+          var rl2=(real&&real.rl?real.rl:"").trim().toLowerCase();
+          var rv2=(real&&real.rv?real.rv:"").trim().toLowerCase();
+          var pl2=(pr&&pr.pl?""+pr.pl:"").trim().toLowerCase();
+          var pv2=(pr&&pr.pv?""+pr.pv:"").trim().toLowerCase();
+          var slts=SLOTS[pa.id];
+          var eL2=slts?resolverSlot16(slts[0]):"";
+          var eV2=slts?resolverSlot16(slts[1]):"";
+          if(!eL2||/^[0-9WL]/.test(eL2))eL2=slts?resolverSlot(slts[0]):"";
+          if(!eV2||/^[0-9WL]/.test(eV2))eV2=slts?resolverSlot(slts[1]):"";
+          var ce=(eL2&&eV2&&rl2&&rv2&&eL2.trim().toLowerCase()===rl2&&eV2.trim().toLowerCase()===rv2);
+          var motParts=[];
+          if(ce)motParts.push("cruce +"+reg.x);
+          var sR4=real.gl>real.gv?"L":real.gl<real.gv?"V":"X";
+          var sP4=pr.gl>pr.gv?"L":pr.gl<pr.gv?"V":"X";
+          if(ce&&sR4===sP4)motParts.push("signo +"+reg.s);
+          if(ce&&real.gl===pr.gl&&real.gv===pr.gv)motParts.push("exacto +"+reg.e);
+          motivoTxt=motParts.length?" "+motParts.join(" "):"";
+        }
+        var motivo=motivoTxt?" <span style='font-size:10px;color:#888'>"+motivoTxt+"</span>":"";
         var lNom=real&&real.rl?real.rl:pa.l;
         var vNom=real&&real.rv?real.rv:pa.v;
         rowsGrupo+="<div class='prow prow-g' style='background:#F7FFF7'>";
@@ -874,11 +907,23 @@ function calcClasificadoFase(pronos,fase){
     if(r&&r.rv)equiposReales.push(r.rv.trim().toLowerCase());
   });
   if(!equiposReales.length)return 0;
+  // El participante guardó slots ("1E","W73") no nombres reales
+  // Resolverlos con los resultados del Admin para poder comparar
+  function esNombreReal(s){return!!(s&&s.length>3&&!/^[0-9WL]/.test(s)&&s.indexOf("°")<0);}
   var equiposProno=[];
   TODOS.filter(function(pa){return pa.f===fase;}).forEach(function(pa){
-    var pr=pronos[pa.id];
-    if(pr&&pr.pl)equiposProno.push(pr.pl.trim().toLowerCase());
-    if(pr&&pr.pv)equiposProno.push(pr.pv.trim().toLowerCase());
+    var pr=pronos[pa.id];if(!pr||pr.gl==null)return;
+    var slots=SLOTS[pa.id];if(!slots)return;
+    var eL,eV;
+    if(fase==="dieciseisavos"){
+      eL=resolverSlot16(slots[0]);eV=resolverSlot16(slots[1]);
+    }else{
+      eL=resolverSlot(slots[0]);eV=resolverSlot(slots[1]);
+      if(!esNombreReal(eL))eL=resolverSlot16(slots[0]);
+      if(!esNombreReal(eV))eV=resolverSlot16(slots[1]);
+    }
+    if(esNombreReal(eL))equiposProno.push(eL.trim().toLowerCase());
+    if(esNombreReal(eV))equiposProno.push(eV.trim().toLowerCase());
   });
   if(!equiposProno.length)return 0;
   var pts=0;
@@ -1423,6 +1468,28 @@ function construirPDFResultados(){
       var tot=0,ex=0;var pr2=p.pronos||{};
       TODOS.forEach(function(pa){var pr=pr2[pa.id],real=res[pa.id];var pts=calcP(pr,real,pa.f);if(pts!==null){tot+=pts;if(pr&&real&&pr.gl===real.gl&&pr.gv===real.gv)ex++;}});
       ["dieciseisavos","octavos","cuartos","semis","final"].forEach(function(fase){tot+=calcClasificadoFase(pr2,fase);});
+      (function(){var regS=PTS.semis;if(!regS.clasS)return;
+        var gR=[];TODOS.filter(function(pa){return pa.f==="cuartos";}).forEach(function(pa){
+          var r=res[pa.id];if(!r||r.gl==null)return;
+          var rl=(r.rl||"").trim().toLowerCase(),rv=(r.rv||"").trim().toLowerCase();
+          var g=r.gl>r.gv?rl:r.gl<r.gv?rv:(r.penWin==="L"?rl:r.penWin==="V"?rv:"");if(g)gR.push(g);});
+        var eP=[];TODOS.filter(function(pa){return pa.f==="cuartos";}).forEach(function(pa){
+          var pr=pr2[pa.id];if(!pr)return;
+          var pl=(pr.pl||"").trim().toLowerCase(),pv=(pr.pv||"").trim().toLowerCase();
+          if(pl)eP.push(pl);if(pv)eP.push(pv);});
+        gR.forEach(function(eq){if(eq&&eP.indexOf(eq)!==-1)tot+=regS.clasS;});
+      })();
+      (function(){var regF=PTS.final;if(!regF.clasF)return;
+        var gR=[];TODOS.filter(function(pa){return pa.f==="semis";}).forEach(function(pa){
+          var r=res[pa.id];if(!r||r.gl==null)return;
+          var rl=(r.rl||"").trim().toLowerCase(),rv=(r.rv||"").trim().toLowerCase();
+          var g=r.gl>r.gv?rl:r.gl<r.gv?rv:(r.penWin==="L"?rl:r.penWin==="V"?rv:"");if(g)gR.push(g);});
+        var eP=[];TODOS.filter(function(pa){return pa.f==="semis";}).forEach(function(pa){
+          var pr=pr2[pa.id];if(!pr)return;
+          var pl=(pr.pl||"").trim().toLowerCase(),pv=(pr.pv||"").trim().toLowerCase();
+          if(pl)eP.push(pl);if(pv)eP.push(pv);});
+        gR.forEach(function(eq){if(eq&&eP.indexOf(eq)!==-1)tot+=regF.clasF;});
+      })();
       var hon=p.honor||{};HONOR.forEach(function(h){if(hR[h.k]&&hon[h.k]&&matchHonor(hon[h.k],hR[h.k]))tot+=h.pts;});
       GK2.forEach(function(g){tot+=ptsGrupoPos(g,pr2);});
       return{nombre:p.nombre,pts:tot,exactos:ex,validado:p.validado};
