@@ -198,31 +198,77 @@ var TOTAL=GK.length+1+ELIM.length;
 // ============================================================
 // MOTOR FIFA — clasificación de grupo
 // ============================================================
+
+function calcMiniStats(equipos,pids,resMap,TODOS_arr){
+  var ms={};equipos.forEach(function(e){ms[e]={pts:0,dg:0,gf:0};});
+  pids.forEach(function(pid){
+    var r=resMap[pid];if(!r||r.gl==null||r.gv==null)return;
+    var pa=TODOS_arr.find(function(p){return p.id===pid;});if(!pa)return;
+    if(equipos.indexOf(pa.l)<0||equipos.indexOf(pa.v)<0)return;
+    ms[pa.l].gf+=r.gl;ms[pa.l].dg+=(r.gl-r.gv);
+    ms[pa.v].gf+=r.gv;ms[pa.v].dg+=(r.gv-r.gl);
+    if(r.gl>r.gv)ms[pa.l].pts+=3;else if(r.gl<r.gv)ms[pa.v].pts+=3;
+    else{ms[pa.l].pts+=1;ms[pa.v].pts+=1;}
+  });return ms;
+}
+function rankSubgrupo(sub,allStats,pids,resMap,TODOS_arr,esStep2){
+  if(sub.length===1)return sub;
+  var ms=calcMiniStats(sub,pids,resMap,TODOS_arr);
+  function gbv(arr,fn){var m={};arr.forEach(function(e){var k=fn(e);if(!m[k])m[k]=[];m[k].push(e);});return m;}
+  var result=[];
+  var byPts=gbv(sub,function(e){return ms[e].pts;});
+  Object.keys(byPts).map(Number).sort(function(a,b){return b-a;}).forEach(function(pv){
+    var g=byPts[pv];if(g.length===1){result=result.concat(g);return;}
+    var byDg=gbv(g,function(e){return ms[e].dg;});
+    Object.keys(byDg).map(Number).sort(function(a,b){return b-a;}).forEach(function(dv){
+      var gd=byDg[dv];if(gd.length===1){result=result.concat(gd);return;}
+      var byGf=gbv(gd,function(e){return ms[e].gf;});
+      Object.keys(byGf).map(Number).sort(function(a,b){return b-a;}).forEach(function(gfv){
+        var gg=byGf[gfv];if(gg.length===1){result=result.concat(gg);return;}
+        if(!esStep2&&gg.length<sub.length){result=result.concat(rankSubgrupo(gg,allStats,pids,resMap,TODOS_arr,true));return;}
+        var byGdg=gbv(gg,function(e){return allStats[e].dg;});
+        Object.keys(byGdg).map(Number).sort(function(a,b){return b-a;}).forEach(function(gdv){
+          var ggd=byGdg[gdv];if(ggd.length===1){result=result.concat(ggd);return;}
+          var byGgf=gbv(ggd,function(e){return allStats[e].gf;});
+          Object.keys(byGgf).map(Number).sort(function(a,b){return b-a;}).forEach(function(ggfv){
+            result=result.concat(byGgf[ggfv].slice().sort());
+          });
+        });
+      });
+    });
+  });return result;
+}
+function fifaSortGrupo(equipos,allStats,pids,resMap,TODOS_arr){
+  function gbv(arr,fn){var m={};arr.forEach(function(e){var k=fn(e);if(!m[k])m[k]=[];m[k].push(e);});return m;}
+  var byPts=gbv(equipos,function(e){return allStats[e].pts;});
+  var result=[];
+  Object.keys(byPts).map(Number).sort(function(a,b){return b-a;}).forEach(function(pv){
+    var g=byPts[pv];
+    if(g.length===1)result=result.concat(g);
+    else result=result.concat(rankSubgrupo(g,allStats,pids,resMap,TODOS_arr,false));
+  });
+  return result;
+}
 function clasGrupo(g){
   var eq=GEQ[g];
   var stats={};
   eq.forEach(function(e){stats[e]={pts:0,dg:0,gf:0,j:0,g:0,emp:0,p:0};});
-  PG.filter(function(p){return p.g===g;}).forEach(function(p){
-    var pr=pronos[p.id];
-    if(!pr||pr.gl==null||pr.gv==null)return;
-    var gl=parseInt(pr.gl),gv=parseInt(pr.gv);
-    if(isNaN(gl)||isNaN(gv))return;
+  var pgGrupo=PG.filter(function(p){return p.g===g;});
+  var pids=pgGrupo.map(function(p){return p.id;});
+  pgGrupo.forEach(function(p){
+    var pr=pronos[p.id];if(!pr||pr.gl==null||pr.gv==null)return;
+    var gl=parseInt(pr.gl),gv=parseInt(pr.gv);if(isNaN(gl)||isNaN(gv))return;
     stats[p.l].gf+=gl;stats[p.l].dg+=(gl-gv);stats[p.l].j++;
     stats[p.v].gf+=gv;stats[p.v].dg+=(gv-gl);stats[p.v].j++;
     if(gl>gv){stats[p.l].pts+=3;stats[p.l].g++;stats[p.v].p++;}
     else if(gl<gv){stats[p.v].pts+=3;stats[p.v].g++;stats[p.l].p++;}
     else{stats[p.l].pts+=1;stats[p.l].emp++;stats[p.v].pts+=1;stats[p.v].emp++;}
   });
-  var sorted=eq.slice().sort(function(a,b){
-    if(stats[b].pts!==stats[a].pts)return stats[b].pts-stats[a].pts;
-    var h2h=calcH2H([a,b],g);
-    if(h2h[b].pts!==h2h[a].pts)return h2h[b].pts-h2h[a].pts;
-    if(h2h[b].dg!==h2h[a].dg)return h2h[b].dg-h2h[a].dg;
-    if(h2h[b].gf!==h2h[a].gf)return h2h[b].gf-h2h[a].gf;
-    if(stats[b].dg!==stats[a].dg)return stats[b].dg-stats[a].dg;
-    if(stats[b].gf!==stats[a].gf)return stats[b].gf-stats[a].gf;
-    return a.localeCompare(b);
+  var pronosMap={};pgGrupo.forEach(function(p){
+    var pr=pronos[p.id];if(!pr||pr.gl==null||pr.gv==null)return;
+    pronosMap[p.id]={gl:parseInt(pr.gl),gv:parseInt(pr.gv)};
   });
+  var sorted=fifaSortGrupo(eq,stats,pids,pronosMap,pgGrupo);
   return{orden:sorted,stats:stats};
 }
 
@@ -321,7 +367,7 @@ function renderTablaGrupo(g,contenedor){
     var medalla="";
     if(i===0)medalla="🥇";
     else if(i===1)medalla="🥈";
-    else if(i===2){medalla=terceroClasifica?"🥉<span style='font-size:9px;color:#888;margin-left:1px'>"+rankTercero+"°</span>":"<span style='font-size:10px;color:#CCC'>✗</span>";}
+    else if(i===2){medalla=terceroClasifica?"🥉<span style='font-size:9px;color:#4CAF50;margin-left:2px'>✓</span>":"<span style='font-size:10px;color:#CCC'>✗</span>";}
     html+="<tr class='"+posClasses[i]+"'>";
     html+="<td style='white-space:nowrap'>"+(i+1)+medalla+"</td>";
     html+="<td>"+flag(eq)+eq+"</td>";
