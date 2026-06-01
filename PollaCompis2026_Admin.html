@@ -338,56 +338,18 @@ async function delP(id,nom){
 }
 
 
-function calcMiniStats(equipos,pids,resMap,TODOS_arr){
-  var ms={};equipos.forEach(function(e){ms[e]={pts:0,dg:0,gf:0};});
-  pids.forEach(function(pid){
-    var r=resMap[pid];if(!r||r.gl==null||r.gv==null)return;
-    var pa=TODOS_arr.find(function(p){return p.id===pid;});if(!pa)return;
-    if(equipos.indexOf(pa.l)<0||equipos.indexOf(pa.v)<0)return;
-    ms[pa.l].gf+=r.gl;ms[pa.l].dg+=(r.gl-r.gv);
-    ms[pa.v].gf+=r.gv;ms[pa.v].dg+=(r.gv-r.gl);
-    if(r.gl>r.gv)ms[pa.l].pts+=3;else if(r.gl<r.gv)ms[pa.v].pts+=3;
-    else{ms[pa.l].pts+=1;ms[pa.v].pts+=1;}
-  });return ms;
-}
-function rankSubgrupo(sub,allStats,pids,resMap,TODOS_arr,esStep2){
-  if(sub.length===1)return sub;
-  var ms=calcMiniStats(sub,pids,resMap,TODOS_arr);
-  function gbv(arr,fn){var m={};arr.forEach(function(e){var k=fn(e);if(!m[k])m[k]=[];m[k].push(e);});return m;}
-  var result=[];
-  var byPts=gbv(sub,function(e){return ms[e].pts;});
-  Object.keys(byPts).map(Number).sort(function(a,b){return b-a;}).forEach(function(pv){
-    var g=byPts[pv];if(g.length===1){result=result.concat(g);return;}
-    var byDg=gbv(g,function(e){return ms[e].dg;});
-    Object.keys(byDg).map(Number).sort(function(a,b){return b-a;}).forEach(function(dv){
-      var gd=byDg[dv];if(gd.length===1){result=result.concat(gd);return;}
-      var byGf=gbv(gd,function(e){return ms[e].gf;});
-      Object.keys(byGf).map(Number).sort(function(a,b){return b-a;}).forEach(function(gfv){
-        var gg=byGf[gfv];if(gg.length===1){result=result.concat(gg);return;}
-        if(!esStep2&&gg.length<sub.length){result=result.concat(rankSubgrupo(gg,allStats,pids,resMap,TODOS_arr,true));return;}
-        var byGdg=gbv(gg,function(e){return allStats[e].dg;});
-        Object.keys(byGdg).map(Number).sort(function(a,b){return b-a;}).forEach(function(gdv){
-          var ggd=byGdg[gdv];if(ggd.length===1){result=result.concat(ggd);return;}
-          var byGgf=gbv(ggd,function(e){return allStats[e].gf;});
-          Object.keys(byGgf).map(Number).sort(function(a,b){return b-a;}).forEach(function(ggfv){
-            result=result.concat(byGgf[ggfv].slice().sort());
-          });
-        });
-      });
-    });
-  });return result;
-}
-function fifaSortGrupo(equipos,allStats,pids,resMap,TODOS_arr){
-  function gbv(arr,fn){var m={};arr.forEach(function(e){var k=fn(e);if(!m[k])m[k]=[];m[k].push(e);});return m;}
-  var byPts=gbv(equipos,function(e){return allStats[e].pts;});
-  var result=[];
-  Object.keys(byPts).map(Number).sort(function(a,b){return b-a;}).forEach(function(pv){
-    var g=byPts[pv];
-    if(g.length===1)result=result.concat(g);
-    else result=result.concat(rankSubgrupo(g,allStats,pids,resMap,TODOS_arr,false));
+function sortGrupo(equipos,stats){
+  return equipos.slice().sort(function(a,b){
+    var sa=stats[a],sb=stats[b];
+    if(sb.pts!==sa.pts)return sb.pts-sa.pts;
+    if(sb.dg!==sa.dg)return sb.dg-sa.dg;
+    if(sb.gf!==sa.gf)return sb.gf-sa.gf;
+    var gca=sa.gf-sa.dg,gcb=sb.gf-sb.dg;
+    if(gca!==gcb)return gca-gcb;
+    return a.localeCompare(b);
   });
-  return result;
 }
+
 function clasGrupoReal(g){
   var eq=GEQ_G[g];var stats={};
   eq.forEach(function(e){stats[e]={pts:0,dg:0,gf:0};});
@@ -399,8 +361,7 @@ function clasGrupoReal(g){
     if(r.gl>r.gv)stats[pa.l].pts+=3;else if(r.gl<r.gv)stats[pa.v].pts+=3;
     else{stats[pa.l].pts+=1;stats[pa.v].pts+=1;}
   });
-  var resW={};GPIDS_G[g].forEach(function(pid){if(res[pid])resW[pid]=res[pid];});
-  return fifaSortGrupo(eq,stats,GPIDS_G[g],resW,TODOS);
+  return sortGrupo(eq,stats);
 }
 
 function clasGrupoProno(g,pronos){
@@ -414,8 +375,7 @@ function clasGrupoProno(g,pronos){
     if(pr.gl>pr.gv)stats[pa.l].pts+=3;else if(pr.gl<pr.gv)stats[pa.v].pts+=3;
     else{stats[pa.l].pts+=1;stats[pa.v].pts+=1;}
   });
-  var pronosW={};GPIDS_G[g].forEach(function(pid){if(pronos[pid])pronosW[pid]=pronos[pid];});
-  return fifaSortGrupo(eq,stats,GPIDS_G[g],pronosW,TODOS);
+  return sortGrupo(eq,stats);
 }
 
 function ptsGrupoPos(g,pronos){
@@ -1507,63 +1467,6 @@ function construirPDFResultados(){
       doc.setFont("helvetica","normal");doc.setFontSize(6.5);doc.setTextColor(120,120,120);
       doc.text(p.exactos+" ex"+(p.validado?"  val":"  pend"),W-mg-22,y+4.5);y+=6.5;
     });y+=4;
-
-    // Sección mejores terceros en PDF de resultados
-    (function(){
-      var gruposConRes=GK2.filter(function(g){
-        return GPIDS_G[g].some(function(pid){var r=res[pid];return r&&r.gl!=null;});
-      });
-      if(!gruposConRes.length)return;
-      checkY(20);
-      banda([10,22,40],7);
-      doc.setFontSize(9);doc.setFont("helvetica","bold");doc.setTextColor(255,255,255);
-      doc.text("MEJORES TERCEROS CLASIFICADOS",mg,y+5);y+=7;y+=1;
-      var allTerceros=GK2.map(function(g){
-        var orden=clasGrupoReal(g);var eq=orden[2];
-        if(!eq)return null;
-        var s={pts:0,dg:0,gf:0};
-        GPIDS_G[g].forEach(function(pid){
-          var r=res[pid];if(!r||r.gl==null||r.gv==null)return;
-          var pa=TODOS.find(function(p){return p.id===pid;});if(!pa)return;
-          if(pa.l===eq){s.pts+=(r.gl>r.gv?3:r.gl===r.gv?1:0);s.gf+=r.gl;s.dg+=(r.gl-r.gv);}
-          if(pa.v===eq){s.pts+=(r.gv>r.gl?3:r.gl===r.gv?1:0);s.gf+=r.gv;s.dg+=(r.gv-r.gl);}
-        });
-        return{equipo:eq,grupo:g,pts:s.pts,dg:s.dg,gf:s.gf};
-      }).filter(Boolean);
-      allTerceros.sort(function(a,b){
-        if(b.pts!==a.pts)return b.pts-a.pts;
-        if(b.dg!==a.dg)return b.dg-a.dg;
-        if(b.gf!==a.gf)return b.gf-a.gf;
-        return a.equipo.localeCompare(b.equipo);
-      });
-      allTerceros.forEach(function(t,i){
-        checkY(7);
-        var clasifica=i<8;
-        var bg=clasifica?(i%2===0?[232,245,233]:[241,248,233]):(i%2===0?[250,250,250]:[245,245,245]);
-        doc.setFillColor(bg[0],bg[1],bg[2]);doc.rect(mg,y,W-mg*2,6,"F");
-        doc.setFontSize(8);
-        doc.setFont("helvetica","bold");
-        doc.setTextColor(clasifica?46:120,clasifica?125:120,clasifica?50:120);
-        doc.text((i+1)+".",mg+2,y+4);
-        doc.setFont("helvetica",clasifica?"bold":"normal");
-        doc.setTextColor(clasifica?27:100,clasifica?94:100,clasifica?32:100);
-        doc.text(limpiar(t.equipo)+" (Grupo "+t.grupo+")",mg+8,y+4);
-        doc.setFont("helvetica","normal");doc.setTextColor(100,100,100);
-        doc.text("Pts:"+t.pts+"  DG:"+(t.dg>=0?"+":"")+t.dg+"  GF:"+t.gf,W-mg-22,y+4);
-        if(clasifica){
-          doc.setFillColor(46,125,50);doc.roundedRect(W-mg-18,y+1,16,4,1,1,"F");
-          doc.setFont("helvetica","bold");doc.setFontSize(7);doc.setTextColor(255,255,255);
-          doc.text("clasifica",W-mg-10,y+3.8,{align:"center"});
-        }else{
-          doc.setFillColor(189,189,189);doc.roundedRect(W-mg-20,y+1,18,4,1,1,"F");
-          doc.setFont("helvetica","normal");doc.setFontSize(7);doc.setTextColor(255,255,255);
-          doc.text("no clasifica",W-mg-11,y+3.8,{align:"center"});
-        }
-        y+=6;
-      });
-      y+=4;
-    })();
-
     FR.forEach(function(fase){
       var partidos=TODOS.filter(function(p){return fase.ids.indexOf(p.id)>=0;});
       var conRes=partidos.filter(function(p){var r=res[p.id];return r&&r.gl!=null;});

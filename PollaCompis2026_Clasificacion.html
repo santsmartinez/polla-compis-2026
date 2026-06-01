@@ -207,56 +207,18 @@ var countdown=60,countTimer=null;
 // MOTOR GRUPOS
 // ============================================================
 
-function calcMiniStats(equipos,pids,resMap,TODOS_arr){
-  var ms={};equipos.forEach(function(e){ms[e]={pts:0,dg:0,gf:0};});
-  pids.forEach(function(pid){
-    var r=resMap[pid];if(!r||r.gl==null||r.gv==null)return;
-    var pa=TODOS_arr.find(function(p){return p.id===pid;});if(!pa)return;
-    if(equipos.indexOf(pa.l)<0||equipos.indexOf(pa.v)<0)return;
-    ms[pa.l].gf+=r.gl;ms[pa.l].dg+=(r.gl-r.gv);
-    ms[pa.v].gf+=r.gv;ms[pa.v].dg+=(r.gv-r.gl);
-    if(r.gl>r.gv)ms[pa.l].pts+=3;else if(r.gl<r.gv)ms[pa.v].pts+=3;
-    else{ms[pa.l].pts+=1;ms[pa.v].pts+=1;}
-  });return ms;
-}
-function rankSubgrupo(sub,allStats,pids,resMap,TODOS_arr,esStep2){
-  if(sub.length===1)return sub;
-  var ms=calcMiniStats(sub,pids,resMap,TODOS_arr);
-  function gbv(arr,fn){var m={};arr.forEach(function(e){var k=fn(e);if(!m[k])m[k]=[];m[k].push(e);});return m;}
-  var result=[];
-  var byPts=gbv(sub,function(e){return ms[e].pts;});
-  Object.keys(byPts).map(Number).sort(function(a,b){return b-a;}).forEach(function(pv){
-    var g=byPts[pv];if(g.length===1){result=result.concat(g);return;}
-    var byDg=gbv(g,function(e){return ms[e].dg;});
-    Object.keys(byDg).map(Number).sort(function(a,b){return b-a;}).forEach(function(dv){
-      var gd=byDg[dv];if(gd.length===1){result=result.concat(gd);return;}
-      var byGf=gbv(gd,function(e){return ms[e].gf;});
-      Object.keys(byGf).map(Number).sort(function(a,b){return b-a;}).forEach(function(gfv){
-        var gg=byGf[gfv];if(gg.length===1){result=result.concat(gg);return;}
-        if(!esStep2&&gg.length<sub.length){result=result.concat(rankSubgrupo(gg,allStats,pids,resMap,TODOS_arr,true));return;}
-        var byGdg=gbv(gg,function(e){return allStats[e].dg;});
-        Object.keys(byGdg).map(Number).sort(function(a,b){return b-a;}).forEach(function(gdv){
-          var ggd=byGdg[gdv];if(ggd.length===1){result=result.concat(ggd);return;}
-          var byGgf=gbv(ggd,function(e){return allStats[e].gf;});
-          Object.keys(byGgf).map(Number).sort(function(a,b){return b-a;}).forEach(function(ggfv){
-            result=result.concat(byGgf[ggfv].slice().sort());
-          });
-        });
-      });
-    });
-  });return result;
-}
-function fifaSortGrupo(equipos,allStats,pids,resMap,TODOS_arr){
-  function gbv(arr,fn){var m={};arr.forEach(function(e){var k=fn(e);if(!m[k])m[k]=[];m[k].push(e);});return m;}
-  var byPts=gbv(equipos,function(e){return allStats[e].pts;});
-  var result=[];
-  Object.keys(byPts).map(Number).sort(function(a,b){return b-a;}).forEach(function(pv){
-    var g=byPts[pv];
-    if(g.length===1)result=result.concat(g);
-    else result=result.concat(rankSubgrupo(g,allStats,pids,resMap,TODOS_arr,false));
+function sortGrupo(equipos,stats){
+  return equipos.slice().sort(function(a,b){
+    var sa=stats[a],sb=stats[b];
+    if(sb.pts!==sa.pts)return sb.pts-sa.pts;
+    if(sb.dg!==sa.dg)return sb.dg-sa.dg;
+    if(sb.gf!==sa.gf)return sb.gf-sa.gf;
+    var gca=sa.gf-sa.dg,gcb=sb.gf-sb.dg;
+    if(gca!==gcb)return gca-gcb;
+    return a.localeCompare(b);
   });
-  return result;
 }
+
 function clasGrupoReal(g){
   var eq=GEQ_G[g];var s={};eq.forEach(function(e){s[e]={pts:0,dg:0,gf:0};});
   GPIDS_G[g].forEach(function(pid){
@@ -265,8 +227,7 @@ function clasGrupoReal(g){
     s[pa.l].gf+=r.gl;s[pa.l].dg+=(r.gl-r.gv);s[pa.v].gf+=r.gv;s[pa.v].dg+=(r.gv-r.gl);
     if(r.gl>r.gv)s[pa.l].pts+=3;else if(r.gl<r.gv)s[pa.v].pts+=3;else{s[pa.l].pts+=1;s[pa.v].pts+=1;}
   });
-  var resW={};GPIDS_G[g].forEach(function(pid){if(res[pid])resW[pid]=res[pid];});
-  return fifaSortGrupo(eq,s,GPIDS_G[g],resW,TODOS);
+  return sortGrupo(eq,s);
 }
 
 
@@ -280,8 +241,7 @@ function clasGrupoProno(g,pronos){
     if(pr.gl>pr.gv)s[pa.l].pts+=3;else if(pr.gl<pr.gv)s[pa.v].pts+=3;
     else{s[pa.l].pts+=1;s[pa.v].pts+=1;}
   });
-  var pronosW={};GPIDS_G[g].forEach(function(pid){if(pronos[pid])pronosW[pid]=pronos[pid];});
-  return fifaSortGrupo(eq,s,GPIDS_G[g],pronosW,TODOS);
+  return sortGrupo(eq,s);
 }
 function ptsGrupoPos(g,pronos){
   var pids=GPIDS_G[g];
