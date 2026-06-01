@@ -715,12 +715,8 @@ function htmlTablaGrupo(g){
     if(gl>gv)stats[l].pts+=3;else if(gl<gv)stats[v].pts+=3;
     else{stats[l].pts+=1;stats[v].pts+=1;}
   });
-  var sorted=eq.slice().sort(function(a,b){
-    if(stats[b].pts!==stats[a].pts)return stats[b].pts-stats[a].pts;
-    if(stats[b].dg!==stats[a].dg)return stats[b].dg-stats[a].dg;
-    if(stats[b].gf!==stats[a].gf)return stats[b].gf-stats[a].gf;
-    return a.localeCompare(b);
-  });
+  var resW={};GPIDS_G[g].forEach(function(pid){if(res[pid])resW[pid]=res[pid];});
+  var sorted=fifaSortGrupo(eq,stats,GPIDS_G[g],resW,TODOS);
   var h="<table style='width:100%;border-collapse:collapse;font-size:11px;margin-top:4px'>";
   h+="<tr style='background:#F0F4FF;color:#444'><th style='padding:3px 4px;text-align:left'>Pos</th><th style='padding:3px 4px;text-align:left;min-width:90px'>Equipo</th><th style='padding:3px 4px;text-align:center'>PJ</th><th style='padding:3px 4px;text-align:center'>Pts</th><th style='padding:3px 4px;text-align:center'>DG</th><th style='padding:3px 4px;text-align:center'>GF</th></tr>";
   sorted.forEach(function(eq2,i){
@@ -1305,13 +1301,22 @@ var SLOTS={
 };
 
 function nombresElim(id,pr,resEntry,slotL,slotV){
-  var nL="",nV="";
-  if(resEntry&&resEntry.rl)nL=resEntry.rl;
-  if(resEntry&&resEntry.rv)nV=resEntry.rv;
-  if(!nL&&pr&&pr.pl)nL=pr.pl;
-  if(!nV&&pr&&pr.pv)nV=pr.pv;
-  if(!nL)nL=resolverSlot(slotL)||slotL||"—";
-  if(!nV)nV=resolverSlot(slotV)||slotV||"—";
+  // Usar el pronóstico del participante (pl/pv), NO los resultados reales.
+  // Si pl/pv son códigos de slot, resolverlos con los resultados reales del Admin.
+  function esSlot(s){
+    return!!(s&&(/^[12][A-L]$/.test(s)||/^[WLl]\d+$/.test(s)||/^3[A-L]{2,}$/.test(s)));
+  }
+  function resolveNombre(prNombre,slot){
+    if(prNombre&&prNombre.length>0&&!esSlot(prNombre))return prNombre;
+    // Es slot o vacío → resolver con resultados reales
+    var r=resolverSlot16(slot);
+    if(r&&!esSlot(r))return r;
+    var r2=resolverSlot(slot);
+    if(r2&&!esSlot(r2))return r2;
+    return slot||"—";
+  }
+  var nL=resolveNombre(pr&&pr.pl?pr.pl:"",slotL);
+  var nV=resolveNombre(pr&&pr.pv?pr.pv:"",slotV);
   return[nL,nV];
 }
 
