@@ -225,8 +225,7 @@ function clasGrupo(g){
     else if(gl<gv){stats[p.v].pts+=3;stats[p.v].g++;stats[p.l].p++;}
     else{stats[p.l].pts+=1;stats[p.l].emp++;stats[p.v].pts+=1;stats[p.v].emp++;}
   });
-  var sorted=sortGrupo(eq,stats);
-  return{orden:sorted,stats:stats};
+  return{orden:sortGrupo(eq,stats),stats:stats};
 }
 
 function calcH2H(equipos,g){
@@ -324,26 +323,10 @@ function renderTablaGrupo(g,contenedor){
     var medalla="";
     if(i===0)medalla="🥇";
     else if(i===1)medalla="🥈";
-    else if(i===2){
-      var gruposCompletos=Object.keys(GEQ).filter(function(gr){
-        return PG.filter(function(p){return p.g===gr;}).every(function(p){
-          var pr=pronos[p.id];return pr&&pr.gl!=null&&pr.gv!=null;
-        });
-      }).length;
-      var todosCompletos=(gruposCompletos===Object.keys(GEQ).length);
-      var badgeTercero="";
-      if(!todosCompletos){
-        badgeTercero="<span style='display:inline-flex;align-items:center;gap:2px;font-size:10px;font-weight:500;padding:1px 6px;border-radius:4px;background:#FFF8E1;color:#E65100;border:0.5px solid #FFB74D;margin-left:4px'>&#9203; por definir</span>";
-      }else if(terceroClasifica){
-        badgeTercero="<span style='display:inline-flex;align-items:center;gap:2px;font-size:10px;font-weight:500;padding:1px 6px;border-radius:4px;background:#E8F5E9;color:#2E7D32;border:0.5px solid #81C784;margin-left:4px'>&#10003; clasifica</span>";
-      }else{
-        badgeTercero="<span style='display:inline-flex;align-items:center;gap:2px;font-size:10px;font-weight:500;padding:1px 6px;border-radius:4px;background:#F5F5F5;color:#9E9E9E;border:0.5px solid #BDBDBD;margin-left:4px'>&#10007; no clasifica</span>";
-      }
-      medalla="🥉";
-    }
+    else if(i===2){medalla="🥉";}
     html+="<tr class='"+posClasses[i]+"'>";
     html+="<td style='white-space:nowrap'>"+(i+1)+medalla+"</td>";
-    html+="<td>"+flag(eq)+eq+(i===2?badgeTercero:"")+"</td>";
+    html+="<td>"+flag(eq)+eq+"</td>";
     html+="<td>"+s.j+"</td><td>"+s.g+"</td><td>"+s.emp+"</td><td>"+s.p+"</td>";
     html+="<td>"+s.gf+"</td><td>"+gc+"</td>";
     html+="<td>"+(s.dg>=0?"+":"")+s.dg+"</td>";
