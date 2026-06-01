@@ -715,8 +715,12 @@ function htmlTablaGrupo(g){
     if(gl>gv)stats[l].pts+=3;else if(gl<gv)stats[v].pts+=3;
     else{stats[l].pts+=1;stats[v].pts+=1;}
   });
-  var resW={};GPIDS_G[g].forEach(function(pid){if(res[pid])resW[pid]=res[pid];});
-  var sorted=fifaSortGrupo(eq,stats,GPIDS_G[g],resW,TODOS);
+  var sorted=eq.slice().sort(function(a,b){
+    if(stats[b].pts!==stats[a].pts)return stats[b].pts-stats[a].pts;
+    if(stats[b].dg!==stats[a].dg)return stats[b].dg-stats[a].dg;
+    if(stats[b].gf!==stats[a].gf)return stats[b].gf-stats[a].gf;
+    return a.localeCompare(b);
+  });
   var h="<table style='width:100%;border-collapse:collapse;font-size:11px;margin-top:4px'>";
   h+="<tr style='background:#F0F4FF;color:#444'><th style='padding:3px 4px;text-align:left'>Pos</th><th style='padding:3px 4px;text-align:left;min-width:90px'>Equipo</th><th style='padding:3px 4px;text-align:center'>PJ</th><th style='padding:3px 4px;text-align:center'>Pts</th><th style='padding:3px 4px;text-align:center'>DG</th><th style='padding:3px 4px;text-align:center'>GF</th></tr>";
   sorted.forEach(function(eq2,i){
@@ -1301,22 +1305,13 @@ var SLOTS={
 };
 
 function nombresElim(id,pr,resEntry,slotL,slotV){
-  // Usar el pronóstico del participante (pl/pv), NO los resultados reales.
-  // Si pl/pv son códigos de slot, resolverlos con los resultados reales del Admin.
-  function esSlot(s){
-    return!!(s&&(/^[12][A-L]$/.test(s)||/^[WLl]\d+$/.test(s)||/^3[A-L]{2,}$/.test(s)));
-  }
-  function resolveNombre(prNombre,slot){
-    if(prNombre&&prNombre.length>0&&!esSlot(prNombre))return prNombre;
-    // Es slot o vacío → resolver con resultados reales
-    var r=resolverSlot16(slot);
-    if(r&&!esSlot(r))return r;
-    var r2=resolverSlot(slot);
-    if(r2&&!esSlot(r2))return r2;
-    return slot||"—";
-  }
-  var nL=resolveNombre(pr&&pr.pl?pr.pl:"",slotL);
-  var nV=resolveNombre(pr&&pr.pv?pr.pv:"",slotV);
+  var nL="",nV="";
+  if(resEntry&&resEntry.rl)nL=resEntry.rl;
+  if(resEntry&&resEntry.rv)nV=resEntry.rv;
+  if(!nL&&pr&&pr.pl)nL=pr.pl;
+  if(!nV&&pr&&pr.pv)nV=pr.pv;
+  if(!nL)nL=resolverSlot(slotL)||slotL||"—";
+  if(!nV)nV=resolverSlot(slotV)||slotV||"—";
   return[nL,nV];
 }
 
@@ -1512,6 +1507,63 @@ function construirPDFResultados(){
       doc.setFont("helvetica","normal");doc.setFontSize(6.5);doc.setTextColor(120,120,120);
       doc.text(p.exactos+" ex"+(p.validado?"  val":"  pend"),W-mg-22,y+4.5);y+=6.5;
     });y+=4;
+
+    // Sección mejores terceros en PDF de resultados
+    (function(){
+      var gruposConRes=GK2.filter(function(g){
+        return GPIDS_G[g].some(function(pid){var r=res[pid];return r&&r.gl!=null;});
+      });
+      if(!gruposConRes.length)return;
+      checkY(20);
+      banda([10,22,40],7);
+      doc.setFontSize(9);doc.setFont("helvetica","bold");doc.setTextColor(255,255,255);
+      doc.text("MEJORES TERCEROS CLASIFICADOS",mg,y+5);y+=7;y+=1;
+      var allTerceros=GK2.map(function(g){
+        var orden=clasGrupoReal(g);var eq=orden[2];
+        if(!eq)return null;
+        var s={pts:0,dg:0,gf:0};
+        GPIDS_G[g].forEach(function(pid){
+          var r=res[pid];if(!r||r.gl==null||r.gv==null)return;
+          var pa=TODOS.find(function(p){return p.id===pid;});if(!pa)return;
+          if(pa.l===eq){s.pts+=(r.gl>r.gv?3:r.gl===r.gv?1:0);s.gf+=r.gl;s.dg+=(r.gl-r.gv);}
+          if(pa.v===eq){s.pts+=(r.gv>r.gl?3:r.gl===r.gv?1:0);s.gf+=r.gv;s.dg+=(r.gv-r.gl);}
+        });
+        return{equipo:eq,grupo:g,pts:s.pts,dg:s.dg,gf:s.gf};
+      }).filter(Boolean);
+      allTerceros.sort(function(a,b){
+        if(b.pts!==a.pts)return b.pts-a.pts;
+        if(b.dg!==a.dg)return b.dg-a.dg;
+        if(b.gf!==a.gf)return b.gf-a.gf;
+        return a.equipo.localeCompare(b.equipo);
+      });
+      allTerceros.forEach(function(t,i){
+        checkY(7);
+        var clasifica=i<8;
+        var bg=clasifica?(i%2===0?[232,245,233]:[241,248,233]):(i%2===0?[250,250,250]:[245,245,245]);
+        doc.setFillColor(bg[0],bg[1],bg[2]);doc.rect(mg,y,W-mg*2,6,"F");
+        doc.setFontSize(8);
+        doc.setFont("helvetica","bold");
+        doc.setTextColor(clasifica?46:120,clasifica?125:120,clasifica?50:120);
+        doc.text((i+1)+".",mg+2,y+4);
+        doc.setFont("helvetica",clasifica?"bold":"normal");
+        doc.setTextColor(clasifica?27:100,clasifica?94:100,clasifica?32:100);
+        doc.text(limpiar(t.equipo)+" (Grupo "+t.grupo+")",mg+8,y+4);
+        doc.setFont("helvetica","normal");doc.setTextColor(100,100,100);
+        doc.text("Pts:"+t.pts+"  DG:"+(t.dg>=0?"+":"")+t.dg+"  GF:"+t.gf,W-mg-22,y+4);
+        if(clasifica){
+          doc.setFillColor(46,125,50);doc.roundedRect(W-mg-18,y+1,16,4,1,1,"F");
+          doc.setFont("helvetica","bold");doc.setFontSize(7);doc.setTextColor(255,255,255);
+          doc.text("clasifica",W-mg-10,y+3.8,{align:"center"});
+        }else{
+          doc.setFillColor(189,189,189);doc.roundedRect(W-mg-20,y+1,18,4,1,1,"F");
+          doc.setFont("helvetica","normal");doc.setFontSize(7);doc.setTextColor(255,255,255);
+          doc.text("no clasifica",W-mg-11,y+3.8,{align:"center"});
+        }
+        y+=6;
+      });
+      y+=4;
+    })();
+
     FR.forEach(function(fase){
       var partidos=TODOS.filter(function(p){return fase.ids.indexOf(p.id)>=0;});
       var conRes=partidos.filter(function(p){var r=res[p.id];return r&&r.gl!=null;});

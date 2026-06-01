@@ -367,10 +367,27 @@ function renderTablaGrupo(g,contenedor){
     var medalla="";
     if(i===0)medalla="🥇";
     else if(i===1)medalla="🥈";
-    else if(i===2){medalla=terceroClasifica?"🥉<span style='font-size:9px;color:#4CAF50;margin-left:2px'>✓</span>":"<span style='font-size:10px;color:#CCC'>✗</span>";}
+    else if(i===2){
+      // Verificar si todos los grupos tienen al menos 6 partidos pronosticados
+      var gruposCompletos=Object.keys(GEQ).filter(function(gr){
+        return PG.filter(function(p){return p.g===gr;}).every(function(p){
+          var pr=pronos[p.id];return pr&&pr.gl!=null&&pr.gv!=null;
+        });
+      }).length;
+      var todosCompletos=(gruposCompletos===Object.keys(GEQ).length);
+      var badgeTercero="";
+      if(!todosCompletos){
+        badgeTercero="<span style='display:inline-flex;align-items:center;gap:2px;font-size:10px;font-weight:500;padding:1px 6px;border-radius:4px;background:#FFF8E1;color:#E65100;border:0.5px solid #FFB74D;margin-left:4px'>&#9203; por definir</span>";
+      }else if(terceroClasifica){
+        badgeTercero="<span style='display:inline-flex;align-items:center;gap:2px;font-size:10px;font-weight:500;padding:1px 6px;border-radius:4px;background:#E8F5E9;color:#2E7D32;border:0.5px solid #81C784;margin-left:4px'>&#10003; clasifica</span>";
+      }else{
+        badgeTercero="<span style='display:inline-flex;align-items:center;gap:2px;font-size:10px;font-weight:500;padding:1px 6px;border-radius:4px;background:#F5F5F5;color:#9E9E9E;border:0.5px solid #BDBDBD;margin-left:4px'>&#10007; no clasifica</span>";
+      }
+      medalla="🥉";
+    }
     html+="<tr class='"+posClasses[i]+"'>";
     html+="<td style='white-space:nowrap'>"+(i+1)+medalla+"</td>";
-    html+="<td>"+flag(eq)+eq+"</td>";
+    html+="<td>"+flag(eq)+eq+(i===2?badgeTercero:"")+"</td>";
     html+="<td>"+s.j+"</td><td>"+s.g+"</td><td>"+s.emp+"</td><td>"+s.p+"</td>";
     html+="<td>"+s.gf+"</td><td>"+gc+"</td>";
     html+="<td>"+(s.dg>=0?"+":"")+s.dg+"</td>";
@@ -679,6 +696,10 @@ function limpiarN(n){
   return s.replace(/\s+/g," ").trim();
 }
 
+function limpiar(s){
+  if(!s)return"";
+  return s.normalize("NFD").replace(/[̀-ͯ]/g,"");
+}
 function construirPDF(){
   var btn=document.getElementById("btnpdf");
   try{
@@ -753,6 +774,60 @@ function construirPDF(){
       });
       y+=3;
     });
+
+    // Sección mejores terceros en PDF
+    (function(){
+      checkY(20);
+      // Fondo de cabecera
+      doc.setFillColor(16,62,100);
+      doc.rect(mg,y,W-mg*2,7,"F");
+      doc.setFontSize(9);doc.setFont("helvetica","bold");doc.setTextColor(255,255,255);
+      doc.text("MEJORES TERCEROS CLASIFICADOS",mg+2,y+4.8);y+=7;
+      // Calcular todos los terceros
+      var allTerceros=Object.keys(GEQ).map(function(g){
+        var r=clasGrupo(g);var eq=r.orden[2];var st=r.stats[eq];
+        return{equipo:eq,grupo:g,pts:st?st.pts:0,dg:st?st.dg:0,gf:st?st.gf:0};
+      });
+      allTerceros.sort(function(a,b){
+        if(b.pts!==a.pts)return b.pts-a.pts;
+        if(b.dg!==a.dg)return b.dg-a.dg;
+        if(b.gf!==a.gf)return b.gf-a.gf;
+        return a.equipo.localeCompare(b.equipo);
+      });
+      allTerceros.forEach(function(t,i){
+        checkY(7);
+        var clasifica=i<8;
+        var bg=clasifica?(i%2===0?[232,245,233]:[241,248,233]):(i%2===0?[250,250,250]:[245,245,245]);
+        doc.setFillColor(bg[0],bg[1],bg[2]);
+        doc.rect(mg,y,W-mg*2,6,"F");
+        doc.setFontSize(8);
+        // Posición
+        doc.setFont("helvetica","bold");
+        doc.setTextColor(clasifica?46:120,clasifica?125:120,clasifica?50:120);
+        doc.text((i+1)+".",mg+2,y+4);
+        // Nombre y grupo
+        doc.setFont("helvetica",clasifica?"bold":"normal");
+        doc.setTextColor(clasifica?27:100,clasifica?94:100,clasifica?32:100);
+        var nm=limpiar(t.equipo)+" (Grupo "+t.grupo+")";
+        doc.text(nm,mg+8,y+4);
+        // Stats
+        doc.setFont("helvetica","normal");
+        doc.setTextColor(100,100,100);
+        doc.text("Pts:"+t.pts+"  DG:"+(t.dg>=0?"+":"")+t.dg+"  GF:"+t.gf,W-mg-22,y+4);
+        // Badge clasifica/no
+        if(clasifica){
+          doc.setFillColor(46,125,50);doc.roundedRect(W-mg-18,y+1,16,4,1,1,"F");
+          doc.setFont("helvetica","bold");doc.setFontSize(7);doc.setTextColor(255,255,255);
+          doc.text("clasifica",W-mg-10,y+3.8,{align:"center"});
+        }else{
+          doc.setFillColor(189,189,189);doc.roundedRect(W-mg-20,y+1,18,4,1,1,"F");
+          doc.setFont("helvetica","normal");doc.setFontSize(7);doc.setTextColor(255,255,255);
+          doc.text("no clasifica",W-mg-11,y+3.8,{align:"center"});
+        }
+        y+=6;
+      });
+      y+=4;
+    })();
 
     // Eliminatorias
     var SLOTS_PDF={
