@@ -40,7 +40,8 @@ option{background:#132038}
 .card-brand .badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:3px 10px;font-size:10px;font-weight:700;letter-spacing:.08em;color:#fff}
 
 .partido-hero{padding:20px 22px 18px;border-bottom:1px solid rgba(255,255,255,.07)}
-.fase-chip{display:inline-block;background:rgba(200,16,46,.2);border:1px solid rgba(200,16,46,.4);border-radius:5px;padding:2px 8px;font-size:10px;font-weight:700;color:#FF8A80;letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px}
+.fase-chip{display:inline-block;background:rgba(200,16,46,.2);border:1px solid rgba(200,16,46,.4);border-radius:5px;padding:2px 8px;font-size:10px;font-weight:700;color:#FF8A80;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px}
+.horarios-line{font-size:10px;color:#93C5FD;margin-bottom:10px;letter-spacing:.02em;opacity:.9}
 .equipos{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px}
 .equipo-l{text-align:right}
 .equipo-r{text-align:left}
@@ -254,6 +255,28 @@ function renderCard(partido,nomL,nomV,rows,esElim){
   html+="<div class=\'card-top\'><div class=\'card-brand\'><h2>⚽ Polla Compis 2026</h2><span class=\'badge\'>PRONÓSTICOS</span></div></div>";
   html+="<div class=\'partido-hero\'>";
   html+="<div class=\'fase-chip\'>"+partido.fase+" · "+partido.f+"</div>";
+  (function(){
+    // partido.f tiene formato "DD Mon HH:MM" en hora ET (Miami/Bogotá = UTC-4 en verano)
+    var partes=partido.f.split(" "); // ["11","Jun","15:00"]
+    if(partes.length>=3){
+      var hm=partes[2].split(":");
+      var hET=parseInt(hm[0]),min=parseInt(hm[1]);
+      function fmtH(h,m){
+        var hh=((h%24)+24)%24;
+        return (hh<10?"0":"")+hh+":"+(m<10?"0":"")+m;
+      }
+      var zonas=[
+        {label:"Bogotá/Miami", diff:0},
+        {label:"México",       diff:-1},
+        {label:"Bolivia",      diff:1},
+        {label:"Francia",      diff:6}
+      ];
+      var linea=zonas.map(function(z){
+        return z.label+" "+fmtH(hET+z.diff,min);
+      }).join(" &nbsp;·&nbsp; ");
+      html+="<div class=\'horarios-line\'>🕐 "+linea+"</div>";
+    }
+  })();
   html+="<div class=\'equipos\'>";
   html+="<div class=\'equipo-l\'><span class=\'eq-flag\'>"+fL+"</span><div class=\'eq-name\'>"+esc(nomL)+"</div></div>";
   html+="<div class=\'vs-sep\'><span class=\'vs-txt\'>VS</span></div>";
