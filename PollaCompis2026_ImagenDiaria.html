@@ -266,10 +266,11 @@ function renderCard(partido,nomL,nomV,rows,esElim){
         return (hh<10?"0":"")+hh+":"+(m<10?"0":"")+m;
       }
       var zonas=[
-        {label:"Bogotá/Miami", diff:0},
-        {label:"México",       diff:-1},
-        {label:"Bolivia",      diff:1},
-        {label:"Francia",      diff:6}
+        {label:"Bogotá",  diff:-1},
+        {label:"México",  diff:-2},
+        {label:"Miami",   diff:0},
+        {label:"Bolivia", diff:0},
+        {label:"Francia", diff:7}
       ];
       var linea=zonas.map(function(z){
         return z.label+" "+fmtH(hET+z.diff,min);
