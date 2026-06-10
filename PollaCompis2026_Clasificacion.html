@@ -695,157 +695,293 @@ load();startCountdown();
 // ============================================================
 function descargarPDF(pid){
   var btn=document.getElementById("btnpdf_"+pid);
-  if(btn){btn.textContent="Generando…";btn.disabled=true;}
+  var p=parts.find(function(x){return x.id===pid;});
+  if(!p){if(btn){btn.textContent="⬇ Descargar PDF";btn.disabled=false;}return;}
+  if(btn){btn.textContent="Generando...";btn.disabled=true;}
   if(typeof window.jspdf==="undefined"){
     var s=document.createElement("script");
     s.src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
-    s.onload=function(){construirPDFClas(pid);};
+    s.onload=function(){construirPDFMaestro(p,btn);};
+    s.onerror=function(){if(btn){btn.textContent="⬇ Descargar PDF";btn.disabled=false;}alert("Error cargando jsPDF.");};
     document.head.appendChild(s);
-  }else{construirPDFClas(pid);}
+  }else{construirPDFMaestro(p,btn);}
 }
 
-function limpiarN(n){
-  if(!n)return"";
-  var s=n.replace(/[\u{1F300}-\u{1FFFF}]|[\u{1F100}-\u{1F1FF}]|[\u2600-\u27FF]/gu,"");
-  s=s.normalize("NFD").replace(/[\u0300-\u036f]/g,"");
-  s=s.replace(/\u00f1/g,"n").replace(/\u00d1/g,"N");
-  s=s.replace(/[\u0080-\u00ff]/g,function(c){
-    var map={"ü":"u","Ü":"U","ö":"o","Ö":"O","ä":"a","Ä":"A","ø":"o","å":"a","æ":"ae","Æ":"AE"};
-    return map[c]||c.normalize("NFD").replace(/[\u0300-\u036f]/g,"")||"?";
-  });
-  return s.replace(/\s+/g," ").trim();
-}
-
-function construirPDFClas(pid){
-  var btn=document.getElementById("btnpdf_"+pid);
-  var p=parts.find(function(x){return x.id===pid;});
-  if(!p){if(btn){btn.textContent="⬇ Descargar PDF";btn.disabled=false;}return;}
-  var pronos=p.pronos||{};
-  var GK_PDF=Object.keys(GEQ_G);
+function construirPDFMaestro(p, btnEl){
   try{
     var {jsPDF}=window.jspdf;
     var doc=new jsPDF({orientation:"portrait",unit:"mm",format:"a4"});
     var W=210,mg=14,y=0;
+    var pronos=p.pronos||{}, hvals=p.honor||{};
     var now=new Date();
     var fechaStr=now.toLocaleDateString("es-CO",{day:"2-digit",month:"long",year:"numeric"})+" · "+now.toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit"});
-    var refCode="PC2026-CLS-"+now.getTime().toString(36).toUpperCase();
+    var refCode="PC2026-"+now.getTime().toString(36).toUpperCase();
     var nomPart=limpiarN(p.nombre||"Participante");
+
     function newPage(){doc.addPage();y=0;}
-    function checkY(n){if(y+n>275)newPage();}
+    function checkY(needed){if(y+needed>275)newPage();}
     function banda(color,h){doc.setFillColor(color[0],color[1],color[2]);doc.rect(0,y,W,h,"F");}
     function txt(texto,x,fy,size,bold,color){
       doc.setFontSize(size);doc.setFont("helvetica",bold?"bold":"normal");
-      doc.setTextColor(color?color[0]:30,color?color[1]:30,color?color[2]:30);doc.text(texto,x,fy);
+      doc.setTextColor(color?color[0]:30,color?color[1]:30,color?color[2]:30);
+      doc.text(texto,x,fy);
     }
 
+    // — Variables de datos (autocontenidas, igual que Participante) —
+    function limpiarN(n){if(!n)return"";var s=String(n);s=s.replace(/[\u{1F300}-\u{1FFFF}]|[\u{1F100}-\u{1F1FF}]|[\u2600-\u27FF]/gu," ");s=s.normalize("NFD").replace(/[\u0300-\u036f]/g,"");s=s.replace(/\u00f1/g,"n").replace(/\u00d1/g,"N");return s.replace(/\s+/g," ").trim();}
+    var GEQ_PDF={
+      A:["México","Sudáfrica","Corea del Sur","Rep. Checa"],
+      B:["Canadá","Bosnia y Herz.","Catar","Suiza"],
+      C:["Brasil","Marruecos","Haití","Escocia"],
+      D:["EE.UU.","Paraguay","Australia","Turquía"],
+      E:["Alemania","Curazao","Costa de Marfil","Ecuador"],
+      F:["Países Bajos","Japón","Suecia","Túnez"],
+      G:["Bélgica","Egipto","Irán","Nueva Zelanda"],
+      H:["España","Cabo Verde","Arabia Saudita","Uruguay"],
+      I:["Francia","Senegal","Irak","Noruega"],
+      J:["Argentina","Argelia","Austria","Jordania"],
+      K:["Portugal","RD Congo","Uzbekistán","Colombia"],
+      L:["Inglaterra","Croacia","Ghana","Panamá"]
+    };
+    var GK_PDF=Object.keys(GEQ_PDF);
+    var PG_PDF=[
+      {id:1,l:"México",v:"Sudáfrica",g:"A",f:"11 Jun 15:00"},{id:2,l:"Corea del Sur",v:"Rep. Checa",g:"A",f:"11 Jun 22:00"},{id:25,l:"Rep. Checa",v:"Sudáfrica",g:"A",f:"18 Jun 12:00"},{id:28,l:"México",v:"Corea del Sur",g:"A",f:"18 Jun 21:00"},{id:53,l:"Sudáfrica",v:"Corea del Sur",g:"A",f:"24 Jun 21:00"},{id:54,l:"Rep. Checa",v:"México",g:"A",f:"24 Jun 21:00"},
+      {id:3,l:"Canadá",v:"Bosnia y Herz.",g:"B",f:"12 Jun 15:00"},{id:5,l:"Catar",v:"Suiza",g:"B",f:"13 Jun 15:00"},{id:26,l:"Suiza",v:"Bosnia y Herz.",g:"B",f:"18 Jun 15:00"},{id:27,l:"Canadá",v:"Catar",g:"B",f:"18 Jun 18:00"},{id:51,l:"Suiza",v:"Canadá",g:"B",f:"24 Jun 15:00"},{id:52,l:"Bosnia y Herz.",v:"Catar",g:"B",f:"24 Jun 15:00"},
+      {id:6,l:"Brasil",v:"Marruecos",g:"C",f:"13 Jun 18:00"},{id:7,l:"Haití",v:"Escocia",g:"C",f:"13 Jun 21:00"},{id:29,l:"Brasil",v:"Haití",g:"C",f:"19 Jun 18:00"},{id:30,l:"Escocia",v:"Marruecos",g:"C",f:"19 Jun 20:30"},{id:49,l:"Escocia",v:"Brasil",g:"C",f:"24 Jun 18:00"},{id:50,l:"Marruecos",v:"Haití",g:"C",f:"24 Jun 18:00"},
+      {id:4,l:"EE.UU.",v:"Paraguay",g:"D",f:"12 Jun 21:00"},{id:8,l:"Australia",v:"Turquía",g:"D",f:"14 Jun 00:00"},{id:31,l:"Turquía",v:"Paraguay",g:"D",f:"19 Jun 15:00"},{id:32,l:"EE.UU.",v:"Australia",g:"D",f:"19 Jun 23:00"},{id:59,l:"Turquía",v:"EE.UU.",g:"D",f:"25 Jun 22:00"},{id:60,l:"Paraguay",v:"Australia",g:"D",f:"25 Jun 22:00"},
+      {id:9,l:"Alemania",v:"Curazao",g:"E",f:"14 Jun 13:00"},{id:10,l:"Costa de Marfil",v:"Ecuador",g:"E",f:"14 Jun 19:00"},{id:33,l:"Alemania",v:"Costa de Marfil",g:"E",f:"20 Jun 16:00"},{id:34,l:"Ecuador",v:"Curazao",g:"E",f:"20 Jun 20:00"},{id:55,l:"Curazao",v:"Costa de Marfil",g:"E",f:"25 Jun 16:00"},{id:56,l:"Ecuador",v:"Alemania",g:"E",f:"25 Jun 16:00"},
+      {id:11,l:"Países Bajos",v:"Japón",g:"F",f:"14 Jun 16:00"},{id:12,l:"Suecia",v:"Túnez",g:"F",f:"14 Jun 22:00"},{id:35,l:"Países Bajos",v:"Suecia",g:"F",f:"20 Jun 13:00"},{id:36,l:"Túnez",v:"Japón",g:"F",f:"21 Jun 00:00"},{id:57,l:"Japón",v:"Suecia",g:"F",f:"25 Jun 19:00"},{id:58,l:"Túnez",v:"Países Bajos",g:"F",f:"25 Jun 19:00"},
+      {id:13,l:"Bélgica",v:"Egipto",g:"G",f:"15 Jun 15:00"},{id:14,l:"Irán",v:"Nueva Zelanda",g:"G",f:"15 Jun 21:00"},{id:38,l:"Bélgica",v:"Irán",g:"G",f:"21 Jun 15:00"},{id:40,l:"Nueva Zelanda",v:"Egipto",g:"G",f:"21 Jun 21:00"},{id:63,l:"Egipto",v:"Irán",g:"G",f:"26 Jun 23:00"},{id:64,l:"Nueva Zelanda",v:"Bélgica",g:"G",f:"26 Jun 23:00"},
+      {id:15,l:"España",v:"Cabo Verde",g:"H",f:"15 Jun 12:00"},{id:16,l:"Arabia Saudita",v:"Uruguay",g:"H",f:"15 Jun 18:00"},{id:37,l:"España",v:"Arabia Saudita",g:"H",f:"21 Jun 12:00"},{id:39,l:"Uruguay",v:"Cabo Verde",g:"H",f:"21 Jun 18:00"},{id:65,l:"Cabo Verde",v:"Arabia Saudita",g:"H",f:"26 Jun 20:00"},{id:66,l:"Uruguay",v:"España",g:"H",f:"26 Jun 20:00"},
+      {id:17,l:"Francia",v:"Senegal",g:"I",f:"16 Jun 15:00"},{id:18,l:"Irak",v:"Noruega",g:"I",f:"16 Jun 18:00"},{id:41,l:"Francia",v:"Irak",g:"I",f:"22 Jun 17:00"},{id:42,l:"Noruega",v:"Senegal",g:"I",f:"22 Jun 20:00"},{id:61,l:"Noruega",v:"Francia",g:"I",f:"26 Jun 15:00"},{id:62,l:"Senegal",v:"Irak",g:"I",f:"26 Jun 15:00"},
+      {id:19,l:"Argentina",v:"Argelia",g:"J",f:"16 Jun 21:00"},{id:20,l:"Austria",v:"Jordania",g:"J",f:"17 Jun 00:00"},{id:43,l:"Argentina",v:"Austria",g:"J",f:"22 Jun 13:00"},{id:44,l:"Jordania",v:"Argelia",g:"J",f:"22 Jun 23:00"},{id:69,l:"Argelia",v:"Austria",g:"J",f:"27 Jun 22:00"},{id:70,l:"Jordania",v:"Argentina",g:"J",f:"27 Jun 22:00"},
+      {id:21,l:"Portugal",v:"RD Congo",g:"K",f:"17 Jun 13:00"},{id:24,l:"Uzbekistán",v:"Colombia",g:"K",f:"17 Jun 22:00"},{id:45,l:"Portugal",v:"Uzbekistán",g:"K",f:"23 Jun 13:00"},{id:48,l:"Colombia",v:"RD Congo",g:"K",f:"23 Jun 22:00"},{id:71,l:"Colombia",v:"Portugal",g:"K",f:"27 Jun 19:30"},{id:72,l:"RD Congo",v:"Uzbekistán",g:"K",f:"27 Jun 19:30"},
+      {id:22,l:"Inglaterra",v:"Croacia",g:"L",f:"17 Jun 16:00"},{id:23,l:"Ghana",v:"Panamá",g:"L",f:"17 Jun 19:00"},{id:46,l:"Inglaterra",v:"Ghana",g:"L",f:"23 Jun 16:00"},{id:47,l:"Panamá",v:"Croacia",g:"L",f:"23 Jun 19:00"},{id:67,l:"Panamá",v:"Inglaterra",g:"L",f:"27 Jun 17:00"},{id:68,l:"Croacia",v:"Ghana",g:"L",f:"27 Jun 17:00"}
+    ];
+
+    // — clasGrupo local (igual que Participante) —
+    function sortGrupoPDF(equipos,stats){
+      return equipos.slice().sort(function(a,b){
+        var sa=stats[a],sb=stats[b];
+        if(sb.pts!==sa.pts)return sb.pts-sa.pts;
+        if(sb.dg!==sa.dg)return sb.dg-sa.dg;
+        if(sb.gf!==sa.gf)return sb.gf-sa.gf;
+        var gca=sa.gf-sa.dg,gcb=sb.gf-sb.dg;
+        if(gca!==gcb)return gca-gcb;
+        return a.localeCompare(b);
+      });
+    }
+    function clasGrupoPDF(g){
+      var eq=GEQ_PDF[g];
+      var stats={};
+      eq.forEach(function(e){stats[e]={pts:0,dg:0,gf:0};});
+      PG_PDF.filter(function(pa){return pa.g===g;}).forEach(function(pa){
+        var pr=pronos[pa.id];
+        if(!pr||pr.gl==null||pr.gv==null)return;
+        var gl=parseInt(pr.gl),gv=parseInt(pr.gv);
+        stats[pa.l].gf+=gl;stats[pa.v].gf+=gv;
+        stats[pa.l].dg+=(gl-gv);stats[pa.v].dg+=(gv-gl);
+        if(gl>gv){stats[pa.l].pts+=3;}else if(gl===gv){stats[pa.l].pts+=1;stats[pa.v].pts+=1;}else{stats[pa.v].pts+=3;}
+      });
+      return{orden:sortGrupoPDF(eq,stats),stats:stats};
+    }
+    function resolveSlot(cod){
+      var m1=cod.match(/^(\d)([A-L])$/);
+      if(m1){var pos=parseInt(m1[1])-1;var g=m1[2];var r=clasGrupoPDF(g);return r.orden[pos]||cod;}
+      var m2=cod.match(/^W(\d+)$/);
+      if(m2){var pid=parseInt(m2[1]);var pr2=pronos[pid];return(pr2&&pr2.pl&&pr2.pv)?(pr2.gl>pr2.gv?pr2.pl:(pr2.gl<pr2.gv?pr2.pv:(pr2.penWin==="L"?pr2.pl:pr2.pv))):cod;}
+      var m3=cod.match(/^L(\d+)$/);
+      if(m3){var pid3=parseInt(m3[1]);var pr3=pronos[pid3];return(pr3&&pr3.pl&&pr3.pv)?(pr3.gl>pr3.gv?pr3.pv:(pr3.gl<pr3.gv?pr3.pl:(pr3.penWin==="L"?pr3.pv:pr3.pl))):cod;}
+      return cod;
+    }
+
+    // — Encabezado —
     banda([10,22,40],22);
     txt("POLLA COMPIS · MUNDIAL 2026",mg,10,13,true,[255,255,255]);
     txt("USA · CANADA · MEXICO  |  11 Jun - 19 Jul 2026",mg,16,8,false,[200,216,240]);
-    y=22;banda([244,246,250],14);
-    txt("Participante:",mg,y+5,8,false,[100,100,100]);txt(nomPart,mg+22,y+5,10,true,[10,22,40]);
+    y=22;
+    banda([244,246,250],14);
+    txt("Participante:",mg,y+5,8,false,[100,100,100]);
+    txt(nomPart,mg+22,y+5,10,true,[10,22,40]);
     txt("Ref: "+refCode,W-mg,y+5,7,false,[150,150,150]);
-    doc.setFontSize(7);doc.setTextColor(150,150,150);doc.text(limpiarN(fechaStr),W-mg,y+10,{align:"right"});
-    y+=14;doc.setDrawColor(220,220,220);doc.setLineWidth(0.3);doc.line(mg,y+2,W-mg,y+2);y+=6;
+    doc.setFontSize(7);doc.setTextColor(150,150,150);
+    doc.text(limpiarN(fechaStr),W-mg,y+10,{align:"right"});
+    y+=14;
+    doc.setDrawColor(220,220,220);doc.setLineWidth(0.3);doc.line(mg,y+2,W-mg,y+2);y+=6;
 
-    // CLASIFICACIÓN GENERAL — FIX: usa calcTotal que incluye clasS/clasF
+    // — Grupos —
     checkY(10);banda([200,16,46],7);
-    txt("CLASIFICACION GENERAL",mg,y+5,9,true,[255,255,255]);y+=7;y+=1;
-    var GK2=Object.keys(GEQ_G);
-    // ★ FIX: calcular clas usando calcTotal (que ya incluye clasS + clasF globales)
-    var clas=parts.map(function(px){
-      var c=calcTotal(px);
-      return{nombre:px.nombre,pts:c.pts,exactos:c.exactos,validado:px.validado};
-    }).sort(function(a,b){return b.pts-a.pts||b.exactos-a.exactos;});
-
-    clas.forEach(function(px,i){
-      checkY(7);
-      doc.setFillColor(i%2===0?255:248,i%2===0?255:249,i%2===0?255:250);doc.rect(mg,y,W-mg*2,6.5,"F");
-      doc.setFontSize(8);doc.setFont("helvetica","normal");doc.setTextColor(60,60,60);doc.text(String(i+1)+".",mg+1,y+4.5);
-      doc.setFont("helvetica",i<3?"bold":"normal");doc.setTextColor(10,22,40);doc.text(limpiarN(px.nombre),mg+8,y+4.5);
-      doc.setFont("helvetica","bold");doc.setTextColor(i===0?200:10,i===0?16:22,i===0?46:40);
-      doc.text(String(px.pts)+" pts",W-mg-2,y+4.5,{align:"right"});
-      doc.setFont("helvetica","normal");doc.setFontSize(6.5);doc.setTextColor(120,120,120);
-      doc.text(px.exactos+" ex"+(px.validado?"  val":"  pend"),W-mg-22,y+4.5);y+=6.5;
-    });y+=4;
-
-    // GRUPOS
-    checkY(10);banda([30,42,70],7);txt("FASE DE GRUPOS",mg,y+5,9,true,[255,255,255]);y+=7;y+=1;
-    var gruposParts={A:[1,2,25,28,53,54],B:[3,5,26,27,51,52],C:[6,7,29,30,49,50],D:[4,8,31,32,59,60],E:[9,10,33,34,55,56],F:[11,12,35,36,57,58],G:[13,14,38,40,63,64],H:[15,16,37,39,65,66],I:[17,18,41,42,61,62],J:[19,20,43,44,69,70],K:[21,24,45,48,71,72],L:[22,23,46,47,67,68]};
-    var gruposNames_p=TODOS.filter(function(pa){return pa.f==="grupos";});
+    txt("FASE DE GRUPOS",mg,y+5,9,true,[255,255,255]);y+=7;y+=2;
     GK_PDF.forEach(function(g){
-      checkY(12);
-      doc.setFillColor(10,22,40);doc.rect(mg,y,W-mg*2,6,"F");
-      doc.setFontSize(8);doc.setFont("helvetica","bold");doc.setTextColor(255,255,255);
-      doc.text("GRUPO "+g+" · "+(GEQ_G[g]||[]).join("  ·  "),mg+2,y+4);y+=6;
-      gruposNames_p.filter(function(pa){return pa.g===g;}).forEach(function(pa,idx){
-        checkY(6);
+      checkY(40);
+      banda([10,22,40],7);
+      txt("GRUPO "+g+" · "+GEQ_PDF[g].join("  ·  "),mg,y+5,8,true,[255,255,255]);y+=7;
+      PG_PDF.filter(function(pa){return pa.g===g;}).forEach(function(pa,idx){
+        checkY(8);
         var pr=pronos[pa.id];
-        var score=(pr&&pr.gl!=null&&pr.gv!=null)?(pr.gl+"-"+pr.gv):"  -  ";
-        var real=res[pa.id];var realScore=real?(real.gl+"-"+real.gv):"";
+        var score=(pr&&pr.gl!=null&&pr.gv!=null)?(pr.gl+"–"+pr.gv):"–";
         var bg=idx%2===0?[255,255,255]:[248,249,250];
-        doc.setFillColor(bg[0],bg[1],bg[2]);doc.rect(mg,y,W-mg*2,5.5,"F");
-        doc.setFontSize(7.5);doc.setFont("helvetica","normal");doc.setTextColor(30,30,30);
-        doc.text(limpiarN(pa.l),mg+2,y+3.8);
-        doc.setFont("helvetica","bold");doc.setTextColor(200,16,46);doc.text(score,W/2,y+3.8,{align:"center"});
-        doc.setFont("helvetica","normal");doc.setTextColor(30,30,30);doc.text(limpiarN(pa.v),W-mg-2,y+3.8,{align:"right"});
-        if(realScore){doc.setFontSize(6);doc.setTextColor(100,100,100);doc.text("real:"+realScore,mg+2,y+3.8+2.2);}
-        y+=5.5;
-      });y+=2;
+        doc.setFillColor(bg[0],bg[1],bg[2]);doc.rect(mg,y,W-mg*2,6,"F");
+        doc.setFontSize(8);doc.setFont("helvetica","normal");doc.setTextColor(30,30,30);
+        doc.text(limpiarN(pa.l),mg+2,y+4);
+        doc.setFont("helvetica","bold");doc.setTextColor(200,16,46);
+        doc.text(score,W/2,y+4,{align:"center"});
+        doc.setFont("helvetica","normal");doc.setTextColor(30,30,30);
+        doc.text(limpiarN(pa.v),W-mg-2,y+4,{align:"right"});
+        doc.setFontSize(6);doc.setTextColor(170,170,170);doc.text(pa.f,W-mg-2,y+4+2.5,{align:"right"});
+        y+=6;
+      });
+      // Mini tabla clasificación grupo
+      checkY(20);
+      var res=clasGrupoPDF(g);
+      doc.setFillColor(240,244,255);doc.rect(mg,y,W-mg*2,6,"F");
+      doc.setFontSize(7);doc.setFont("helvetica","bold");doc.setTextColor(10,22,40);
+      doc.text("Clasificación pronosticada:",mg+2,y+4);y+=6;
+      res.orden.forEach(function(eq,i){
+        checkY(6);
+        var bg2=i<2?[232,245,232]:[255,255,255];
+        doc.setFillColor(bg2[0],bg2[1],bg2[2]);doc.rect(mg,y,W-mg*2,5,"F");
+        doc.setFontSize(7);doc.setFont("helvetica",i<2?"bold":"normal");
+        doc.setTextColor(i<2?27:80,i<2?94:80,i<2?32:80);
+        var st=res.stats[eq];
+        doc.text((i+1)+"° "+limpiarN(eq),mg+2,y+3.5);
+        doc.text("Pts:"+st.pts+" DG:"+(st.dg>=0?"+":"")+st.dg+" GF:"+st.gf,W-mg-2,y+3.5,{align:"right"});
+        y+=5;
+      });
+      y+=3;
     });
 
-    // ELIMINATORIAS
-    var FR_PDF=[
-      {lbl:"Dieciseisavos",f:"dieciseisavos"},{lbl:"Octavos",f:"octavos"},
-      {lbl:"Cuartos",f:"cuartos"},{lbl:"Semifinales",f:"semis"},
-      {lbl:"3er y 4to Puesto",f:"tercero"},{lbl:"Final",f:"final"}
-    ];
-    FR_PDF.forEach(function(fr){
-      var partidos=TODOS.filter(function(pa){return pa.f===fr.f;});
-      var conRes=partidos.filter(function(pa){var r=res[pa.id];return r&&r.gl!=null;});
-      if(!conRes.length)return;
-      checkY(10);banda([30,42,70],7);
+    // — Mejores Terceros —
+    (function(){
+      checkY(20);
+      doc.setFillColor(16,62,100);doc.rect(mg,y,W-mg*2,7,"F");
       doc.setFontSize(9);doc.setFont("helvetica","bold");doc.setTextColor(255,255,255);
-      doc.text(fr.lbl.toUpperCase()+" ("+conRes.length+"/"+partidos.length+")",mg,y+5);y+=7;y+=1;
-      conRes.forEach(function(pa,idx){
-        checkY(7);var r=res[pa.id];
-        doc.setFillColor(idx%2===0?255:248,idx%2===0?255:249,idx%2===0?255:250);doc.rect(mg,y,W-mg*2,6,"F");
-        var nL=limpiarN(r.rl||pa.l),nV=limpiarN(r.rv||pa.v);
-        doc.setFontSize(7.5);doc.setFont("helvetica","normal");doc.setTextColor(30,30,30);
-        doc.text(nL,mg+2,y+4);doc.setFont("helvetica","bold");doc.setTextColor(200,16,46);
-        doc.text(r.gl+"-"+r.gv,W/2,y+4,{align:"center"});doc.setFont("helvetica","normal");doc.setTextColor(30,30,30);
-        doc.text(nV,W-mg-2,y+4,{align:"right"});
-        if(r.penWin){doc.setFontSize(6);doc.setTextColor(230,81,0);doc.text("pen: "+limpiarN(r.penWin==="L"?nL:nV),W/2,y+4+2.3,{align:"center"});y+=9;}
-        else{y+=6;}
+      doc.text("MEJORES TERCEROS CLASIFICADOS",mg+2,y+4.8);y+=7;
+      var allTerceros=GK_PDF.map(function(g){
+        var r=clasGrupoPDF(g);var eq=r.orden[2];var st=r.stats[eq];
+        return{equipo:eq,grupo:g,pts:st?st.pts:0,dg:st?st.dg:0,gf:st?st.gf:0};
+      });
+      allTerceros.sort(function(a,b){
+        if(b.pts!==a.pts)return b.pts-a.pts;
+        if(b.dg!==a.dg)return b.dg-a.dg;
+        if(b.gf!==a.gf)return b.gf-a.gf;
+        return a.equipo.localeCompare(b.equipo);
+      });
+      allTerceros.forEach(function(t,i){
+        checkY(7);var clasifica=i<8;
+        var bg=clasifica?(i%2===0?[232,245,233]:[241,248,233]):(i%2===0?[250,250,250]:[245,245,245]);
+        doc.setFillColor(bg[0],bg[1],bg[2]);doc.rect(mg,y,W-mg*2,6,"F");
+        doc.setFontSize(8);doc.setFont("helvetica","bold");
+        doc.setTextColor(clasifica?46:120,clasifica?125:120,clasifica?50:120);
+        doc.text((i+1)+".",mg+2,y+4);
+        doc.setFont("helvetica",clasifica?"bold":"normal");
+        doc.setTextColor(clasifica?27:100,clasifica?94:100,clasifica?32:100);
+        doc.text(limpiarN(t.equipo)+" (Grupo "+t.grupo+")",mg+8,y+4);
+        doc.setFont("helvetica","normal");doc.setTextColor(100,100,100);
+        doc.text("Pts:"+t.pts+"  DG:"+(t.dg>=0?"+":"")+t.dg+"  GF:"+t.gf,W-mg-22,y+4);
+        if(clasifica){
+          doc.setFillColor(46,125,50);doc.roundedRect(W-mg-18,y+1,16,4,1,1,"F");
+          doc.setFont("helvetica","bold");doc.setFontSize(7);doc.setTextColor(255,255,255);
+          doc.text("clasifica",W-mg-10,y+3.8,{align:"center"});
+        }else{
+          doc.setFillColor(189,189,189);doc.roundedRect(W-mg-20,y+1,18,4,1,1,"F");
+          doc.setFont("helvetica","normal");doc.setFontSize(7);doc.setTextColor(255,255,255);
+          doc.text("no clasifica",W-mg-11,y+3.8,{align:"center"});
+        }
+        y+=6;
+      });y+=4;
+    })();
+
+    // — Eliminatorias —
+    var SLOTS_PDF={
+      73:["2A","2B"],74:["1E","3ABCDF"],75:["1F","2C"],76:["1C","2F"],
+      77:["1I","3CDFGH"],78:["2E","2I"],79:["1A","3CEFHI"],80:["1L","3EHIJK"],
+      81:["1D","3BEFIJ"],82:["1G","3AEHIJ"],83:["2K","2L"],84:["1H","2J"],
+      85:["1B","3EFGIJ"],86:["1J","2H"],87:["1K","3DEIJL"],88:["2D","2G"],
+      89:["W73","W75"],90:["W74","W77"],91:["W76","W78"],92:["W79","W80"],
+      93:["W83","W84"],94:["W81","W82"],95:["W86","W88"],96:["W85","W87"],
+      97:["W89","W90"],98:["W93","W94"],99:["W91","W92"],100:["W95","W96"],
+      101:["W97","W98"],102:["W99","W100"],103:["L101","L102"],104:["W101","W102"]
+    };
+    var fasesElimPDF=[
+      {lbl:"DIECISEISAVOS DE FINAL",ids:[73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88]},
+      {lbl:"OCTAVOS DE FINAL",ids:[89,90,91,92,93,94,95,96]},
+      {lbl:"CUARTOS DE FINAL",ids:[97,98,99,100]},
+      {lbl:"SEMIFINALES",ids:[101,102]},
+      {lbl:"3ER Y 4TO PUESTO",ids:[103]},
+      {lbl:"GRAN FINAL",ids:[104]}
+    ];
+    fasesElimPDF.forEach(function(fase){
+      checkY(12);banda([200,16,46],7);
+      txt(fase.lbl,mg,y+5,9,true,[255,255,255]);y+=7;y+=2;
+      fase.ids.forEach(function(id,idx){
+        checkY(10);
+        var pr=pronos[id];
+        var slotPair=SLOTS_PDF[id]||["—","—"];
+        var nomLraw=(pr&&pr.pl)?pr.pl:resolveSlot(slotPair[0]);
+        var nomVraw=(pr&&pr.pv)?pr.pv:resolveSlot(slotPair[1]);
+        var nomL=limpiarN(nomLraw)||slotPair[0];
+        var nomV=limpiarN(nomVraw)||slotPair[1];
+        var glP=pr&&pr.gl!=null?parseInt(pr.gl):null;
+        var gvP=pr&&pr.gv!=null?parseInt(pr.gv):null;
+        var score=(glP!==null&&gvP!==null)?(glP+"–"+gvP):"–";
+        var bg=idx%2===0?[255,255,255]:[248,249,250];
+        doc.setFillColor(bg[0],bg[1],bg[2]);doc.rect(mg,y,W-mg*2,6,"F");
+        doc.setFontSize(8);doc.setFont("helvetica","normal");doc.setTextColor(30,30,30);
+        doc.text((nomL.length>22?nomL.substring(0,20)+"…":nomL),mg+2,y+4);
+        doc.setFont("helvetica","bold");doc.setTextColor(200,16,46);
+        doc.text(score,W/2,y+4,{align:"center"});
+        doc.setFont("helvetica","normal");doc.setTextColor(30,30,30);
+        doc.text((nomV.length>22?nomV.substring(0,20)+"…":nomV),W-mg-2,y+4,{align:"right"});
+        y+=6;
+        if(glP!==null&&gvP!==null&&glP===gvP&&pr&&pr.penWin){
+          checkY(6);doc.setFillColor(255,248,225);doc.rect(mg,y,W-mg*2,5,"F");
+          doc.setFontSize(7);doc.setFont("helvetica","normal");doc.setTextColor(230,81,0);
+          doc.text("Penales — clasifica: "+limpiarN(pr.penWin==="L"?nomL:nomV),mg+2,y+3.5);y+=5;
+        }
       });y+=3;
     });
 
-    // HONOR REAL
-    var hayHonor=HONOR_DEF.some(function(h){return hR[h.k];});
-    if(hayHonor){
-      checkY(10);banda([200,16,46],7);
-      doc.setFontSize(9);doc.setFont("helvetica","bold");doc.setTextColor(255,255,255);
-      doc.text("CUADRO DE HONOR REAL",mg,y+5);y+=7;y+=1;
-      HONOR_DEF.forEach(function(h,i){
-        var val=hR[h.k];if(!val)return;checkY(6.5);
-        doc.setFillColor(i%2===0?255:248,i%2===0?255:249,i%2===0?255:250);doc.rect(mg,y,W-mg*2,6,"F");
-        doc.setFontSize(8);doc.setFont("helvetica","normal");doc.setTextColor(80,80,80);
-        doc.text(h.l.replace(/[^\u0000-\u007F]/g,"").trim()+" ("+h.pts+"pts)",mg+2,y+4);
-        doc.setFont("helvetica","bold");doc.setTextColor(10,22,40);doc.text(limpiarN(val),W-mg-2,y+4,{align:"right"});y+=6;
-      });
-    }
+    // — Cuadro de Honor —
+    checkY(12);banda([10,22,40],7);
+    txt("CUADRO DE HONOR",mg,y+5,9,true,[255,255,255]);y+=7;y+=2;
+    var honorLbls={campeon:"Campeon",subcampeon:"Subcampeon",tercero_h:"Tercer puesto",bota_oro:"Bota de Oro",bota_plata:"Bota de Plata",bota_bronce:"Bota de Bronce",balon_oro:"Balon de Oro",balon_plata:"Balon de Plata",balon_bronce:"Balon de Bronce",guante_oro:"Guante de Oro"};
+    var honorPts={campeon:40,subcampeon:25,tercero_h:15,bota_oro:15,bota_plata:10,bota_bronce:7,balon_oro:15,balon_plata:10,balon_bronce:7,guante_oro:15};
+    Object.keys(honorLbls).forEach(function(k,idx){
+      checkY(7);
+      var bg=idx%2===0?[255,255,255]:[248,249,250];
+      doc.setFillColor(bg[0],bg[1],bg[2]);doc.rect(mg,y,W-mg*2,6,"F");
+      doc.setFontSize(8);doc.setFont("helvetica","normal");doc.setTextColor(80,80,80);
+      doc.text(honorLbls[k],mg+2,y+4);
+      doc.setFont("helvetica","bold");doc.setTextColor(10,22,40);
+      doc.text(limpiarN(hvals[k]||"—"),W-mg-20,y+4);
+      doc.setFontSize(7);doc.setFont("helvetica","normal");doc.setTextColor(150,150,150);
+      doc.text(honorPts[k]+"pts",W-mg-2,y+4,{align:"right"});y+=6;
+    });
 
-    var np=doc.getNumberOfPages();
-    for(var pg=1;pg<=np;pg++){
+    // — Pie —
+    checkY(16);y+=4;
+    doc.setFontSize(7);doc.setFont("helvetica","normal");doc.setTextColor(150,150,150);
+    doc.text("Polla Compis 2026 · Maximo teorico: 2.208 pts · 100.000 COP / 25 EUR",mg,y);
+    y+=4;
+
+    var totalPags=doc.getNumberOfPages();
+    for(var pg=1;pg<=totalPags;pg++){
       doc.setPage(pg);doc.setFillColor(10,22,40);doc.rect(0,287,W,10,"F");
       doc.setFontSize(7);doc.setFont("helvetica","normal");doc.setTextColor(200,216,240);
       doc.text("Polla Compis 2026  ·  "+nomPart+"  ·  Ref: "+refCode,mg,293);
-      doc.text("Pag "+pg+"/"+np,W-mg,293,{align:"right"});
+      doc.text("Pag. "+pg+" / "+totalPags,W-mg,293,{align:"right"});
     }
     doc.save("PollaCompis2026_"+nomPart.replace(/[^a-zA-Z0-9]/g,"_")+".pdf");
-    if(btn){btn.textContent="✓ PDF descargado";btn.style.background="#22C55E";btn.disabled=false;
-      setTimeout(function(){btn.textContent="⬇ Descargar PDF";btn.style.background="#0A1628";},3000);}
-  }catch(err){console.error(err);if(btn){btn.textContent="⬇ Descargar PDF";btn.disabled=false;}}
+    if(btnEl){btnEl.textContent="✓ PDF descargado";btnEl.style.background="#1B5E20";btnEl.disabled=false;
+      setTimeout(function(){btnEl.textContent="⬇ PDF";btnEl.style.background="";btnEl.disabled=false;},3000);}
+  }catch(err){
+    console.error(err);
+    if(btnEl){btnEl.textContent="⬇ PDF";btnEl.disabled=false;}
+    alert("Error generando el PDF: "+err.message);
+  }
 }
+
 </script>
 </body>
 </html>
