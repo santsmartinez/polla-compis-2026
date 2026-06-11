@@ -40,7 +40,8 @@ option{background:#132038}
 .card-brand .badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:3px 10px;font-size:10px;font-weight:700;letter-spacing:.08em;color:#fff}
 
 .partido-hero{padding:20px 22px 18px;border-bottom:1px solid rgba(255,255,255,.07)}
-.fase-chip{display:inline-block;background:rgba(200,16,46,.2);border:1px solid rgba(200,16,46,.4);border-radius:5px;padding:2px 8px;font-size:10px;font-weight:700;color:#FF8A80;letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px}
+.fase-chip{display:inline-block;background:rgba(200,16,46,.2);border:1px solid rgba(200,16,46,.4);border-radius:5px;padding:2px 8px;font-size:10px;font-weight:700;color:#FF8A80;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px}
+.horarios-zonas{font-size:10px;color:#8899B8;margin-bottom:10px;line-height:1.4}
 .equipos{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px}
 .equipo-l{text-align:right}
 .equipo-r{text-align:left}
@@ -329,6 +330,24 @@ async function generarImagen(){
   }
 }
 
+// ---- CONVERSIÓN HORARIA ----
+function horariosZonas(f){
+  // f tiene formato "DD Mon HH:MM" en hora ET (Miami/Bogotá, UTC-5 en invierno / UTC-4 en verano)
+  // Durante el Mundial 2026 (jun-jul) ET = UTC-4, Bogotá = UTC-5 → Bogotá = ET - 1h
+  var partes=f.split(" ");
+  if(partes.length<3)return "";
+  var hm=partes[2].split(":");
+  if(hm.length<2)return "";
+  var hET=parseInt(hm[0]),min=parseInt(hm[1]);
+  function fmt(h,m){var hh=((h%24)+24)%24;return(hh<10?"0":"")+hh+":"+(m<10?"0":"")+m;}
+  var bog=fmt(hET-1,min);   // Bogotá = ET - 1h
+  var mia=fmt(hET,min);     // Miami = ET
+  var mex=fmt(hET-1,min);   // México Ciudad = ET - 1h (mismo que Bogotá en verano)
+  var bol=fmt(hET+1,min);   // Bolivia = ET + 1h
+  var fra=fmt(hET+6,min);   // Francia = ET + 6h
+  return "🕐 Bogotá "+bog+" · Miami "+mia+" · México "+mex+" · Bolivia "+bol+" · Francia "+fra;
+}
+
 function signo(gl,gv,nomL,nomV){
   if(gl==null||gv==null)return{txt:"—",cls:""};
   if(gl>gv)return{txt:"🏠 "+nomL,cls:"sig-L"};
@@ -346,6 +365,7 @@ function renderCard(partido,nomL,nomV,rows,esElim){
   html+="<div class=\'card-top\'><div class=\'card-brand\'><h2>⚽ Polla Compis 2026</h2><span class=\'badge\'>PRONÓSTICOS</span></div></div>";
   html+="<div class=\'partido-hero\'>";
   html+="<div class=\'fase-chip\'>"+partido.fase+" · "+partido.f+"</div>";
+  html+="<div class=\'horarios-zonas\'>"+horariosZonas(partido.f)+"</div>";
   html+="<div class=\'equipos\'>";
   html+="<div class=\'equipo-l\'><span class=\'eq-flag\'>"+fL+"</span><div class=\'eq-name\'>"+esc(nomL)+"</div></div>";
   html+="<div class=\'vs-sep\'><span class=\'vs-txt\'>VS</span></div>";
@@ -429,6 +449,7 @@ function renderStats(partido,nomL,nomV,rows,esElim){
   // Hero partido
   html+="<div class='st-partido-hero'>";
   html+="<div class='st-fase-chip'>"+esc(partido.fase)+" · "+esc(partido.f)+"</div>";
+  html+="<div class='horarios-zonas'>"+horariosZonas(partido.f)+"</div>";
   html+="<div class='st-equipos'>";
   html+="<div class='st-eq-l'><span class='st-eq-flag'>"+fL+"</span><div class='st-eq-name'>"+esc(nomL)+"</div></div>";
   html+="<div class='st-vs'>VS</div>";
