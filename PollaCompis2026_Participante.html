@@ -73,6 +73,27 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
   <h1>⚽ Polla Compis · Mundial 2026</h1>
   <p>Llena tus 104 pronósticos · 100.000 COP / 25 EUR</p>
 </div>
+
+<script>
+// ── CIERRE DE INSCRIPCIONES ──────────────────────────────────
+var CERRADO = true; // Cambiar a false para reabrir
+// ────────────────────────────────────────────────────────────
+if (CERRADO) {
+  document.write('<div style="max-width:480px;margin:2rem auto;padding:2rem 1.5rem;background:#fff;border-radius:14px;box-shadow:0 2px 12px rgba(0,0,0,.1);text-align:center;font-family:system-ui,sans-serif">'
+    + '<div style="font-size:52px;margin-bottom:.75rem">🔒</div>'
+    + '<h2 style="font-size:20px;font-weight:700;color:#0A1628;margin-bottom:.5rem">Inscripciones cerradas</h2>'
+    + '<p style="font-size:14px;color:#555;line-height:1.6;margin-bottom:1.25rem">El plazo de registro para la Polla Compis 2026 ya venció.<br>El torneo ha comenzado — ¡disfruta los partidos!</p>'
+    + '<a href="https://santsmartinez.github.io/polla-compis-2026/PollaCompis2026_Clasificacion.html" style="display:inline-block;padding:11px 24px;background:#C8102E;color:#fff;border-radius:9px;font-size:14px;font-weight:600;text-decoration:none">Ver clasificación ▶</a>'
+    + '</div>');
+  document.addEventListener("DOMContentLoaded", function(){
+    var prog = document.querySelector(".prog");
+    var body = document.querySelector(".body");
+    if (prog) prog.style.display = "none";
+    if (body) body.style.display = "none";
+  });
+}
+</script>
+
 <div class="prog">
   <div class="bar"><div class="fill" id="pf"></div></div>
   <div class="plbl"><span id="pt">Paso 1 de 19</span><span id="pp">0%</span></div>
