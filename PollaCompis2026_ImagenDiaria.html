@@ -689,6 +689,8 @@ async function renderLideres(partido,nomL,nomV,rows,esElim){
     card.innerHTML="<div class='ld' style='padding:2rem;color:#FF8A80;font-size:13px'>Error cargando clasificación: "+esc(e.message)+"</div>";
   }
 }
+
+function descargarPNG(cardId,filename,btn){
   var origTxt=btn.textContent;
   btn.textContent="Generando…";btn.disabled=true;
   function capturar(){
