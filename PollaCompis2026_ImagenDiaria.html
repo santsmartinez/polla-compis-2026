@@ -134,6 +134,38 @@ option{background:#132038}
 .st-foot{background:rgba(255,255,255,.03);border-top:1px solid rgba(255,255,255,.06);padding:10px 22px;display:flex;justify-content:space-between;align-items:center}
 .st-foot-txt{font-size:10px;color:#4A5568}
 .st-foot-logo{font-family:'Bebas Neue',sans-serif;font-size:14px;color:#FFD700;letter-spacing:1px}
+
+/* ---- TARJETA LÍDERES ---- */
+#cardLideres{background:#0A1628;border-radius:16px;overflow:hidden;position:relative;width:100%;font-family:'DM Sans',sans-serif;}
+.ld-top{background:linear-gradient(135deg,#1a4a1a 0%,#0d2b0d 100%);padding:18px 22px 16px;position:relative;overflow:hidden}
+.ld-top::before{content:'';position:absolute;right:-30px;top:-30px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.05)}
+.ld-brand{display:flex;align-items:center;justify-content:space-between;position:relative;z-index:1}
+.ld-brand h2{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1.5px;color:#fff}
+.ld-brand .badge-l{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:3px 10px;font-size:10px;font-weight:700;letter-spacing:.08em;color:#FFD700}
+.ld-partido-hero{padding:16px 22px 14px;border-bottom:1px solid rgba(255,255,255,.07)}
+.ld-fase-chip{display:inline-block;background:rgba(255,215,0,.15);border:1px solid rgba(255,215,0,.3);border-radius:5px;padding:2px 8px;font-size:10px;font-weight:700;color:#FFD700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px}
+.ld-equipos{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px}
+.ld-eq-l{text-align:right}
+.ld-eq-r{text-align:left}
+.ld-eq-flag{font-size:28px;display:block;margin-bottom:3px}
+.ld-eq-name{font-size:16px;font-weight:700;color:#fff;line-height:1.2}
+.ld-vs{text-align:center;font-family:'Bebas Neue',sans-serif;font-size:24px;color:rgba(255,255,255,.2)}
+.ld-body{padding:16px 22px 20px}
+.ld-sec-title{font-size:10px;font-weight:700;color:#8899B8;text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.ld-sec-title::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.07)}
+.ld-row{display:grid;grid-template-columns:28px 1fr 80px 1fr;align-items:center;gap:8px;background:rgba(255,255,255,.04);border-radius:8px;padding:9px 12px;border:1px solid rgba(255,255,255,.06);margin-bottom:7px}
+.ld-row:nth-child(even){background:rgba(255,255,255,.02)}
+.ld-pos{font-family:'Bebas Neue',sans-serif;font-size:18px;color:#FFD700;text-align:center}
+.ld-nombre{font-size:13px;font-weight:600;color:#E0E8F0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ld-pts-badge{font-size:10px;color:#86EFAC;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.25);border-radius:4px;padding:1px 6px;display:inline-block;margin-top:2px}
+.ld-score{text-align:center}
+.ld-score-val{font-family:'Bebas Neue',sans-serif;font-size:22px;color:#FFD700;letter-spacing:1px;display:block;line-height:1}
+.ld-score-nd{font-size:12px;color:#4A5568;display:block;padding:4px 0}
+.ld-signo{text-align:right}
+.ld-signo-val{display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.05em}
+.ld-foot{background:rgba(255,255,255,.03);border-top:1px solid rgba(255,255,255,.06);padding:10px 22px;display:flex;justify-content:space-between;align-items:center}
+.ld-foot-txt{font-size:10px;color:#4A5568}
+.ld-foot-logo{font-family:'Bebas Neue',sans-serif;font-size:14px;color:#86EFAC;letter-spacing:1px}
 </style>
 </head>
 <body>
@@ -155,6 +187,7 @@ option{background:#132038}
 <div class="tabs" id="tabsRow">
   <button class="tab-btn active" id="tabBtnPronos" onclick="switchTab('pronos')">Pronósticos</button>
   <button class="tab-btn" id="tabBtnStats" onclick="switchTab('stats')">Estadísticas</button>
+  <button class="tab-btn" id="tabBtnLideres" onclick="switchTab('lideres')">Pronós. Líderes</button>
 </div>
 
 <!-- Botones de descarga por pestaña -->
@@ -163,6 +196,9 @@ option{background:#132038}
 </div>
 <div class="dl-row" id="dlRowStats">
   <button class="btn btn-dl" id="btnDlStats" disabled>⬇ Descargar PNG · Estadísticas</button>
+</div>
+<div class="dl-row" id="dlRowLideres">
+  <button class="btn btn-dl" id="btnDlLideres" disabled>⬇ Descargar PNG · Líderes</button>
 </div>
 
 <div id="preview">
@@ -176,6 +212,12 @@ option{background:#132038}
   <div class="tab-panel" id="panelStats">
     <div class="card-wrap" id="cardStatsWrap">
       <div id="cardStats"></div>
+    </div>
+  </div>
+  <!-- Panel líderes -->
+  <div class="tab-panel" id="panelLideres">
+    <div class="card-wrap" id="cardLideresWrap">
+      <div id="cardLideres"></div>
     </div>
   </div>
 </div>
@@ -323,7 +365,11 @@ async function generarImagen(){
     document.getElementById("tabsRow").classList.add("show");
     document.getElementById("dlRowPronos").classList.add("show");
     document.getElementById("dlRowStats").classList.add("show");
+    document.getElementById("dlRowLideres").classList.add("show");
     switchTab("pronos");
+
+    // Cargar líderes de la clasificación en paralelo
+    renderLideres(partido,nomL,nomV,rows,esElim);
 
   }catch(e){
     msg.innerHTML="<div class='err'>Error: "+e.message+"</div>";
@@ -399,10 +445,13 @@ function renderCard(partido,nomL,nomV,rows,esElim){
 function switchTab(tab){
   document.getElementById("panelPronos").classList.toggle("active",tab==="pronos");
   document.getElementById("panelStats").classList.toggle("active",tab==="stats");
+  document.getElementById("panelLideres").classList.toggle("active",tab==="lideres");
   document.getElementById("tabBtnPronos").classList.toggle("active",tab==="pronos");
   document.getElementById("tabBtnStats").classList.toggle("active",tab==="stats");
+  document.getElementById("tabBtnLideres").classList.toggle("active",tab==="lideres");
   document.getElementById("dlRowPronos").style.display=(tab==="pronos")?"flex":"none";
   document.getElementById("dlRowStats").style.display=(tab==="stats")?"flex":"none";
+  document.getElementById("dlRowLideres").style.display=(tab==="lideres")?"flex":"none";
 }
 
 // ---- RENDER ESTADÍSTICAS ----
@@ -523,7 +572,123 @@ document.getElementById("btnDlStats").addEventListener("click",function(){
   descargarPNG("cardStats","PollaCompis_P"+document.getElementById("selPartido").value+"_stats.png",this);
 });
 
-function descargarPNG(cardId,filename,btn){
+// ---- DESCARGA PNG LÍDERES ----
+document.getElementById("btnDlLideres").addEventListener("click",function(){
+  descargarPNG("cardLideres","PollaCompis_P"+document.getElementById("selPartido").value+"_lideres.png",this);
+});
+
+// ---- RENDER LÍDERES ----
+async function renderLideres(partido,nomL,nomV,rows,esElim){
+  var card=document.getElementById("cardLideres");
+  var wrap=document.getElementById("cardLideresWrap");
+  var btnDl=document.getElementById("btnDlLideres");
+  card.innerHTML="<div class='ld' style='padding:2rem;color:#8899B8;font-size:13px'>Cargando tabla de clasificación…</div>";
+  wrap.classList.add("show");
+  btnDl.disabled=true;
+
+  try{
+    // Fetch a la página de clasificación (mismo origen)
+    var resp=await fetch("PollaCompis2026_Clasificacion.html",{cache:"no-store"});
+    if(!resp.ok)throw new Error("No se pudo cargar la clasificación ("+resp.status+")");
+    var html=await resp.text();
+
+    // Parsear el HTML con DOMParser
+    var parser=new DOMParser();
+    var doc=parser.parseFromString(html,"text/html");
+
+    // Extraer filas de la tabla: cada .row tiene .nom (nombre) y .pts-big (puntos)
+    var filas=doc.querySelectorAll(".tbl .row");
+    if(!filas.length){
+      card.innerHTML="<div class='ld' style='padding:2rem;color:#FF8A80;font-size:13px'>La clasificación aún no tiene datos o la estructura cambió.</div>";
+      return;
+    }
+
+    // Construir lista ordenada [{nombre, pts, pos}]
+    var tabla=[];
+    filas.forEach(function(fila,i){
+      var nomEl=fila.querySelector(".nom");
+      var ptsEl=fila.querySelector(".pts-big");
+      if(!nomEl||!ptsEl)return;
+      // .nom puede tener un <span class="tag"> adentro — tomamos solo el texto directo
+      var nombre=(nomEl.childNodes[0]&&nomEl.childNodes[0].nodeType===3)
+        ?nomEl.childNodes[0].textContent.trim()
+        :nomEl.textContent.replace("▾ ver desglose de puntos","").trim();
+      var pts=parseInt(ptsEl.textContent.trim())||0;
+      tabla.push({nombre:nombre,pts:pts,pos:i+1});
+    });
+
+    if(!tabla.length){
+      card.innerHTML="<div class='ld' style='padding:2rem;color:#FF8A80;font-size:13px'>No se encontraron participantes en la clasificación.</div>";
+      return;
+    }
+
+    // Determinar el puntaje del 3er lugar (posición índice 2)
+    // Incluir todos los que tengan >= ese puntaje
+    var ptsTercero=tabla.length>=3?tabla[2].pts:(tabla[tabla.length-1].pts);
+    var lideres=tabla.filter(function(p){return p.pts>=ptsTercero;});
+
+    // Cruzar con pronósticos del partido ya cargados
+    // rows tiene {nombre, gl, gv, ...} — hacer lookup por nombre normalizado
+    function norm(s){return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim();}
+    var pronosMap={};
+    rows.forEach(function(r){pronosMap[norm(r.nombre)]=r;});
+
+    // Construir filas de líderes con sus pronósticos
+    var fL=flag(nomL),fV=flag(nomV);
+    var ahora=new Date().toLocaleDateString("es-CO",{day:"2-digit",month:"short",year:"numeric"});
+    var medals=["🥇","🥈","🥉"];
+
+    var bodyHtml="";
+    lideres.forEach(function(lider,i){
+      var prono=pronosMap[norm(lider.nombre)];
+      var posLabel=i<3?medals[i]:(lider.pos+"°");
+      var scoreHtml="";
+      if(prono&&prono.gl!=null&&prono.gv!=null){
+        var s=signo(prono.gl,prono.gv,nomL,nomV);
+        scoreHtml="<span class='ld-score-val'>"+prono.gl+" – "+prono.gv+"</span>";
+        var signoHtml="<span class='ld-signo-val "+s.cls+"'>"+s.txt+"</span>";
+        bodyHtml+="<div class='ld-row'>";
+        bodyHtml+="<div class='ld-pos'>"+posLabel+"</div>";
+        bodyHtml+="<div><div class='ld-nombre'>"+esc(lider.nombre)+"</div><div class='ld-pts-badge'>"+lider.pts+" pts</div></div>";
+        bodyHtml+="<div class='ld-score'>"+scoreHtml+"</div>";
+        bodyHtml+="<div class='ld-signo'>"+signoHtml+"</div>";
+        bodyHtml+="</div>";
+      } else {
+        // Sin pronóstico para este partido
+        bodyHtml+="<div class='ld-row'>";
+        bodyHtml+="<div class='ld-pos'>"+posLabel+"</div>";
+        bodyHtml+="<div><div class='ld-nombre'>"+esc(lider.nombre)+"</div><div class='ld-pts-badge'>"+lider.pts+" pts</div></div>";
+        bodyHtml+="<div class='ld-score'><span class='ld-score-nd'>—</span></div>";
+        bodyHtml+="<div class='ld-signo'><span style='font-size:10px;color:#4A5568'>Sin pronóstico</span></div>";
+        bodyHtml+="</div>";
+      }
+    });
+
+    var subtitulo="Líderes · "+lideres.length+" participante"+(lideres.length!==1?"s":"")+" · "+ptsTercero+" pts o más";
+
+    var out="";
+    out+="<div class='ld-top'><div class='ld-brand'><h2>⚽ Polla Compis 2026</h2><span class='badge-l'>LÍDERES</span></div></div>";
+    out+="<div class='ld-partido-hero'>";
+    out+="<div class='ld-fase-chip'>"+esc(partido.fase)+" · "+esc(partido.f)+"</div>";
+    out+="<div class='horarios-zonas'>"+horariosZonas(partido.f)+"</div>";
+    out+="<div class='ld-equipos'>";
+    out+="<div class='ld-eq-l'><span class='ld-eq-flag'>"+fL+"</span><div class='ld-eq-name'>"+esc(nomL)+"</div></div>";
+    out+="<div class='ld-vs'>VS</div>";
+    out+="<div class='ld-eq-r'><span class='ld-eq-flag'>"+fV+"</span><div class='ld-eq-name'>"+esc(nomV)+"</div></div>";
+    out+="</div></div>";
+    out+="<div class='ld-body'>";
+    out+="<div class='ld-sec-title'>"+subtitulo+"</div>";
+    out+=bodyHtml;
+    out+="</div>";
+    out+="<div class='ld-foot'><span class='ld-foot-txt'>"+ahora+"</span><span class='ld-foot-logo'>POLLA COMPIS 2026</span></div>";
+
+    card.innerHTML=out;
+    btnDl.disabled=false;
+
+  }catch(e){
+    card.innerHTML="<div class='ld' style='padding:2rem;color:#FF8A80;font-size:13px'>Error cargando clasificación: "+esc(e.message)+"</div>";
+  }
+}
   var origTxt=btn.textContent;
   btn.textContent="Generando…";btn.disabled=true;
   function capturar(){
