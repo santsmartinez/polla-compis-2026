@@ -1275,10 +1275,8 @@ var SLOTS={
 
 function nombresElim(id,pr,resEntry,slotL,slotV){
   var nL="",nV="";
-  if(resEntry&&resEntry.rl)nL=resEntry.rl;
-  if(resEntry&&resEntry.rv)nV=resEntry.rv;
-  if(!nL&&pr&&pr.pl)nL=pr.pl;
-  if(!nV&&pr&&pr.pv)nV=pr.pv;
+  if(pr&&pr.pl)nL=pr.pl;
+  if(pr&&pr.pv)nV=pr.pv;
   if(!nL)nL=resolverSlot(slotL)||slotL||"—";
   if(!nV)nV=resolverSlot(slotV)||slotV||"—";
   return[nL,nV];
