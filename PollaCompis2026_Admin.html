@@ -761,9 +761,9 @@ function rendRF(){
           html+="<div style='font-size:10px;color:#999;margin-bottom:4px'>Slot: <b style='color:#555'>"+p.l+"</b> vs <b style='color:#555'>"+p.v+"</b> → <span style='color:#1B5E20;font-weight:600'>"+nL+"</span> vs <span style='color:#1B5E20;font-weight:600'>"+nV+"</span></div>";
         }
         html+="<div class='elim-names'>";
-        html+="<input class='hin' style='font-size:12px;padding:5px 8px' type='text' placeholder='Equipo local…' id='rrl_"+p.id+"' value='"+escHtml(rlVal)+"'>";
+        html+="<input class='hin' style='font-size:12px;padding:5px 8px' type='text' placeholder='Equipo local…' id='rrl_"+p.id+"' oninput='scheduleAutoSave()' value='"+escHtml(rlVal)+"'>";
         html+="<div class='elabel'>vs</div>";
-        html+="<input class='hin' style='font-size:12px;padding:5px 8px' type='text' placeholder='Equipo visitante…' id='rrv_"+p.id+"' value='"+escHtml(rvVal)+"'>";
+        html+="<input class='hin' style='font-size:12px;padding:5px 8px' type='text' placeholder='Equipo visitante…' id='rrv_"+p.id+"' oninput='scheduleAutoSave()' value='"+escHtml(rvVal)+"'>";
         html+="</div>";
         html+="<div class='prow prow-e' style='border:none;padding:4px 0'><div class='el' style='color:#999;font-size:11px'>Marcador (120')</div><input class='nin' type='number' min='0' max='20' placeholder='-' id='rgl_"+p.id+"' oninput='scheduleAutoSave();togglePenAdmin("+p.id+")' value='"+(r.gl!==undefined?r.gl:"")+"'><div class='vsep'>–</div><input class='nin' type='number' min='0' max='20' placeholder='-' id='rgv_"+p.id+"' oninput='scheduleAutoSave();togglePenAdmin("+p.id+")' value='"+(r.gv!==undefined?r.gv:"")+"'><div class='ev' style='color:#999;font-size:11px'>Goles visitante</div></div>";
         var penW=r.penWin||"";
