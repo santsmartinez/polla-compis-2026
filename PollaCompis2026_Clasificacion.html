@@ -430,20 +430,13 @@ function calcClasificadoFase(pronos,fase,resMap,TODOS_arr){
     if(r&&r.rv)equiposReales.push(r.rv.trim().toLowerCase());
   });
   if(!equiposReales.length)return 0;
-  function esNombreReal(s){return!!(s&&s.length>3&&!/^[0-9WL]/.test(s)&&s.indexOf("°")<0);}
+  // Comparar directamente contra lo que el participante pronosticó (pr.pl/pr.pv ya
+  // contienen nombres reales de equipo, sincronizados desde sus pronósticos de grupos).
   var equiposProno=[];
   TODOS_arr.filter(function(pa){return pa.f===fase;}).forEach(function(pa){
-    var pr=pronos[pa.id];if(!pr||pr.gl==null)return;
-    var slots=SLOTS[pa.id];if(!slots)return;
-    var eL,eV;
-    if(fase==="dieciseisavos"){eL=resolverSlot16Clas(slots[0]);eV=resolverSlot16Clas(slots[1]);}
-    else{
-      eL=resolverSlot(slots[0]);eV=resolverSlot(slots[1]);
-      if(!esNombreReal(eL))eL=resolverSlot16Clas(slots[0]);
-      if(!esNombreReal(eV))eV=resolverSlot16Clas(slots[1]);
-    }
-    if(esNombreReal(eL))equiposProno.push(eL.trim().toLowerCase());
-    if(esNombreReal(eV))equiposProno.push(eV.trim().toLowerCase());
+    var pr=pronos[pa.id];if(!pr)return;
+    if(pr.pl)equiposProno.push((""+pr.pl).trim().toLowerCase());
+    if(pr.pv)equiposProno.push((""+pr.pv).trim().toLowerCase());
   });
   if(!equiposProno.length)return 0;
   var pts=0;

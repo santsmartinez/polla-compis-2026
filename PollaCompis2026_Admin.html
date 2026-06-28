@@ -937,23 +937,13 @@ function calcClasificadoFase(pronos,fase){
     if(r&&r.rv)equiposReales.push(r.rv.trim().toLowerCase());
   });
   if(!equiposReales.length)return 0;
-  // El participante guardó slots ("1E","W73") no nombres reales
-  // Resolverlos con los resultados del Admin para poder comparar
-  function esNombreReal(s){return!!(s&&s.length>3&&!/^[0-9WL]/.test(s)&&s.indexOf("°")<0);}
+  // Comparar directamente contra lo que el participante pronosticó (pr.pl/pr.pv ya
+  // contienen nombres reales de equipo, sincronizados desde sus pronósticos de grupos).
   var equiposProno=[];
   TODOS.filter(function(pa){return pa.f===fase;}).forEach(function(pa){
-    var pr=pronos[pa.id];if(!pr||pr.gl==null)return;
-    var slots=SLOTS[pa.id];if(!slots)return;
-    var eL,eV;
-    if(fase==="dieciseisavos"){
-      eL=resolverSlot16(slots[0]);eV=resolverSlot16(slots[1]);
-    }else{
-      eL=resolverSlot(slots[0]);eV=resolverSlot(slots[1]);
-      if(!esNombreReal(eL))eL=resolverSlot16(slots[0]);
-      if(!esNombreReal(eV))eV=resolverSlot16(slots[1]);
-    }
-    if(esNombreReal(eL))equiposProno.push(eL.trim().toLowerCase());
-    if(esNombreReal(eV))equiposProno.push(eV.trim().toLowerCase());
+    var pr=pronos[pa.id];if(!pr)return;
+    if(pr.pl)equiposProno.push((""+pr.pl).trim().toLowerCase());
+    if(pr.pv)equiposProno.push((""+pr.pv).trim().toLowerCase());
   });
   if(!equiposProno.length)return 0;
   var pts=0;
