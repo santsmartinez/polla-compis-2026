@@ -392,35 +392,40 @@ function ptsGrupoPos(g,pronos){
 }
 
 function calcP(pr,real,fase){
-  if(!real||real.gl==null||!pr||pr.gl==null)return null;
+  if(!pr)return null;
   var reg=PTS[fase]||PTS.grupos;
   var t=0;
   if(fase==="grupos"){
+    if(!real||real.gl==null||pr.gl==null)return null;
     var sR=real.gl>real.gv?"L":real.gl<real.gv?"V":"X";
     var sP=pr.gl>pr.gv?"L":pr.gl<pr.gv?"V":"X";
     if(sR===sP)t+=reg.s;
     if(real.gl===pr.gl&&real.gv===pr.gv)t+=reg.e;
-  }else{
-    var rl=(real.rl||"").trim().toLowerCase();
-    var rv=(real.rv||"").trim().toLowerCase();
-    var pl=(pr.pl||"").trim().toLowerCase();
-    var pv=(pr.pv||"").trim().toLowerCase();
-    var tenemosEquipos=(rl!==""&&rv!=="");
-    var tenemosProno=(pl!==""&&pv!=="");
-    var cruceExacto=false;
-    if(tenemosEquipos&&tenemosProno){cruceExacto=(rl===pl&&rv===pv);}
-    if(cruceExacto){
-      var sR2=real.gl>real.gv?"L":real.gl<real.gv?"V":"X";
-      var sP2=pr.gl>pr.gv?"L":pr.gl<pr.gv?"V":"X";
-      if(reg.x)t+=reg.x;
-      if(sR2===sP2)t+=reg.s;
-      if(real.gl===pr.gl&&real.gv===pr.gv)t+=reg.e;
-    }else if(!tenemosEquipos){
-      var sR3=real.gl>real.gv?"L":real.gl<real.gv?"V":"X";
-      var sP3=pr.gl>pr.gv?"L":pr.gl<pr.gv?"V":"X";
-      if(sR3===sP3)t+=reg.s;
-      if(real.gl===pr.gl&&real.gv===pr.gv)t+=reg.e;
-    }
+    return t;
+  }
+  if(!real)return null; // sin ningún dato del cruce todavía
+  var rl=(real.rl||"").trim().toLowerCase();
+  var rv=(real.rv||"").trim().toLowerCase();
+  var pl=(pr.pl||"").trim().toLowerCase();
+  var pv=(pr.pv||"").trim().toLowerCase();
+  var tenemosEquipos=(rl!==""&&rv!=="");
+  var tenemosProno=(pl!==""&&pv!=="");
+  var cruceExacto=false;
+  if(tenemosEquipos&&tenemosProno){cruceExacto=(rl===pl&&rv===pv);}
+  // Bono de cruce exacto: depende solo de los nombres reales, no del marcador.
+  // Se otorga aunque el partido aún no se haya jugado.
+  if(cruceExacto&&reg.x)t+=reg.x;
+  if(real.gl==null||pr.gl==null)return t; // aún sin marcador real → solo aplica el cruce exacto
+  if(cruceExacto){
+    var sR2=real.gl>real.gv?"L":real.gl<real.gv?"V":"X";
+    var sP2=pr.gl>pr.gv?"L":pr.gl<pr.gv?"V":"X";
+    if(sR2===sP2)t+=reg.s;
+    if(real.gl===pr.gl&&real.gv===pr.gv)t+=reg.e;
+  }else if(!tenemosEquipos){
+    var sR3=real.gl>real.gv?"L":real.gl<real.gv?"V":"X";
+    var sP3=pr.gl>pr.gv?"L":pr.gl<pr.gv?"V":"X";
+    if(sR3===sP3)t+=reg.s;
+    if(real.gl===pr.gl&&real.gv===pr.gv)t+=reg.e;
   }
   return t;
 }
@@ -504,7 +509,7 @@ function verD(id){
         var pts=calcP(pr,real,fase);
         if(!pts||pts<=0)return;
         var prS=(pr&&pr.gl!=null)?pr.gl+"–"+pr.gv:"–";
-        var reS=real?real.gl+"–"+real.gv:"?";
+        var reS=(real&&real.gl!=null)?real.gl+"–"+real.gv:"?";
         var prN=(pr&&pr.pl)?pr.pl+" vs "+pr.pv:"";
         var esExacto=(pr&&real&&pr.gl===real.gl&&pr.gv===real.gv);
         var badge="<span class='"+(esExacto?"tok":"tsig")+"'>+"+pts+"pts</span>";
@@ -516,18 +521,15 @@ function verD(id){
           var rv2=(real&&real.rv?real.rv:"").trim().toLowerCase();
           var pl2=(pr&&pr.pl?""+pr.pl:"").trim().toLowerCase();
           var pv2=(pr&&pr.pv?""+pr.pv:"").trim().toLowerCase();
-          var slts=SLOTS[pa.id];
-          var eL2=slts?resolverSlot16(slts[0]):"";
-          var eV2=slts?resolverSlot16(slts[1]):"";
-          if(!eL2||/^[0-9WL]/.test(eL2))eL2=slts?resolverSlot(slts[0]):"";
-          if(!eV2||/^[0-9WL]/.test(eV2))eV2=slts?resolverSlot(slts[1]):"";
-          var ce=(eL2&&eV2&&rl2&&rv2&&eL2.trim().toLowerCase()===rl2&&eV2.trim().toLowerCase()===rv2);
+          var ce=(rl2!==""&&rv2!==""&&pl2!==""&&pv2!==""&&rl2===pl2&&rv2===pv2);
           var motParts=[];
-          if(ce)motParts.push("cruce +"+reg.x);
-          var sR4=real.gl>real.gv?"L":real.gl<real.gv?"V":"X";
-          var sP4=pr.gl>pr.gv?"L":pr.gl<pr.gv?"V":"X";
-          if(ce&&sR4===sP4)motParts.push("signo +"+reg.s);
-          if(ce&&real.gl===pr.gl&&real.gv===pr.gv)motParts.push("exacto +"+reg.e);
+          if(ce&&reg.x)motParts.push("cruce +"+reg.x);
+          if(real&&real.gl!=null&&pr&&pr.gl!=null){
+            var sR4=real.gl>real.gv?"L":real.gl<real.gv?"V":"X";
+            var sP4=pr.gl>pr.gv?"L":pr.gl<pr.gv?"V":"X";
+            if(ce&&sR4===sP4)motParts.push("signo +"+reg.s);
+            if(ce&&real.gl===pr.gl&&real.gv===pr.gv)motParts.push("exacto +"+reg.e);
+          }
           motivoTxt=motParts.length?" "+motParts.join(" "):"";
         }
         var motivo=motivoTxt?" <span style='font-size:10px;color:#888'>"+motivoTxt+"</span>":"";
