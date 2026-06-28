@@ -215,9 +215,18 @@ async function generarImagen(){
         // Tiene al menos uno de los dos equipos correctos → puede sumar puntos clasificado
         var tieneL=(pl===nomLn||pl===nomVn); // alguno de sus pronosticados es el local real
         var tieneV=(pv===nomLn||pv===nomVn); // alguno de sus pronosticados es el visitante real
-        if(tieneL||tieneV){
-          rows.push({nombre:p.nombre,gl:pr.gl,gv:pr.gv,pl:pr.pl,pv:pr.pv,
-            tieneL:tieneL,tieneV:tieneV,ambos:(tieneL&&tieneV)});
+        if(!tieneL&&!tieneV)return;
+        var ambos=(tieneL&&tieneV);
+        if(ambos){
+          // Cruce exacto: orientar el marcador según el orden real local/visitante
+          var dispGl,dispGv;
+          if(pl===nomLn){dispGl=pr.gl;dispGv=pr.gv;} // mismo orden que el real
+          else{dispGl=pr.gv;dispGv=pr.gl;} // venía invertido (su local era el visitante real)
+          rows.push({nombre:p.nombre,ambos:true,gl:dispGl,gv:dispGv});
+        } else {
+          // Solo un equipo correcto → identificar cuál de los dos reales es
+          var equipoAcertado=(pl===nomLn||pv===nomLn)?nomL:nomV;
+          rows.push({nombre:p.nombre,ambos:false,equipoAcertado:equipoAcertado});
         }
       });
     }
@@ -251,9 +260,6 @@ function signo(gl,gv,nomL,nomV){
 function renderCard(partido,nomL,nomV,rows,esElim){
   var fL=flag(nomL),fV=flag(nomV);
   var ahora=new Date().toLocaleDateString("es-CO",{day:"2-digit",month:"short",year:"numeric"});
-  var tituloSec=esElim
-    ? "Con opciones de sumar · "+rows.length+" jugador"+(rows.length!==1?"es":"")
-    : "Pronósticos · "+rows.length+" jugador"+(rows.length!==1?"es":"");
   var html="";
   html+="<div class=\'card-top\'><div class=\'card-brand\'><h2>⚽ Polla Compis 2026</h2><span class=\'badge\'>PRONÓSTICOS</span></div></div>";
   html+="<div class=\'partido-hero\'>";
@@ -263,23 +269,61 @@ function renderCard(partido,nomL,nomV,rows,esElim){
   html+="<div class=\'vs-sep\'><span class=\'vs-txt\'>VS</span></div>";
   html+="<div class=\'equipo-r\'><span class=\'eq-flag\'>"+fV+"</span><div class=\'eq-name\'>"+esc(nomV)+"</div></div>";
   html+="</div></div>";
-  html+="<div class=\'prono-section\'>";
-  html+="<div class=\'prono-title\'>"+tituloSec+"</div>";
-  html+="<div class=\'prono-grid\'>";
-  rows.forEach(function(r){
-    var s=signo(r.gl,r.gv,nomL,nomV);
-    var badge="";
-    if(esElim){
-      if(r.ambos)badge="<span style=\'font-size:9px;background:rgba(34,197,94,.2);color:#86EFAC;border:1px solid rgba(34,197,94,.3);border-radius:4px;padding:1px 5px;margin-left:6px\'>2 ✓</span>";
-      else badge="<span style=\'font-size:9px;background:rgba(255,215,0,.15);color:#FDE68A;border:1px solid rgba(255,215,0,.25);border-radius:4px;padding:1px 5px;margin-left:6px\'>1 ✓</span>";
+
+  if(!esElim){
+    html+="<div class=\'prono-section\'>";
+    html+="<div class=\'prono-title\'>Pronósticos · "+rows.length+" jugador"+(rows.length!==1?"es":"")+"</div>";
+    html+="<div class=\'prono-grid\'>";
+    rows.forEach(function(r){
+      var s=signo(r.gl,r.gv,nomL,nomV);
+      html+="<div class=\'prono-row\'>";
+      html+="<div class=\'pr-nombre\'>"+esc(r.nombre)+"</div>";
+      html+="<div class=\'pr-score\'><span class=\'pr-score-val\'>"+r.gl+" – "+r.gv+"</span></div>";
+      html+="<div class=\'pr-signo\'><span class=\'pr-signo-val "+s.cls+"\'>"+s.txt+"</span></div>";
+      html+="</div>";
+    });
+    html+="</div></div>";
+  } else {
+    var exactos=rows.filter(function(r){return r.ambos;});
+    var clasificados=rows.filter(function(r){return !r.ambos;});
+
+    // SECCIÓN 1 — Cruce exacto (marcador real)
+    html+="<div class=\'prono-section\'>";
+    html+="<div class=\'prono-title\'>✅ Acertaron el cruce exacto · "+exactos.length+" jugador"+(exactos.length!==1?"es":"")+"</div>";
+    html+="<div class=\'prono-grid\'>";
+    if(!exactos.length){
+      html+="<div style=\'padding:10px 0;color:#8899B8;font-size:12px\'>Nadie acertó el cruce exacto todavía.</div>";
     }
-    html+="<div class=\'prono-row\'>";
-    html+="<div class=\'pr-nombre\'>"+esc(r.nombre)+badge+"</div>";
-    html+="<div class=\'pr-score\'><span class=\'pr-score-val\'>"+r.gl+" – "+r.gv+"</span></div>";
-    html+="<div class=\'pr-signo\'><span class=\'pr-signo-val "+s.cls+"\'>"+s.txt+"</span></div>";
-    html+="</div>";
-  });
-  html+="</div></div>";
+    exactos.forEach(function(r){
+      var s=signo(r.gl,r.gv,nomL,nomV);
+      html+="<div class=\'prono-row\'>";
+      html+="<div class=\'pr-nombre\'>"+esc(r.nombre)+"</div>";
+      html+="<div class=\'pr-score\'><span class=\'pr-score-val\'>"+r.gl+" – "+r.gv+"</span></div>";
+      html+="<div class=\'pr-signo\'><span class=\'pr-signo-val "+s.cls+"\'>"+s.txt+"</span></div>";
+      html+="</div>";
+    });
+    html+="</div></div>";
+
+    // SECCIÓN 2 — Tienen un equipo clasificado (sin marcador, no aplica)
+    html+="<div class=\'prono-section\'>";
+    html+="<div class=\'prono-title\'>🎯 Tienen un equipo clasificado en este cruce · "+clasificados.length+" jugador"+(clasificados.length!==1?"es":"")+"</div>";
+    html+="<div class=\'prono-grid\'>";
+    if(!clasificados.length){
+      html+="<div style=\'padding:10px 0;color:#8899B8;font-size:12px\'>Nadie más tiene un equipo clasificado en este cruce.</div>";
+    }
+    [nomL,nomV].forEach(function(equipo){
+      var grupo=clasificados.filter(function(r){return r.equipoAcertado===equipo;});
+      if(!grupo.length)return;
+      html+="<div style=\'font-size:11px;font-weight:600;color:#C8D8F0;padding:6px 0 4px;text-transform:uppercase;letter-spacing:.04em\'>"+flag(equipo)+" "+esc(equipo)+"</div>";
+      grupo.forEach(function(r){
+        html+="<div class=\'prono-row\'>";
+        html+="<div class=\'pr-nombre\'>"+esc(r.nombre)+"</div>";
+        html+="</div>";
+      });
+    });
+    html+="</div></div>";
+  }
+
   html+="<div class=\'card-foot\'><span class=\'foot-txt\'>"+ahora+"</span><span class=\'foot-logo\'>POLLA COMPIS 2026</span></div>";
   var card=document.getElementById("card");
   card.innerHTML=html;
