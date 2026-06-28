@@ -315,28 +315,37 @@ function resolverSlot(slot){
   return slot;
 }
 function getMejorTerceroClas(pid16){
-  var gLetter=D16SLOTS;var grupos=null;
-  Object.keys(gLetter).forEach(function(k){if(gLetter[k]===pid16)grupos=k;});
-  if(!grupos)return null;
-  var letras=grupos.replace(/[^A-L]/g,"").split("");
-  var allTerceros=Object.keys(GEQ_G).map(function(g){
-    var clas=clasGrupoReal(g);var eq=clas[2];if(!eq)return null;
-    var s={pts:0,dg:0,gf:0};
-    GPIDS_G[g].forEach(function(pid){
-      var r=res[pid];if(!r||r.gl==null||r.gv==null)return;
-      var pa=TODOS.find(function(p){return p.id===pid;});if(!pa)return;
-      if(pa.l===eq){s.pts+=(r.gl>r.gv?3:r.gl===r.gv?1:0);s.gf+=r.gl;s.dg+=(r.gl-r.gv);}
-      if(pa.v===eq){s.pts+=(r.gv>r.gl?3:r.gl===r.gv?1:0);s.gf+=r.gv;s.dg+=(r.gv-r.gl);}
+  var terceros=[];
+  var GK2=["A","B","C","D","E","F","G","H","I","J","K","L"];
+  GK2.forEach(function(g){
+    var clas=clasGrupoReal(g);
+    if(clas.length<3)return;
+    var eq=clas[2];
+    var stats={pts:0,dg:0,gf:0};
+    GPIDS_G[g].forEach(function(id2){
+      var r=res[id2];if(!r||r.gl==null)return;
+      var pa=TODOS.find(function(p){return p.id===id2;});if(!pa)return;
+      var l=pa.l,v=pa.v,gl=r.gl,gv=r.gv;
+      if(l===eq){stats.gf+=gl;stats.dg+=(gl-gv);stats.pts+=(gl>gv?3:gl===gv?1:0);}
+      if(v===eq){stats.gf+=gv;stats.dg+=(gv-gl);stats.pts+=(gv>gl?3:gv===gl?1:0);}
     });
-    return{equipo:eq,grupo:g,pts:s.pts,dg:s.dg,gf:s.gf};
-  }).filter(Boolean);
-  allTerceros.sort(function(a,b){
-    if(b.pts!==a.pts)return b.pts-a.pts;if(b.dg!==a.dg)return b.dg-a.dg;
-    if(b.gf!==a.gf)return b.gf-a.gf;return a.equipo.localeCompare(b.equipo);
+    terceros.push({equipo:eq,grupo:g,pts:stats.pts,dg:stats.dg,gf:stats.gf});
   });
-  var top8=allTerceros.slice(0,8);
-  var candidatos=top8.filter(function(t){return letras.indexOf(t.grupo)>=0;});
-  return candidatos.length?candidatos[0].equipo:null;
+  terceros.sort(function(a,b){
+    if(b.pts!==a.pts)return b.pts-a.pts;
+    if(b.dg!==a.dg)return b.dg-a.dg;
+    if(b.gf!==a.gf)return b.gf-a.gf;
+    return a.equipo.localeCompare(b.equipo);
+  });
+  var top8=terceros.slice(0,8);
+  if(top8.length<8)return null;
+  var clave=top8.map(function(t){return t.grupo;}).sort().join("");
+  var combo=COMBOS[clave];
+  if(!combo)return null;
+  var g=combo[pid16];
+  if(!g)return null;
+  var t=top8.find(function(x){return x.grupo===g;});
+  return t?t.equipo:null;
 }
 function resolverSlot16Clas(slot){
   if(!slot)return"";
@@ -710,9 +719,9 @@ function descargarPDF(pid){
   if(typeof window.jspdf==="undefined"){
     var s=document.createElement("script");
     s.src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
-    s.onload=function(){construirPDFClas(pid);};
+    s.onload=function(){construirPDFOriginal(pid);};
     document.head.appendChild(s);
-  }else{construirPDFClas(pid);}
+  }else{construirPDFOriginal(pid);}
 }
 
 function limpiarN(n){
@@ -727,27 +736,84 @@ function limpiarN(n){
   return s.replace(/\s+/g," ").trim();
 }
 
-function construirPDFClas(pid){
+// ============================================================
+// PDF ORIGINAL — réplica exacta del comprobante que el participante
+// descargó al inscribirse (solo sus pronósticos, sin resultados reales)
+// ============================================================
+function clasGrupoPDF(g,pronos){
+  var eq=GEQ_G[g];
+  var stats={};
+  eq.forEach(function(e){stats[e]={pts:0,dg:0,gf:0};});
+  TODOS.filter(function(pa){return pa.f==="grupos"&&pa.g===g;}).forEach(function(pa){
+    var pr=pronos[pa.id];if(!pr||pr.gl==null||pr.gv==null)return;
+    var gl=parseInt(pr.gl),gv=parseInt(pr.gv);if(isNaN(gl)||isNaN(gv))return;
+    stats[pa.l].gf+=gl;stats[pa.l].dg+=(gl-gv);
+    stats[pa.v].gf+=gv;stats[pa.v].dg+=(gv-gl);
+    if(gl>gv)stats[pa.l].pts+=3;else if(gl<gv)stats[pa.v].pts+=3;
+    else{stats[pa.l].pts+=1;stats[pa.v].pts+=1;}
+  });
+  return{orden:sortGrupo(eq,stats),stats:stats};
+}
+function obtenerMejoresTercerosPDF(pronos){
+  var terceros=[];
+  Object.keys(GEQ_G).forEach(function(g){
+    var r=clasGrupoPDF(g,pronos);var eq=r.orden[2];var st=r.stats[eq];
+    terceros.push({equipo:eq,grupo:g,pts:st.pts,dg:st.dg,gf:st.gf});
+  });
+  terceros.sort(function(a,b){
+    if(b.pts!==a.pts)return b.pts-a.pts;
+    if(b.dg!==a.dg)return b.dg-a.dg;
+    if(b.gf!==a.gf)return b.gf-a.gf;
+    return a.equipo.localeCompare(b.equipo);
+  });
+  return terceros;
+}
+function getMejorTerceroPDF(pid,pronos){
+  var top8=obtenerMejoresTercerosPDF(pronos).slice(0,8);
+  if(top8.length<8)return null;
+  var clave=top8.map(function(t){return t.grupo;}).sort().join("");
+  var combo=COMBOS[clave];if(!combo)return null;
+  var g=combo[pid];if(!g)return null;
+  var t=top8.find(function(x){return x.grupo===g;});
+  return t?t.equipo:null;
+}
+function resolveCodPDF(cod,pronos){
+  if(!cod)return"";
+  var m1=cod.match(/^([1-4])([A-L])$/);
+  if(m1){var pos=parseInt(m1[1])-1,g=m1[2];var r=clasGrupoPDF(g,pronos);return r.orden[pos]||cod;}
+  if(D16SLOTS[cod]!==undefined){var eq=getMejorTerceroPDF(D16SLOTS[cod],pronos);if(eq)return eq;return"3 Mejor ("+cod+")";}
+  var mw=cod.match(/^W([0-9]+)$/);
+  if(mw){var pidn=parseInt(mw[1]);var pr=pronos[pidn];
+    if(pr&&pr.pl&&pr.gl!=null&&pr.gv!=null){
+      if(pr.gl>pr.gv)return pr.pl;if(pr.gl<pr.gv)return pr.pv;
+      if(pr.penWin==="L")return pr.pl;if(pr.penWin==="V")return pr.pv;return pr.pl;
+    }return cod;}
+  var ml=cod.match(/^L([0-9]+)$/);
+  if(ml){var pidn2=parseInt(ml[1]);var pr2=pronos[pidn2];
+    if(pr2&&pr2.pl&&pr2.gl!=null&&pr2.gv!=null){
+      if(pr2.gl>pr2.gv)return pr2.pv;if(pr2.gl<pr2.gv)return pr2.pl;
+      if(pr2.penWin==="L")return pr2.pv;if(pr2.penWin==="V")return pr2.pl;return pr2.pv;
+    }return cod;}
+  return cod;
+}
+
+function construirPDFOriginal(pid){
   var btn=document.getElementById("btnpdf_"+pid);
   var p=parts.find(function(x){return x.id===pid;});
   if(!p){if(btn){btn.textContent="⬇ Descargar PDF";btn.disabled=false;}return;}
-  var pronos=p.pronos||{};
-  var GK_PDF=Object.keys(GEQ_G);
+  var pronos=p.pronos||{},hvals=p.honor||{};
   try{
     var {jsPDF}=window.jspdf;
     var doc=new jsPDF({orientation:"portrait",unit:"mm",format:"a4"});
     var W=210,mg=14,y=0;
     var now=new Date();
     var fechaStr=now.toLocaleDateString("es-CO",{day:"2-digit",month:"long",year:"numeric"})+" · "+now.toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit"});
-    var refCode="PC2026-CLS-"+now.getTime().toString(36).toUpperCase();
+    var refCode="PC2026-"+now.getTime().toString(36).toUpperCase();
     var nomPart=limpiarN(p.nombre||"Participante");
     function newPage(){doc.addPage();y=0;}
     function checkY(n){if(y+n>275)newPage();}
-    function banda(color,h){doc.setFillColor(color[0],color[1],color[2]);doc.rect(0,y,W,h,"F");}
-    function txt(texto,x,fy,size,bold,color){
-      doc.setFontSize(size);doc.setFont("helvetica",bold?"bold":"normal");
-      doc.setTextColor(color?color[0]:30,color?color[1]:30,color?color[2]:30);doc.text(texto,x,fy);
-    }
+    function banda(c,h){doc.setFillColor(c[0],c[1],c[2]);doc.rect(0,y,W,h,"F");}
+    function txt(t,x,fy,sz,bold,c){doc.setFontSize(sz);doc.setFont("helvetica",bold?"bold":"normal");doc.setTextColor(c?c[0]:30,c?c[1]:30,c?c[2]:30);doc.text(t,x,fy);}
 
     banda([10,22,40],22);
     txt("POLLA COMPIS · MUNDIAL 2026",mg,10,13,true,[255,255,255]);
@@ -758,99 +824,124 @@ function construirPDFClas(pid){
     doc.setFontSize(7);doc.setTextColor(150,150,150);doc.text(limpiarN(fechaStr),W-mg,y+10,{align:"right"});
     y+=14;doc.setDrawColor(220,220,220);doc.setLineWidth(0.3);doc.line(mg,y+2,W-mg,y+2);y+=6;
 
-    // CLASIFICACIÓN GENERAL — FIX: usa calcTotal que incluye clasS/clasF
-    checkY(10);banda([200,16,46],7);
-    txt("CLASIFICACION GENERAL",mg,y+5,9,true,[255,255,255]);y+=7;y+=1;
-    var GK2=Object.keys(GEQ_G);
-    // ★ FIX: calcular clas usando calcTotal (que ya incluye clasS + clasF globales)
-    var clas=parts.map(function(px){
-      var c=calcTotal(px);
-      return{nombre:px.nombre,pts:c.pts,exactos:c.exactos,validado:px.validado};
-    }).sort(function(a,b){return b.pts-a.pts||b.exactos-a.exactos;});
-
-    clas.forEach(function(px,i){
-      checkY(7);
-      doc.setFillColor(i%2===0?255:248,i%2===0?255:249,i%2===0?255:250);doc.rect(mg,y,W-mg*2,6.5,"F");
-      doc.setFontSize(8);doc.setFont("helvetica","normal");doc.setTextColor(60,60,60);doc.text(String(i+1)+".",mg+1,y+4.5);
-      doc.setFont("helvetica",i<3?"bold":"normal");doc.setTextColor(10,22,40);doc.text(limpiarN(px.nombre),mg+8,y+4.5);
-      doc.setFont("helvetica","bold");doc.setTextColor(i===0?200:10,i===0?16:22,i===0?46:40);
-      doc.text(String(px.pts)+" pts",W-mg-2,y+4.5,{align:"right"});
-      doc.setFont("helvetica","normal");doc.setFontSize(6.5);doc.setTextColor(120,120,120);
-      doc.text(px.exactos+" ex"+(px.validado?"  val":"  pend"),W-mg-22,y+4.5);y+=6.5;
-    });y+=4;
-
     // GRUPOS
-    checkY(10);banda([30,42,70],7);txt("FASE DE GRUPOS",mg,y+5,9,true,[255,255,255]);y+=7;y+=1;
-    var gruposParts={A:[1,2,25,28,53,54],B:[3,5,26,27,51,52],C:[6,7,29,30,49,50],D:[4,8,31,32,59,60],E:[9,10,33,34,55,56],F:[11,12,35,36,57,58],G:[13,14,38,40,63,64],H:[15,16,37,39,65,66],I:[17,18,41,42,61,62],J:[19,20,43,44,69,70],K:[21,24,45,48,71,72],L:[22,23,46,47,67,68]};
-    var gruposNames_p=TODOS.filter(function(pa){return pa.f==="grupos";});
-    GK_PDF.forEach(function(g){
-      checkY(12);
-      doc.setFillColor(10,22,40);doc.rect(mg,y,W-mg*2,6,"F");
-      doc.setFontSize(8);doc.setFont("helvetica","bold");doc.setTextColor(255,255,255);
-      doc.text("GRUPO "+g+" · "+(GEQ_G[g]||[]).join("  ·  "),mg+2,y+4);y+=6;
-      gruposNames_p.filter(function(pa){return pa.g===g;}).forEach(function(pa,idx){
-        checkY(6);
-        var pr=pronos[pa.id];
-        var score=(pr&&pr.gl!=null&&pr.gv!=null)?(pr.gl+"-"+pr.gv):"  -  ";
-        var real=res[pa.id];var realScore=real?(real.gl+"-"+real.gv):"";
+    checkY(10);banda([200,16,46],7);txt("FASE DE GRUPOS",mg,y+5,9,true,[255,255,255]);y+=7;y+=2;
+    Object.keys(GEQ_G).forEach(function(g){
+      checkY(40);banda([10,22,40],7);
+      txt("GRUPO "+g+" · "+GEQ_G[g].join("  ·  "),mg,y+5,8,true,[255,255,255]);y+=7;
+      TODOS.filter(function(pa){return pa.f==="grupos"&&pa.g===g;}).forEach(function(pa,idx){
+        checkY(8);var pr=pronos[pa.id];
+        var score=(pr&&pr.gl!=null&&pr.gv!=null)?(pr.gl+"–"+pr.gv):"–";
         var bg=idx%2===0?[255,255,255]:[248,249,250];
-        doc.setFillColor(bg[0],bg[1],bg[2]);doc.rect(mg,y,W-mg*2,5.5,"F");
-        doc.setFontSize(7.5);doc.setFont("helvetica","normal");doc.setTextColor(30,30,30);
-        doc.text(limpiarN(pa.l),mg+2,y+3.8);
-        doc.setFont("helvetica","bold");doc.setTextColor(200,16,46);doc.text(score,W/2,y+3.8,{align:"center"});
-        doc.setFont("helvetica","normal");doc.setTextColor(30,30,30);doc.text(limpiarN(pa.v),W-mg-2,y+3.8,{align:"right"});
-        if(realScore){doc.setFontSize(6);doc.setTextColor(100,100,100);doc.text("real:"+realScore,mg+2,y+3.8+2.2);}
-        y+=5.5;
-      });y+=2;
-    });
-
-    // ELIMINATORIAS
-    var FR_PDF=[
-      {lbl:"Dieciseisavos",f:"dieciseisavos"},{lbl:"Octavos",f:"octavos"},
-      {lbl:"Cuartos",f:"cuartos"},{lbl:"Semifinales",f:"semis"},
-      {lbl:"3er y 4to Puesto",f:"tercero"},{lbl:"Final",f:"final"}
-    ];
-    FR_PDF.forEach(function(fr){
-      var partidos=TODOS.filter(function(pa){return pa.f===fr.f;});
-      var conRes=partidos.filter(function(pa){var r=res[pa.id];return r&&r.gl!=null;});
-      if(!conRes.length)return;
-      checkY(10);banda([30,42,70],7);
-      doc.setFontSize(9);doc.setFont("helvetica","bold");doc.setTextColor(255,255,255);
-      doc.text(fr.lbl.toUpperCase()+" ("+conRes.length+"/"+partidos.length+")",mg,y+5);y+=7;y+=1;
-      conRes.forEach(function(pa,idx){
-        checkY(7);var r=res[pa.id];
-        doc.setFillColor(idx%2===0?255:248,idx%2===0?255:249,idx%2===0?255:250);doc.rect(mg,y,W-mg*2,6,"F");
-        var nL=limpiarN(r.rl||pa.l),nV=limpiarN(r.rv||pa.v);
-        doc.setFontSize(7.5);doc.setFont("helvetica","normal");doc.setTextColor(30,30,30);
-        doc.text(nL,mg+2,y+4);doc.setFont("helvetica","bold");doc.setTextColor(200,16,46);
-        doc.text(r.gl+"-"+r.gv,W/2,y+4,{align:"center"});doc.setFont("helvetica","normal");doc.setTextColor(30,30,30);
-        doc.text(nV,W-mg-2,y+4,{align:"right"});
-        if(r.penWin){doc.setFontSize(6);doc.setTextColor(230,81,0);doc.text("pen: "+limpiarN(r.penWin==="L"?nL:nV),W/2,y+4+2.3,{align:"center"});y+=9;}
-        else{y+=6;}
+        doc.setFillColor(bg[0],bg[1],bg[2]);doc.rect(mg,y,W-mg*2,6,"F");
+        doc.setFontSize(8);doc.setFont("helvetica","normal");doc.setTextColor(30,30,30);
+        doc.text(limpiarN(pa.l),mg+2,y+4);
+        doc.setFont("helvetica","bold");doc.setTextColor(200,16,46);doc.text(score,W/2,y+4,{align:"center"});
+        doc.setFont("helvetica","normal");doc.setTextColor(30,30,30);doc.text(limpiarN(pa.v),W-mg-2,y+4,{align:"right"});
+        y+=6;
+      });
+      checkY(20);
+      var rg=clasGrupoPDF(g,pronos);
+      doc.setFillColor(240,244,255);doc.rect(mg,y,W-mg*2,6,"F");
+      doc.setFontSize(7);doc.setFont("helvetica","bold");doc.setTextColor(10,22,40);
+      doc.text("Clasificación pronosticada:",mg+2,y+4);y+=6;
+      rg.orden.forEach(function(eq,i){
+        checkY(6);var bg2=i<2?[232,245,232]:[255,255,255];
+        doc.setFillColor(bg2[0],bg2[1],bg2[2]);doc.rect(mg,y,W-mg*2,5,"F");
+        doc.setFontSize(7);doc.setFont("helvetica",i<2?"bold":"normal");
+        doc.setTextColor(i<2?27:80,i<2?94:80,i<2?32:80);
+        var st=rg.stats[eq];
+        doc.text((i+1)+"° "+limpiarN(eq),mg+2,y+3.5);
+        doc.text("Pts:"+st.pts+" DG:"+(st.dg>=0?"+":"")+st.dg+" GF:"+st.gf,W-mg-2,y+3.5,{align:"right"});
+        y+=5;
       });y+=3;
     });
 
-    // HONOR REAL
-    var hayHonor=HONOR_DEF.some(function(h){return hR[h.k];});
-    if(hayHonor){
-      checkY(10);banda([200,16,46],7);
-      doc.setFontSize(9);doc.setFont("helvetica","bold");doc.setTextColor(255,255,255);
-      doc.text("CUADRO DE HONOR REAL",mg,y+5);y+=7;y+=1;
-      HONOR_DEF.forEach(function(h,i){
-        var val=hR[h.k];if(!val)return;checkY(6.5);
-        doc.setFillColor(i%2===0?255:248,i%2===0?255:249,i%2===0?255:250);doc.rect(mg,y,W-mg*2,6,"F");
-        doc.setFontSize(8);doc.setFont("helvetica","normal");doc.setTextColor(80,80,80);
-        doc.text(h.l.replace(/[^\u0000-\u007F]/g,"").trim()+" ("+h.pts+"pts)",mg+2,y+4);
-        doc.setFont("helvetica","bold");doc.setTextColor(10,22,40);doc.text(limpiarN(val),W-mg-2,y+4,{align:"right"});y+=6;
-      });
-    }
+    // MEJORES TERCEROS
+    checkY(20);banda([16,62,100],7);
+    txt("MEJORES TERCEROS CLASIFICADOS",mg+2,y+4.8,9,true,[255,255,255]);y+=7;
+    obtenerMejoresTercerosPDF(pronos).forEach(function(t,i){
+      checkY(7);var clasifica=i<8;
+      var bg=clasifica?(i%2===0?[232,245,233]:[241,248,233]):(i%2===0?[250,250,250]:[245,245,245]);
+      doc.setFillColor(bg[0],bg[1],bg[2]);doc.rect(mg,y,W-mg*2,6,"F");
+      doc.setFontSize(8);doc.setFont("helvetica","bold");
+      doc.setTextColor(clasifica?46:120,clasifica?125:120,clasifica?50:120);
+      doc.text((i+1)+".",mg+2,y+4);
+      doc.setFont("helvetica",clasifica?"bold":"normal");
+      doc.setTextColor(clasifica?27:100,clasifica?94:100,clasifica?32:100);
+      doc.text(limpiarN(t.equipo)+" (Grupo "+t.grupo+")",mg+8,y+4);
+      doc.setFont("helvetica","normal");doc.setTextColor(100,100,100);
+      doc.text("Pts:"+t.pts+"  DG:"+(t.dg>=0?"+":"")+t.dg+"  GF:"+t.gf,W-mg-22,y+4);
+      if(clasifica){
+        doc.setFillColor(46,125,50);doc.roundedRect(W-mg-18,y+1,16,4,1,1,"F");
+        doc.setFont("helvetica","bold");doc.setFontSize(7);doc.setTextColor(255,255,255);
+        doc.text("clasifica",W-mg-10,y+3.8,{align:"center"});
+      }else{
+        doc.setFillColor(189,189,189);doc.roundedRect(W-mg-20,y+1,18,4,1,1,"F");
+        doc.setFont("helvetica","normal");doc.setFontSize(7);doc.setTextColor(255,255,255);
+        doc.text("no clasifica",W-mg-11,y+3.8,{align:"center"});
+      }
+      y+=6;
+    });y+=4;
+
+    // ELIMINATORIAS
+    var fasesElimPDF=[
+      {lbl:"DIECISEISAVOS DE FINAL",ids:[73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88]},
+      {lbl:"OCTAVOS DE FINAL",ids:[89,90,91,92,93,94,95,96]},
+      {lbl:"CUARTOS DE FINAL",ids:[97,98,99,100]},
+      {lbl:"SEMIFINALES",ids:[101,102]},
+      {lbl:"3ER Y 4TO PUESTO",ids:[103]},
+      {lbl:"GRAN FINAL",ids:[104]}
+    ];
+    fasesElimPDF.forEach(function(fase){
+      checkY(12);banda([200,16,46],7);txt(fase.lbl,mg,y+5,9,true,[255,255,255]);y+=7;y+=2;
+      fase.ids.forEach(function(id,idx){
+        checkY(10);var pr=pronos[id];
+        var slotPair=SLOTS[id]||["—","—"];
+        var nomLraw=(pr&&pr.pl)?pr.pl:resolveCodPDF(slotPair[0],pronos);
+        var nomVraw=(pr&&pr.pv)?pr.pv:resolveCodPDF(slotPair[1],pronos);
+        var nomL=limpiarN(nomLraw)||slotPair[0];
+        var nomV=limpiarN(nomVraw)||slotPair[1];
+        var glP=pr&&pr.gl!=null?parseInt(pr.gl):null;
+        var gvP=pr&&pr.gv!=null?parseInt(pr.gv):null;
+        var score=(glP!==null&&gvP!==null)?(glP+"–"+gvP):"–";
+        var bg=idx%2===0?[255,255,255]:[248,249,250];
+        doc.setFillColor(bg[0],bg[1],bg[2]);doc.rect(mg,y,W-mg*2,6,"F");
+        doc.setFontSize(8);doc.setFont("helvetica","normal");doc.setTextColor(30,30,30);
+        doc.text((nomL.length>22?nomL.substring(0,20)+"…":nomL),mg+2,y+4);
+        doc.setFont("helvetica","bold");doc.setTextColor(200,16,46);doc.text(score,W/2,y+4,{align:"center"});
+        doc.setFont("helvetica","normal");doc.setTextColor(30,30,30);doc.text((nomV.length>22?nomV.substring(0,20)+"…":nomV),W-mg-2,y+4,{align:"right"});
+        y+=6;
+        if(glP!==null&&gvP!==null&&glP===gvP&&pr&&pr.penWin){
+          checkY(6);doc.setFillColor(255,248,225);doc.rect(mg,y,W-mg*2,5,"F");
+          doc.setFontSize(7);doc.setFont("helvetica","normal");doc.setTextColor(230,81,0);
+          doc.text("Penales — clasifica: "+limpiarN(pr.penWin==="L"?nomL:nomV),mg+2,y+3.5);y+=5;
+        }
+      });y+=3;
+    });
+
+    // HONOR
+    checkY(12);banda([10,22,40],7);txt("CUADRO DE HONOR",mg,y+5,9,true,[255,255,255]);y+=7;y+=2;
+    HONOR_DEF.forEach(function(h,idx){
+      checkY(7);var bg=idx%2===0?[255,255,255]:[248,249,250];
+      doc.setFillColor(bg[0],bg[1],bg[2]);doc.rect(mg,y,W-mg*2,6,"F");
+      doc.setFontSize(8);doc.setFont("helvetica","normal");doc.setTextColor(80,80,80);
+      doc.text(h.l.replace(/[^\u0000-\u007F]/g,"").trim(),mg+2,y+4);
+      doc.setFont("helvetica","bold");doc.setTextColor(10,22,40);doc.text(limpiarN(hvals[h.k]||"—"),W-mg-20,y+4);
+      doc.setFontSize(7);doc.setFont("helvetica","normal");doc.setTextColor(150,150,150);
+      doc.text(h.pts+"pts",W-mg-2,y+4,{align:"right"});y+=6;
+    });
+
+    checkY(16);y+=4;
+    doc.setFontSize(7);doc.setFont("helvetica","normal");doc.setTextColor(150,150,150);
+    doc.text("Polla Compis 2026 · Máximo teórico: 2.208 pts · 100.000 COP / 25 EUR",mg,y);y+=4;
 
     var np=doc.getNumberOfPages();
     for(var pg=1;pg<=np;pg++){
       doc.setPage(pg);doc.setFillColor(10,22,40);doc.rect(0,287,W,10,"F");
       doc.setFontSize(7);doc.setFont("helvetica","normal");doc.setTextColor(200,216,240);
       doc.text("Polla Compis 2026  ·  "+nomPart+"  ·  Ref: "+refCode,mg,293);
-      doc.text("Pag "+pg+"/"+np,W-mg,293,{align:"right"});
+      doc.text("Pág. "+pg+" / "+np,W-mg,293,{align:"right"});
     }
     doc.save("PollaCompis2026_"+nomPart.replace(/[^a-zA-Z0-9]/g,"_")+".pdf");
     if(btn){btn.textContent="✓ PDF descargado";btn.style.background="#22C55E";btn.disabled=false;
